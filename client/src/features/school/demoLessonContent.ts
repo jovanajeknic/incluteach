@@ -1,16 +1,11 @@
 import type { StudentLesson, StudentProfile, Subject } from '@/features/student/types';
 
-/** Fictional demo student. Their support profile lists needs only, as the backend would. */
+/** Fictional demo student. Their profile names the versions they receive, never a reason. */
 export const demoStudent: StudentProfile = {
   id: 'demo-student-luka',
   firstName: 'Luka',
   lastName: 'Petrović',
-  supportProfile: {
-    preferSimplifiedText: true,
-    preferMoreExamples: false,
-    preferStepByStep: false,
-    readingPreset: 'easier-reading',
-  },
+  supportProfile: { readingVersion: 'easier', audio: true },
 };
 
 export const demoSubjects: Subject[] = [
@@ -40,7 +35,7 @@ export const demoStudentLessons: StudentLesson[] = [
           'Voda u prirodi stalno putuje. Sunce zagrijava vodu u morima, rijekama i jezerima, pa dolazi do isparavanja. Vodena para se diže visoko u vazduh.\n\nU visini je hladnije, pa se vodena para hladi i pretvara u sitne kapljice. Od mnogo kapljica nastaju oblaci.\n\nKada se kapljice u oblacima spoje i postanu teške, pada kiša. Zimi, kada je hladno, umjesto kiše pada snijeg.\n\nVoda se zatim vraća u rijeke, jezera i mora, a dio se upija u zemlju. Tako krug počinje iznova.',
       },
       {
-        kind: 'simplified',
+        kind: 'easier',
         source: 'ai',
         approvedByTeacher: true,
         content:
@@ -94,7 +89,7 @@ export const demoStudentLessons: StudentLesson[] = [
       },
       {
         // Generated but not reviewed yet: students must not see it.
-        kind: 'simplified',
+        kind: 'easier',
         source: 'ai',
         approvedByTeacher: false,
         content: 'Biljka ima korijen, stablo i list. Ova verzija još čeka pregled nastavnika.',
@@ -139,7 +134,7 @@ export const demoStudentLessons: StudentLesson[] = [
           'Kada sabiramo dva broja, prvo saberemo desetice, a zatim jedinice.\n\nPrimjer: 34 + 25. Desetice: 30 + 20 = 50. Jedinice: 4 + 5 = 9. Zajedno: 50 + 9 = 59.\n\nOvaj način nam pomaže da brže i tačnije računamo u glavi.',
       },
       {
-        kind: 'simplified',
+        kind: 'easier',
         source: 'ai',
         approvedByTeacher: true,
         content:
@@ -210,7 +205,7 @@ export const demoStudentLessons: StudentLesson[] = [
           'Imenice su riječi kojima imenujemo bića, stvari i pojave. Na primjer: djevojčica, pas, sto, kiša.\n\nImenice mogu biti vlastite i zajedničke. Vlastite imenice pišemo velikim početnim slovom, na primjer: Ana, Podgorica, Morača.',
       },
       {
-        kind: 'simplified',
+        kind: 'easier',
         source: 'ai',
         approvedByTeacher: true,
         content:

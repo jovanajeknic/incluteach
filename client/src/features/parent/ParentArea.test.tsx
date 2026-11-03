@@ -82,7 +82,7 @@ describe('Child lessons', () => {
 
     await act(() => router.navigate('/parent/children/demo-student-luka/lessons/kruzenje-vode'));
 
-    expect(screen.getByText('Kraća verzija')).toBeInTheDocument();
+    expect(screen.getByText('Verzija nižeg nivoa')).toBeInTheDocument();
     const practice = screen.getByRole('region', { name: 'Vježba' });
     expect(practice).toHaveTextContent('Šta grije vodu u morima i rijekama?');
     expect(practice).not.toHaveTextContent('Od čega nastaju oblaci?');

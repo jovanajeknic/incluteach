@@ -1,19 +1,27 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { pickLessonVersion } from '@/features/student/lessonVersion';
 import type { LessonVersionKind, StudentProfile, SupportProfile } from '@/features/student/types';
 import { createDemoAiService } from './demoAiService';
 import { demoSchoolData, demoSubjects } from './demoSchoolData';
 import {
+  isFullyApproved,
   SchoolContext,
   type LessonEdits,
-  type NeededVersion,
   type NewLessonInput,
   type NewSuggestion,
   type SchoolStore,
+  type VersionEdits,
 } from './schoolContext';
-import { ADAPTED_KINDS, type SchoolData, type SchoolLesson, type SuggestionStatus } from './types';
+import {
+  ADAPTED_KINDS,
+  teacherClassIds,
+  type AdaptedKind,
+  type SchoolData,
+  type SchoolLesson,
+  type SuggestionStatus,
+} from './types';
 
-/** Long enough to see the "processing" state, short enough for a demo. */
+/** Long enough to see the AI at work, short enough for a demo. */
 const DEFAULT_AI_DELAY_MS = 2500;
 
 let idCounter = 0;
@@ -23,10 +31,12 @@ function createId(prefix: string): string {
   return `${prefix}-${Date.now()}-${idCounter}`;
 }
 
-const needsKind: Record<(typeof ADAPTED_KINDS)[number], (needs: SupportProfile) => boolean> = {
-  simplified: (needs) => needs.preferSimplifiedText,
-  examples: (needs) => needs.preferMoreExamples,
-};
+/** Which version kinds a student receives; illustrations go to everyone. */
+function receives(profile: SupportProfile, kind: AdaptedKind): boolean {
+  if (kind === 'illustrations') return true;
+  if (kind === 'audio') return profile.audio;
+  return profile.readingVersion === kind;
+}
 
 interface DemoSchoolProviderProps {
   children: ReactNode;
@@ -46,6 +56,8 @@ export function DemoSchoolProvider({
 }: DemoSchoolProviderProps) {
   const [data, setData] = useState<SchoolData>(initialData);
   const aiService = useMemo(() => createDemoAiService(aiDelayMs), [aiDelayMs]);
+  // Redo requests per lesson and version, so each redo can give a different result.
+  const attempts = useRef(new Map<string, number>());
 
   const updateLessonById = useCallback(
     (lessonId: string, change: (lesson: SchoolLesson) => SchoolLesson) => {
@@ -60,70 +72,46 @@ export function DemoSchoolProvider({
   );
 
   const classOf = useCallback(
-    (studentId: string, source: SchoolData = data) =>
-      source.classes.find((group) => group.studentIds.includes(studentId)),
+    (studentId: string) => data.classes.find((group) => group.studentIds.includes(studentId)),
     [data],
   );
 
-  const targetStudents = useCallback(
-    (lesson: SchoolLesson, source: SchoolData = data): StudentProfile[] => {
-      const assigned = lesson.assignedClassIds.length > 0 || lesson.assignedStudentIds.length > 0;
-      const classIds = assigned ? lesson.assignedClassIds : source.teacher.classIds;
-      const ids = new Set([
-        ...source.classes
-          .filter((group) => classIds.includes(group.id))
-          .flatMap((group) => group.studentIds),
-        ...lesson.assignedStudentIds,
-      ]);
-      return source.students.filter((student) => ids.has(student.id));
+  const studentsOf = useCallback(
+    (classId: string): StudentProfile[] => {
+      const ids = data.classes.find((group) => group.id === classId)?.studentIds ?? [];
+      return data.students.filter((student) => ids.includes(student.id));
     },
     [data],
-  );
-
-  const neededVersions = useCallback(
-    (lesson: SchoolLesson, source: SchoolData = data): NeededVersion[] => {
-      const students = targetStudents(lesson, source);
-      return ADAPTED_KINDS.map((kind) => ({
-        kind,
-        studentCount: students.filter((student) => needsKind[kind](student.supportProfile)).length,
-      })).filter((entry) => entry.studentCount > 0);
-    },
-    [data, targetStudents],
   );
 
   const suggestionsForAdaptation = useCallback(
-    (lesson: SchoolLesson, source: SchoolData = data) => {
-      const ids = new Set(targetStudents(lesson, source).map((student) => student.id));
-      return source.suggestions.filter(
+    (lesson: Pick<SchoolLesson, 'id' | 'classId'>) => {
+      const ids = new Set(studentsOf(lesson.classId).map((student) => student.id));
+      return data.suggestions.filter(
         (item) =>
           item.status === 'use-for-adaptation' &&
           ids.has(item.childId) &&
           (item.lessonId === undefined || item.lessonId === lesson.id),
       );
     },
-    [data, targetStudents],
+    [data, studentsOf],
   );
 
-  const requestAdaptation = useCallback(
-    async (lessonId: string) => {
-      const lesson = data.lessons.find((item) => item.id === lessonId);
-      if (!lesson || lesson.status === 'processing') return;
+  // Takes the lesson itself, so a lesson created in the same click can be generated at once.
+  const runFullGeneration = useCallback(
+    async (lesson: SchoolLesson) => {
+      if (lesson.status === 'processing') return;
       const previousStatus = lesson.status;
-      const kinds: readonly string[] = neededVersions(lesson).map((entry) => entry.kind);
       const suggestions = suggestionsForAdaptation(lesson).map((item) => item.text);
-      updateLessonById(lessonId, (current) => ({ ...current, status: 'processing' }));
+      updateLessonById(lesson.id, (current) => ({ ...current, status: 'processing' }));
 
-      const result = await aiService.adapt({
-        lesson,
-        kinds: neededVersions(lesson).map((entry) => entry.kind),
-        suggestions,
-      });
+      const result = await aiService.generate({ lesson, kinds: ADAPTED_KINDS, suggestions });
 
-      updateLessonById(lessonId, (current) => ({
+      updateLessonById(lesson.id, (current) => ({
         ...current,
-        // New suggestions replace older versions of the same kind; the teacher's text stays.
+        // New results replace older AI versions; the teacher's text stays.
         versions: [
-          ...current.versions.filter((version) => !kinds.includes(version.kind)),
+          ...current.versions.filter((version) => version.kind === 'standard'),
           ...result.versions,
         ],
         glossary: [
@@ -134,50 +122,113 @@ export function DemoSchoolProvider({
         ],
         quiz: current.quiz.length > 0 ? current.quiz : result.quiz,
         adaptationCount: (current.adaptationCount ?? 0) + 1,
-        // An assigned lesson stays visible with its approved versions while new ones wait.
+        // A published lesson stays visible with its approved versions while new ones wait.
         status: previousStatus === 'assigned' ? 'assigned' : 'in_review',
       }));
     },
-    [data, aiService, neededVersions, suggestionsForAdaptation, updateLessonById],
+    [aiService, suggestionsForAdaptation, updateLessonById],
   );
 
-  const createDraft = useCallback((input: NewLessonInput): SchoolLesson => {
-    const lesson: SchoolLesson = {
-      id: createId('lesson'),
-      title: input.title,
-      subjectId: input.subjectId,
-      grade: input.grade,
-      status: 'draft',
-      assignedClassIds: [],
-      assignedStudentIds: [],
-      versions: [
-        { kind: 'standard', source: 'teacher', approvedByTeacher: true, content: input.content },
-      ],
-      glossary: [],
-      quiz: [],
-    };
-    // Newest first, so the teacher sees the new draft at the top of the list.
-    setData((current) => ({ ...current, lessons: [lesson, ...current.lessons] }));
-    return lesson;
-  }, []);
+  const generateAll = useCallback(
+    async (lessonId: string) => {
+      const lesson = data.lessons.find((item) => item.id === lessonId);
+      if (lesson) await runFullGeneration(lesson);
+    },
+    [data, runFullGeneration],
+  );
 
-  const updateVersionContent = useCallback(
-    (lessonId: string, kind: LessonVersionKind, content: string) =>
+  const regenerateVersion = useCallback(
+    async (lessonId: string, kind: AdaptedKind, feedback: string) => {
+      const lesson = data.lessons.find((item) => item.id === lessonId);
+      if (!lesson || lesson.status === 'processing' || lesson.regenerating?.includes(kind)) return;
+      const key = `${lessonId}:${kind}`;
+      const attempt = (attempts.current.get(key) ?? 0) + 1;
+      attempts.current.set(key, attempt);
+      const suggestions = suggestionsForAdaptation(lesson).map((item) => item.text);
+      updateLessonById(lessonId, (current) => ({
+        ...current,
+        regenerating: [...(current.regenerating ?? []), kind],
+      }));
+
+      const result = await aiService.generate({
+        lesson,
+        kinds: [kind],
+        suggestions,
+        feedback,
+        attempt,
+      });
+
+      updateLessonById(lessonId, (current) => ({
+        ...current,
+        versions: [
+          ...current.versions.filter((version) => version.kind !== kind),
+          ...result.versions,
+        ],
+        regenerating: (current.regenerating ?? []).filter((item) => item !== kind),
+        // The new version needs a fresh look before the lesson counts as approved again.
+        status: current.status === 'approved' ? 'in_review' : current.status,
+      }));
+    },
+    [data, aiService, suggestionsForAdaptation, updateLessonById],
+  );
+
+  const createLesson = useCallback(
+    (input: NewLessonInput): SchoolLesson => {
+      const group = data.classes.find((item) => item.id === input.classId);
+      const lesson: SchoolLesson = {
+        id: createId('lesson'),
+        title: input.title,
+        subjectId: input.subjectId,
+        classId: input.classId,
+        grade: group?.grade ?? 0,
+        status: 'draft',
+        versions: [
+          { kind: 'standard', source: 'teacher', approvedByTeacher: true, content: input.content },
+        ],
+        glossary: [],
+        quiz: [],
+      };
+      // Newest first, so the teacher sees the new lesson at the top of the list.
+      setData((current) => ({ ...current, lessons: [lesson, ...current.lessons] }));
+      void runFullGeneration(lesson);
+      return lesson;
+    },
+    [data, runFullGeneration],
+  );
+
+  const updateVersion = useCallback(
+    (lessonId: string, kind: LessonVersionKind, edits: VersionEdits) =>
       updateLessonById(lessonId, (lesson) => ({
         ...lesson,
         versions: lesson.versions.map((version) =>
-          version.kind === kind ? { ...version, content } : version,
+          version.kind === kind ? { ...version, ...edits } : version,
         ),
       })),
     [updateLessonById],
   );
 
-  const removeVersion = useCallback(
-    (lessonId: string, kind: LessonVersionKind) =>
-      updateLessonById(lessonId, (lesson) => ({
-        ...lesson,
-        versions: lesson.versions.filter((version) => version.kind !== kind),
-      })),
+  const approveVersion = useCallback(
+    (lessonId: string, kind: AdaptedKind) =>
+      updateLessonById(lessonId, (lesson) => {
+        const next: SchoolLesson = {
+          ...lesson,
+          versions: lesson.versions.map((version) =>
+            version.kind === kind ? { ...version, approvedByTeacher: true } : version,
+          ),
+        };
+        return lesson.status === 'in_review' && isFullyApproved(next)
+          ? { ...next, status: 'approved' }
+          : next;
+      }),
+    [updateLessonById],
+  );
+
+  const publishLesson = useCallback(
+    (lessonId: string) =>
+      updateLessonById(lessonId, (lesson) =>
+        // Only fully approved content can be published; the UI also prevents it.
+        isFullyApproved(lesson) ? { ...lesson, status: 'assigned' } : lesson,
+      ),
     [updateLessonById],
   );
 
@@ -187,37 +238,11 @@ export function DemoSchoolProvider({
     [updateLessonById],
   );
 
-  const approveLesson = useCallback(
-    (lessonId: string) =>
-      updateLessonById(lessonId, (lesson) => ({
-        ...lesson,
-        versions: lesson.versions.map((version) => ({ ...version, approvedByTeacher: true })),
-        status: lesson.status === 'assigned' ? 'assigned' : 'approved',
-      })),
-    [updateLessonById],
-  );
-
-  const assignLesson = useCallback(
-    (lessonId: string, target: { classIds: string[]; studentIds: string[] }) =>
-      updateLessonById(lessonId, (lesson) =>
-        // Only approved content can be assigned; the UI also prevents it.
-        lesson.status === 'approved' || lesson.status === 'assigned'
-          ? {
-              ...lesson,
-              assignedClassIds: target.classIds,
-              assignedStudentIds: target.studentIds,
-              status: 'assigned',
-            }
-          : lesson,
-      ),
-    [updateLessonById],
-  );
-
-  const setStudentNeeds = useCallback((studentId: string, needs: SupportProfile) => {
+  const setStudentSupport = useCallback((studentId: string, profile: SupportProfile) => {
     setData((current) => ({
       ...current,
       students: current.students.map((student) =>
-        student.id === studentId ? { ...student, supportProfile: needs } : student,
+        student.id === studentId ? { ...student, supportProfile: profile } : student,
       ),
     }));
   }, []);
@@ -285,34 +310,47 @@ export function DemoSchoolProvider({
 
   const store = useMemo<SchoolStore>(() => {
     const getStudent = (id: string) => data.students.find((student) => student.id === id);
+    const ownClassIds = teacherClassIds(data.teacher);
     return {
       data,
       subjects: demoSubjects,
       getStudent,
       getLesson: (id) => data.lessons.find((lesson) => lesson.id === id),
       getClass: (id) => data.classes.find((group) => group.id === id),
-      classOf: (studentId) => classOf(studentId),
-      createDraft,
-      updateVersionContent,
-      removeVersion,
+      getSubject: (id) => demoSubjects.find((subject) => subject.id === id),
+      classOf,
+      teachesStudent: (studentId) => {
+        const group = classOf(studentId);
+        return group !== undefined && ownClassIds.includes(group.id);
+      },
+      createLesson,
+      generateAll,
+      regenerateVersion,
+      updateVersion,
+      approveVersion,
+      publishLesson,
       updateLesson,
-      targetStudents: (lesson) => targetStudents(lesson),
-      neededVersions: (lesson) => neededVersions(lesson),
-      suggestionsForAdaptation: (lesson) => suggestionsForAdaptation(lesson),
-      requestAdaptation,
-      approveLesson,
-      assignLesson,
-      setStudentNeeds,
+      studentsOf,
+      versionAudience: (lesson) => {
+        const students = studentsOf(lesson.classId);
+        return Object.fromEntries(
+          ADAPTED_KINDS.map((kind) => [
+            kind,
+            students.filter((student) => receives(student.supportProfile, kind)).length,
+          ]),
+        ) as Record<AdaptedKind, number>;
+      },
+      suggestionsForAdaptation,
+      setStudentSupport,
       setSuggestionStatus,
       visibleLessonsFor: (studentId) => {
         const student = getStudent(studentId);
         const group = classOf(studentId);
-        if (!student) return [];
+        if (!student || !group) return [];
         return data.lessons.filter(
           (lesson) =>
             lesson.status === 'assigned' &&
-            ((group && lesson.assignedClassIds.includes(group.id)) ||
-              lesson.assignedStudentIds.includes(studentId)) &&
+            lesson.classId === group.id &&
             pickLessonVersion(lesson, student.supportProfile) !== undefined,
         );
       },
@@ -325,17 +363,16 @@ export function DemoSchoolProvider({
   }, [
     data,
     classOf,
-    createDraft,
-    updateVersionContent,
-    removeVersion,
+    createLesson,
+    generateAll,
+    regenerateVersion,
+    updateVersion,
+    approveVersion,
+    publishLesson,
     updateLesson,
-    targetStudents,
-    neededVersions,
+    studentsOf,
     suggestionsForAdaptation,
-    requestAdaptation,
-    approveLesson,
-    assignLesson,
-    setStudentNeeds,
+    setStudentSupport,
     setSuggestionStatus,
     markStarted,
     markCompleted,

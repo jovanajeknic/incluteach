@@ -1,12 +1,12 @@
 import type { NewLessonInput } from '@/features/school/schoolContext';
+import type { TeachingAssignment } from '@/features/school/types';
 import { text } from '@/text/sr-Latn';
-import { GRADES, type Grade } from './types';
 
 /** Raw form values exactly as the user typed or selected them. */
 export interface LessonFormValues {
+  /** A teaching assignment written as "subjectId|classId". */
+  course: string;
   title: string;
-  subjectId: string;
-  grade: string;
   content: string;
 }
 
@@ -17,48 +17,34 @@ export type LessonFormErrors = Partial<Record<LessonFormField, string>>;
 export type LessonFormResult =
   { ok: true; data: NewLessonInput } | { ok: false; errors: LessonFormErrors };
 
-export const emptyLessonForm: LessonFormValues = {
-  title: '',
-  subjectId: '',
-  grade: '',
-  content: '',
-};
+export const courseKey = ({ subjectId, classId }: TeachingAssignment) => `${subjectId}|${classId}`;
 
 /** Field order used to decide which invalid field receives focus first. */
-export const lessonFormFieldOrder: readonly LessonFormField[] = [
-  'title',
-  'subjectId',
-  'grade',
-  'content',
-];
-
-function parseGrade(value: string): Grade | undefined {
-  return GRADES.find((grade) => String(grade) === value);
-}
+export const lessonFormFieldOrder: readonly LessonFormField[] = ['course', 'title', 'content'];
 
 /**
- * Validates and normalizes the lesson form.
- * Values are trimmed, so input made only of spaces counts as empty.
+ * Validates and normalizes the lesson form. Only subjects the teacher teaches in a class are
+ * accepted, and text is trimmed, so input made only of spaces counts as empty.
  */
 export function validateLessonForm(
   values: LessonFormValues,
-  subjectIds: readonly string[],
+  teaching: readonly TeachingAssignment[],
 ): LessonFormResult {
   const title = values.title.trim();
   const content = values.content.trim();
-  const subjectId = subjectIds.includes(values.subjectId) ? values.subjectId : undefined;
-  const grade = parseGrade(values.grade);
+  const course = teaching.find((item) => courseKey(item) === values.course);
   const messages = text.newLesson.errors;
 
   const errors: LessonFormErrors = {};
+  if (!course) errors.course = messages.courseRequired;
   if (!title) errors.title = messages.titleRequired;
-  if (!subjectId) errors.subjectId = messages.subjectRequired;
-  if (!grade) errors.grade = messages.gradeRequired;
   if (!content) errors.content = messages.contentRequired;
 
-  if (!subjectId || !grade || Object.keys(errors).length > 0) {
+  if (!course || Object.keys(errors).length > 0) {
     return { ok: false, errors };
   }
-
-  return { ok: true, data: { title, subjectId, grade, content } };
+  return {
+    ok: true,
+    data: { title, content, subjectId: course.subjectId, classId: course.classId },
+  };
 }

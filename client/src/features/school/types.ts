@@ -9,9 +9,9 @@ import type {
 // Provisional shapes: they will be aligned with the API contract once it is agreed with the backend.
 
 /**
- * draft: only the teacher's text. processing: the AI is preparing adaptations.
- * in_review: AI suggestions wait for the teacher. approved: the teacher approved them.
- * assigned: students can see it.
+ * draft: only the teacher's text. processing: the AI is preparing the versions.
+ * in_review: AI versions wait for the teacher. approved: every version is approved.
+ * assigned: published, so the students of the lesson's class can see it.
  */
 export const LESSON_STATUSES = [
   'draft',
@@ -22,19 +22,24 @@ export const LESSON_STATUSES = [
 ] as const;
 export type LessonStatus = (typeof LESSON_STATUSES)[number];
 
-/** Versions the AI can add next to the teacher's text. */
+/** Everything the AI prepares next to the teacher's text, in the order the teacher reviews it. */
 export const ADAPTED_KINDS = [
-  'simplified',
-  'examples',
+  'shortened',
+  'easier',
+  'dyslexia',
+  'audio',
+  'illustrations',
 ] as const satisfies readonly LessonVersionKind[];
 export type AdaptedKind = (typeof ADAPTED_KINDS)[number];
 
 export interface SchoolLesson extends StudentLesson {
   status: LessonStatus;
-  /** How many AI adaptations have finished; editors reload their drafts when it changes. */
+  /** A lesson belongs to one subject in one class; publishing sends it to that class. */
+  classId: string;
+  /** How many full AI runs have finished; editors reload their drafts when it changes. */
   adaptationCount?: number;
-  assignedClassIds: string[];
-  assignedStudentIds: string[];
+  /** Versions the AI is redoing right now after the teacher's feedback. */
+  regenerating?: AdaptedKind[];
 }
 
 export interface ClassGroup {
@@ -44,11 +49,22 @@ export interface ClassGroup {
   studentIds: string[];
 }
 
+/** One subject the teacher teaches in one class. A class teacher has several per class. */
+export interface TeachingAssignment {
+  subjectId: string;
+  classId: string;
+}
+
 export interface TeacherProfile {
   id: string;
   firstName: string;
   lastName: string;
-  classIds: string[];
+  teaching: TeachingAssignment[];
+}
+
+/** Classes the teacher teaches anything in, in first-seen order. */
+export function teacherClassIds(teacher: TeacherProfile): string[] {
+  return [...new Set(teacher.teaching.map((item) => item.classId))];
 }
 
 export interface ParentProfile {

@@ -1,22 +1,29 @@
-import type { LessonVersion, StudentLesson, SupportProfile } from './types';
+import type { LessonVersion, LessonVersionKind, StudentLesson, SupportProfile } from './types';
+
+/** The teacher-approved version of a kind, if there is one. */
+export function approvedVersion(
+  lesson: StudentLesson,
+  kind: LessonVersionKind,
+): LessonVersion | undefined {
+  return lesson.versions.find((version) => version.kind === kind && version.approvedByTeacher);
+}
 
 /**
- * Chooses which version of a lesson the student sees. Only teacher-approved versions are
- * eligible. Preference order: simplified (if needed), with more examples (if needed), the
- * teacher's standard text. Returns undefined when nothing is approved, so the lesson stays hidden.
+ * Chooses which text the student reads: the version their profile names, once the teacher
+ * has approved it, otherwise the teacher's own text. Returns undefined when nothing is
+ * approved, so the lesson stays hidden.
  */
 export function pickLessonVersion(
   lesson: StudentLesson,
   profile: SupportProfile,
 ): LessonVersion | undefined {
-  const approved = (kind: LessonVersion['kind']) =>
-    lesson.versions.find((version) => version.kind === kind && version.approvedByTeacher);
+  return approvedVersion(lesson, profile.readingVersion) ?? approvedVersion(lesson, 'standard');
+}
 
-  return (
-    (profile.preferSimplifiedText ? approved('simplified') : undefined) ??
-    (profile.preferMoreExamples ? approved('examples') : undefined) ??
-    approved('standard') ??
-    approved('simplified') ??
-    approved('examples')
-  );
+/** The narrated script, only for students who receive audio and only once approved. */
+export function pickAudioVersion(
+  lesson: StudentLesson,
+  profile: SupportProfile,
+): LessonVersion | undefined {
+  return profile.audio ? approvedVersion(lesson, 'audio') : undefined;
 }

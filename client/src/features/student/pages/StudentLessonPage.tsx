@@ -16,7 +16,7 @@ import { text } from '@/text/sr-Latn';
 import { ListenControls } from '../audio/ListenControls';
 import { useLessonSpeech } from '../audio/useLessonSpeech';
 import { useStudent } from '../data/studentContext';
-import { pickLessonVersion } from '../lessonVersion';
+import { approvedVersion, pickAudioVersion, pickLessonVersion } from '../lessonVersion';
 import { studentHomePath, studentQuizPath, subjectPath } from '../paths';
 import type { StudentLesson, StudentProfile, Subject } from '../types';
 
@@ -66,15 +66,24 @@ function LessonView({ lesson, subject, profile }: LessonViewProps) {
   const support = profile.supportProfile;
   // Only teacher-approved versions can be picked; the page is reached only if one exists.
   const version = pickLessonVersion(lesson, support)!;
+  const audio = pickAudioVersion(lesson, support);
+  const illustrations = approvedVersion(lesson, 'illustrations')?.illustrations ?? [];
 
-  const { preferences, update, reset } = useReadingPreferences(profile.id, support.readingPreset);
+  // Students meant to get the dyslexia-friendly text start with the matching font and
+  // spacing, even while that version is not ready and they read the teacher's text.
+  const { preferences, update, reset } = useReadingPreferences(
+    profile.id,
+    support.readingVersion === 'dyslexia' ? 'easier-reading' : 'standard',
+  );
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [stepByStep, setStepByStep] = useState(support.preferStepByStep);
+  const [stepByStep, setStepByStep] = useState(false);
   const [step, setStep] = useState(0);
 
   const paragraphs = useMemo(() => splitParagraphs(version.content), [version.content]);
   const shownContent = stepByStep ? (paragraphs[step] ?? '') : version.content;
-  const sentences = useMemo(() => lessonSentences(shownContent), [shownContent]);
+  // Students who receive audio hear the narrated script; others hear the text on screen.
+  const spokenContent = audio?.content ?? shownContent;
+  const sentences = useMemo(() => lessonSentences(spokenContent), [spokenContent]);
   const speech = useLessonSpeech(sentences);
 
   useEffect(() => {
@@ -96,10 +105,6 @@ function LessonView({ lesson, subject, profile }: LessonViewProps) {
         <h1 className="font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
           {lesson.title}
         </h1>
-        {/* Says what the student is reading, never why: no reason or diagnosis is shown. */}
-        {version.kind === 'simplified' && (
-          <span className="hand-note pb-1 text-sky-ink">{t.shorterVersion}</span>
-        )}
       </header>
 
       <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
@@ -177,7 +182,8 @@ function LessonView({ lesson, subject, profile }: LessonViewProps) {
           <LessonContent
             content={shownContent}
             glossary={lesson.glossary}
-            activeSentence={speech.activeSentence}
+            // The narrated script differs from the text, so there is no sentence to follow.
+            activeSentence={audio ? null : speech.activeSentence}
             className={cn('text-ink', readingTextClassName(preferences))}
           />
 
@@ -202,6 +208,21 @@ function LessonView({ lesson, subject, profile }: LessonViewProps) {
                 {t.nextStep}
                 <ArrowRight aria-hidden="true" />
               </Button>
+            </div>
+          )}
+
+          {illustrations.length > 0 && (
+            <div className="mt-10 grid gap-6 sm:grid-cols-2">
+              {illustrations.map((item) => (
+                <figure key={item.id}>
+                  <img
+                    src={item.src}
+                    alt={item.alt}
+                    className="w-full rounded-2xl border border-border bg-card"
+                  />
+                  <figcaption className="mt-2 text-ink-soft">{item.caption}</figcaption>
+                </figure>
+              ))}
             </div>
           )}
 

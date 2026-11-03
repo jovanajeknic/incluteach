@@ -3,12 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderApp } from '@/test/renderApp';
 import type { SupportProfile } from './types';
 
-const standardReader: Partial<SupportProfile> = {
-  preferSimplifiedText: false,
-  preferMoreExamples: false,
-  preferStepByStep: false,
-  readingPreset: 'standard',
-};
+const standardReader: Partial<SupportProfile> = { readingVersion: 'standard', audio: false };
+/** The lesson has no dyslexia version yet, but the reading preset still follows the profile. */
+const dyslexiaReader: Partial<SupportProfile> = { readingVersion: 'dyslexia' };
 
 /** Finds a whole lesson sentence even when glossary words split it into several elements. */
 function findSentence(match: string | RegExp): Element | undefined {
@@ -23,6 +20,39 @@ afterEach(() => {
   vi.unstubAllGlobals();
   window.localStorage.clear();
 });
+
+/** A fake local voice; returns the sentences it was asked to speak. */
+function stubVoice(): string[] {
+  const spoken: string[] = [];
+  vi.stubGlobal(
+    'SpeechSynthesisUtterance',
+    class {
+      text: string;
+      voice: unknown = null;
+      lang = '';
+      rate = 1;
+      onstart: (() => void) | null = null;
+      onend: (() => void) | null = null;
+      constructor(text: string) {
+        this.text = text;
+      }
+    },
+  );
+  const synth = {
+    getVoices: () => [{ lang: 'sr-RS', name: 'Test glas' }],
+    speak: vi.fn((utterance: { text: string; onstart: (() => void) | null }) => {
+      spoken.push(utterance.text);
+      utterance.onstart?.();
+    }),
+    cancel: vi.fn(),
+    pause: vi.fn(),
+    resume: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  };
+  vi.stubGlobal('speechSynthesis', synth);
+  return spoken;
+}
 
 describe('Student subjects and lessons', () => {
   it('lists the student subjects with lesson counts', () => {
@@ -74,17 +104,26 @@ describe('Student subjects and lessons', () => {
 });
 
 describe('Adapted lesson versions', () => {
-  it('shows the approved shorter version when the profile asks for it', () => {
+  it('shows the approved version named in the profile, without labelling it', () => {
     renderApp({ path: '/student/lessons/kruzenje-vode' });
 
-    expect(screen.getByText('kraća verzija')).toBeInTheDocument();
     expect(screen.getByText('Sunce grije vodu.')).toBeInTheDocument();
+    // Nothing on the page says this is a different version.
+    expect(document.body.textContent).not.toMatch(/niži nivo|nižeg nivoa|skraćen|lakše čitanje/i);
   });
 
-  it('shows the standard version to a student without that need', () => {
+  it('shows the teacher text to a student whose profile names it', () => {
     renderApp({ path: '/student/lessons/kruzenje-vode', studentNeeds: standardReader });
 
-    expect(screen.queryByText('kraća verzija')).not.toBeInTheDocument();
+    expect(screen.getByText(/Voda u prirodi stalno putuje\./)).toBeInTheDocument();
+  });
+
+  it('falls back to the teacher text while the named version is missing', () => {
+    renderApp({
+      path: '/student/lessons/kruzenje-vode',
+      studentNeeds: { readingVersion: 'dyslexia' },
+    });
+
     expect(screen.getByText(/Voda u prirodi stalno putuje\./)).toBeInTheDocument();
   });
 
@@ -92,8 +131,17 @@ describe('Adapted lesson versions', () => {
     renderApp({ path: '/student/lessons/biljke' });
 
     expect(screen.queryByText(/čeka pregled nastavnika/)).not.toBeInTheDocument();
-    expect(screen.queryByText('kraća verzija')).not.toBeInTheDocument();
     expect(findSentence(/Većina biljaka ima korijen/)).toBeDefined();
+  });
+
+  it('shows the approved illustrations with their descriptions', () => {
+    renderApp({ path: '/student/lessons/kruzenje-vode' });
+
+    expect(screen.getByRole('img', { name: /od nje nastaje oblak/ })).toHaveAttribute(
+      'src',
+      '/illustrations/water-cycle.svg',
+    );
+    expect(screen.getByText('Voda putuje u krug: more, para, oblak, kiša.')).toBeInTheDocument();
   });
 
   it('never mentions a diagnosis or the reason for an adaptation', () => {
@@ -108,8 +156,11 @@ describe('Adapted lesson versions', () => {
 
 describe('Reading settings', () => {
   it('starts from the easier-reading preset and lets the student change it', async () => {
-    const { user } = renderApp({ path: '/student/lessons/kruzenje-vode' });
-    const lessonText = () => screen.getByText('Sunce grije vodu.').closest('div');
+    const { user } = renderApp({
+      path: '/student/lessons/kruzenje-vode',
+      studentNeeds: dyslexiaReader,
+    });
+    const lessonText = () => screen.getByText('Voda u prirodi stalno putuje.').closest('div');
 
     expect(lessonText()).toHaveClass('font-dyslexic', 'text-xl');
 
@@ -123,17 +174,27 @@ describe('Reading settings', () => {
   });
 
   it('remembers the choice on this device and can reset it', async () => {
-    const first = renderApp({ path: '/student/lessons/kruzenje-vode' });
+    const first = renderApp({
+      path: '/student/lessons/kruzenje-vode',
+      studentNeeds: dyslexiaReader,
+    });
     await first.user.click(screen.getByRole('button', { name: 'Slova i boje' }));
     await first.user.click(screen.getByRole('radio', { name: 'Zaobljena' }));
     first.unmount();
 
-    const second = renderApp({ path: '/student/lessons/kruzenje-vode' });
-    expect(screen.getByText('Sunce grije vodu.').closest('div')).toHaveClass('font-display');
+    const second = renderApp({
+      path: '/student/lessons/kruzenje-vode',
+      studentNeeds: dyslexiaReader,
+    });
+    expect(screen.getByText('Voda u prirodi stalno putuje.').closest('div')).toHaveClass(
+      'font-display',
+    );
 
     await second.user.click(screen.getByRole('button', { name: 'Slova i boje' }));
     await second.user.click(screen.getByRole('button', { name: 'Vrati početna podešavanja' }));
-    expect(screen.getByText('Sunce grije vodu.').closest('div')).toHaveClass('font-dyslexic');
+    expect(screen.getByText('Voda u prirodi stalno putuje.').closest('div')).toHaveClass(
+      'font-dyslexic',
+    );
   });
 });
 
@@ -174,36 +235,11 @@ describe('Lesson helpers', () => {
   });
 
   it('reads aloud with a local voice and highlights the current sentence', async () => {
-    const spoken: string[] = [];
-    vi.stubGlobal(
-      'SpeechSynthesisUtterance',
-      class {
-        text: string;
-        voice: unknown = null;
-        lang = '';
-        rate = 1;
-        onstart: (() => void) | null = null;
-        onend: (() => void) | null = null;
-        constructor(text: string) {
-          this.text = text;
-        }
-      },
-    );
-    const synth = {
-      getVoices: () => [{ lang: 'sr-RS', name: 'Test glas' }],
-      speak: vi.fn((utterance: { text: string; onstart: (() => void) | null }) => {
-        spoken.push(utterance.text);
-        utterance.onstart?.();
-      }),
-      cancel: vi.fn(),
-      pause: vi.fn(),
-      resume: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    };
-    vi.stubGlobal('speechSynthesis', synth);
-
-    const { user } = renderApp({ path: '/student/lessons/kruzenje-vode' });
+    const spoken = stubVoice();
+    const { user } = renderApp({
+      path: '/student/lessons/kruzenje-vode',
+      studentNeeds: { audio: false },
+    });
     await user.click(screen.getByRole('button', { name: 'Poslušaj lekciju' }));
 
     expect(spoken).toEqual(['Sunce grije vodu.']);
@@ -212,6 +248,14 @@ describe('Lesson helpers', () => {
       'true',
     );
     expect(screen.getByRole('button', { name: 'Pauza' })).toBeInTheDocument();
+  });
+
+  it('plays the approved audio script to a student who receives audio', async () => {
+    const spoken = stubVoice();
+    const { user } = renderApp({ path: '/student/lessons/kruzenje-vode' });
+    await user.click(screen.getByRole('button', { name: 'Poslušaj lekciju' }));
+
+    expect(spoken[0]).toMatch(/^Slušaj lekciju „Kruženje vode u prirodi“/);
   });
 });
 

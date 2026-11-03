@@ -1,25 +1,27 @@
 import { createContext, useContext } from 'react';
 import type {
   LessonProgress,
+  LessonVersion,
   LessonVersionKind,
   PracticeRecord,
   StudentProfile,
   Subject,
   SupportProfile,
 } from '@/features/student/types';
-import type {
-  AdaptedKind,
-  ClassGroup,
-  SchoolData,
-  SchoolLesson,
-  Suggestion,
-  SuggestionStatus,
+import {
+  ADAPTED_KINDS,
+  type AdaptedKind,
+  type ClassGroup,
+  type SchoolData,
+  type SchoolLesson,
+  type Suggestion,
+  type SuggestionStatus,
 } from './types';
 
 export interface NewLessonInput {
   title: string;
   subjectId: string;
-  grade: number;
+  classId: string;
   content: string;
 }
 
@@ -29,17 +31,12 @@ export interface NewSuggestion {
   text: string;
 }
 
-export interface NeededVersion {
-  kind: AdaptedKind;
-  /** How many of the lesson's students need this version. Counts only, never names of needs. */
-  studentCount: number;
-}
-
 export type LessonEdits = Partial<Pick<SchoolLesson, 'glossary' | 'quiz' | 'homeGuidance'>>;
+export type VersionEdits = Partial<Pick<LessonVersion, 'content' | 'illustrations'>>;
 
 /**
  * The single demo "school": teacher, student and parent screens all read and change the same
- * data, so approving and assigning a lesson really reaches the student and parent views.
+ * data, so approving and publishing a lesson really reaches the student and parent views.
  * Every screen depends on this interface, so the demo can later be replaced by API calls.
  */
 export interface SchoolStore {
@@ -48,22 +45,29 @@ export interface SchoolStore {
   getStudent: (id: string) => StudentProfile | undefined;
   getLesson: (id: string) => SchoolLesson | undefined;
   getClass: (id: string) => ClassGroup | undefined;
+  getSubject: (id: string) => Subject | undefined;
   classOf: (studentId: string) => ClassGroup | undefined;
+  /** Whether the teacher teaches this student in any subject. */
+  teachesStudent: (studentId: string) => boolean;
 
   // Teacher
-  createDraft: (input: NewLessonInput) => SchoolLesson;
-  updateVersionContent: (lessonId: string, kind: LessonVersionKind, content: string) => void;
-  removeVersion: (lessonId: string, kind: LessonVersionKind) => void;
+  /** Saves the teacher's text and starts the AI right away. */
+  createLesson: (input: NewLessonInput) => SchoolLesson;
+  /** Runs the AI for every version (a new lesson, or after the teacher changed the text). */
+  generateAll: (lessonId: string) => Promise<void>;
+  /** Asks the AI to redo one version, taking the teacher's note into account. */
+  regenerateVersion: (lessonId: string, kind: AdaptedKind, feedback: string) => Promise<void>;
+  updateVersion: (lessonId: string, kind: LessonVersionKind, edits: VersionEdits) => void;
+  approveVersion: (lessonId: string, kind: AdaptedKind) => void;
+  /** Sends a fully approved lesson to its class; each student gets their own version. */
+  publishLesson: (lessonId: string) => void;
   updateLesson: (lessonId: string, edits: LessonEdits) => void;
-  /** Students the lesson is meant for: those assigned, or the teacher's classes before that. */
-  targetStudents: (lesson: SchoolLesson) => StudentProfile[];
-  neededVersions: (lesson: SchoolLesson) => NeededVersion[];
+  studentsOf: (classId: string) => StudentProfile[];
+  /** How many of the lesson's students receive each version. Counts only, never names. */
+  versionAudience: (lesson: SchoolLesson) => Record<AdaptedKind, number>;
   /** Parent suggestions the teacher marked for use, for the lesson's students. */
   suggestionsForAdaptation: (lesson: SchoolLesson) => Suggestion[];
-  requestAdaptation: (lessonId: string) => Promise<void>;
-  approveLesson: (lessonId: string) => void;
-  assignLesson: (lessonId: string, target: { classIds: string[]; studentIds: string[] }) => void;
-  setStudentNeeds: (studentId: string, needs: SupportProfile) => void;
+  setStudentSupport: (studentId: string, profile: SupportProfile) => void;
   setSuggestionStatus: (suggestionId: string, status: SuggestionStatus) => void;
 
   // Students and parents
@@ -89,8 +93,30 @@ export function useSchool(): SchoolStore {
   return store;
 }
 
-/** A lesson needs the teacher's attention while any version is still an unapproved suggestion. */
+export function findVersion(
+  lesson: SchoolLesson,
+  kind: LessonVersionKind,
+): LessonVersion | undefined {
+  return lesson.versions.find((version) => version.kind === kind);
+}
+
+/** AI versions the teacher has approved, out of all the AI prepares. */
+export function approvalProgress(lesson: SchoolLesson): { approved: number; total: number } {
+  return {
+    approved: ADAPTED_KINDS.filter((kind) => findVersion(lesson, kind)?.approvedByTeacher).length,
+    total: ADAPTED_KINDS.length,
+  };
+}
+
+/** Every AI version exists and is approved, so the lesson may go to students. */
+export function isFullyApproved(lesson: SchoolLesson): boolean {
+  const { approved, total } = approvalProgress(lesson);
+  return approved === total;
+}
+
+/** The teacher has something to look at: finished AI work that is not approved yet. */
 export function needsReview(lesson: SchoolLesson): boolean {
+  if (lesson.status === 'processing' || lesson.status === 'draft') return false;
   return (
     lesson.status === 'in_review' || lesson.versions.some((version) => !version.approvedByTeacher)
   );

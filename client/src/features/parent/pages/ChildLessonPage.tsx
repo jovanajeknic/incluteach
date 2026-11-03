@@ -111,7 +111,7 @@ export function ChildLessonPage() {
             {t.versionHeading(name)}
           </h2>
           <span className="rounded-full bg-sky px-3 py-1 font-display text-sm font-medium text-sky-ink">
-            {version.kind === 'simplified' ? t.shorterVersion : t.standardVersion}
+            {t.versionNames[version.kind]}
           </span>
         </div>
         <div className="mt-4 rounded-3xl border border-border bg-card p-6 shadow-soft sm:p-8">

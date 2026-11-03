@@ -13,7 +13,7 @@ describe('App routes', () => {
 
   it('keeps the teacher area at /teacher', () => {
     renderApp({ path: '/teacher' });
-    expect(screen.getByRole('heading', { level: 1, name: /Dobro došli/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Moji predmeti' })).toBeInTheDocument();
   });
 
   it('shows a public not-found page for an unknown address', async () => {
@@ -34,7 +34,10 @@ describe('App routes', () => {
 
   it('marks the current page in the teacher navigation', () => {
     renderApp({ path: '/teacher' });
-    expect(screen.getByRole('link', { name: 'Moji predmeti' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Moji predmeti' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
   });
 
   it('links the logo in the teacher area to the public home page', async () => {

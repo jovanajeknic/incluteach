@@ -1,45 +1,44 @@
-import { ArrowLeft } from 'lucide-react';
-import { Link, useLocation, useParams } from 'react-router';
-import { useSchool } from '@/features/school/schoolContext';
+import {
+  ArrowClockwiseIcon,
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  ListChecksIcon,
+  SparkleIcon,
+} from '@phosphor-icons/react';
+import { motion } from 'motion/react';
+import { Tabs } from 'radix-ui';
+import { useState } from 'react';
+import { Link, useParams } from 'react-router';
+import { findVersion, useSchool } from '@/features/school/schoolContext';
+import { ADAPTED_KINDS, type AdaptedKind, type SchoolLesson } from '@/features/school/types';
+import { AiPulse } from '@/features/teacher-ui/AiPulse';
+import { SubjectBlob } from '@/features/teacher-ui/SubjectBlob';
+import { blobShape } from '@/features/teacher-ui/subjectIcons';
 import { MessagePage } from '@/shared/components/MessagePage';
+import { cn } from '@/shared/lib/utils';
 import { Button } from '@/shared/ui/button';
 import { text } from '@/text/sr-Latn';
 import { LessonStatusBadge } from '../components/LessonStatusBadge';
-import { teacherHomePath } from '../paths';
-import { AdaptationPanel } from '../workflow/AdaptationPanel';
-import { ApprovalPanel } from '../workflow/ApprovalPanel';
-import { AssignPanel } from '../workflow/AssignPanel';
+import { coursePath, teacherHomePath } from '../paths';
+import { AiWorkingPanel } from '../workflow/AiWorkingPanel';
 import { GlossaryEditor } from '../workflow/GlossaryEditor';
 import { HomeGuidanceEditor } from '../workflow/HomeGuidanceEditor';
+import { PublishBar } from '../workflow/PublishBar';
 import { QuizEditor } from '../workflow/QuizEditor';
-import { SectionCard } from '../workflow/SectionCard';
-import { VersionCard } from '../workflow/VersionCard';
-import { WorkflowSteps } from '../workflow/WorkflowSteps';
-import type { LessonDetailLocationState } from './NewLessonPage';
+import { versionAppearance } from '../workflow/versionKinds';
+import { TextVersionEditor, VersionPanel } from '../workflow/VersionPanel';
 
-function BackToLessonsLink() {
-  return (
-    <Link
-      to={teacherHomePath}
-      className="inline-flex items-center gap-1.5 rounded-full text-ink-soft hover:text-forest"
-    >
-      <ArrowLeft aria-hidden="true" className="size-4" />
-      {text.lessonDetail.backToLessons}
-    </Link>
-  );
-}
+type Tab = 'standard' | AdaptedKind | 'extras';
 
 /**
- * The whole lesson workflow on one page: AI adaptation, review and editing of every part,
- * approval, and assignment to students.
+ * One lesson: the AI at work, then every version on its own tab with the teacher's
+ * feedback and approval, and finally publishing to the class.
  */
 export function LessonDetailPage() {
   const t = text.lessonDetail;
   const { lessonId = '' } = useParams();
-  const location = useLocation();
-  const { getLesson, subjects } = useSchool();
-  const lesson = getLesson(lessonId);
-  const justCreated = (location.state as LessonDetailLocationState | null)?.justCreated === true;
+  const school = useSchool();
+  const lesson = school.getLesson(lessonId);
 
   if (!lesson) {
     return (
@@ -50,7 +49,7 @@ export function LessonDetailPage() {
           description={t.notFoundDescription}
           action={
             <Button asChild variant="outline" size="lg">
-              <Link to={teacherHomePath}>{t.backToLessons}</Link>
+              <Link to={teacherHomePath}>{t.backToSubjects}</Link>
             </Button>
           }
         />
@@ -58,67 +57,221 @@ export function LessonDetailPage() {
     );
   }
 
-  const subject = subjects.find((item) => item.id === lesson.subjectId);
-  const aiRun = lesson.adaptationCount ?? 0;
-  // Teacher's text first, then the adapted versions.
-  const versions = [...lesson.versions].sort((a, b) =>
-    a.kind === 'standard' ? -1 : b.kind === 'standard' ? 1 : 0,
-  );
+  const subject = school.getSubject(lesson.subjectId);
+  const group = school.getClass(lesson.classId);
+  const courseLabel = text.lesson.courseLabel(subject?.name ?? '', group?.name ?? '');
 
   return (
     <>
       <title>{text.app.pageTitle(lesson.title)}</title>
-      <BackToLessonsLink />
+      <Link
+        to={coursePath(lesson.subjectId, lesson.classId)}
+        className="inline-flex items-center gap-1.5 rounded-full font-display font-medium text-ink-soft hover:text-forest"
+      >
+        <ArrowLeftIcon aria-hidden="true" weight="bold" className="size-4" />
+        {courseLabel}
+      </Link>
 
-      {justCreated && (
-        <p role="status" className="hand-note mt-4 text-xl text-mint-ink">
-          ✓ {t.savedMessage}
-        </p>
-      )}
-
-      <header className="mt-4 mb-10">
-        <h1 className="font-display text-3xl font-bold tracking-tight break-words text-ink sm:text-4xl">
-          {lesson.title}
-        </h1>
-        <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-ink-soft">
-          <span>{subject?.name}</span>
-          <span aria-hidden="true">·</span>
-          <span>{text.lesson.gradeLabel(lesson.grade)}</span>
-          <span aria-hidden="true">·</span>
-          <LessonStatusBadge status={lesson.status} />
-        </p>
+      <header className="mt-5 mb-8 flex flex-wrap items-center gap-4">
+        {subject && <SubjectBlob subject={subject} size="lg" />}
+        <div className="min-w-0">
+          <h1 className="font-display text-4xl font-semibold tracking-tight break-words text-ink">
+            {lesson.title}
+          </h1>
+          <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-ink-soft">
+            <span>{courseLabel}</span>
+            <LessonStatusBadge status={lesson.status} />
+          </p>
+        </div>
       </header>
 
-      {/* A worksheet on the left, the to-do list and final steps in the margin on the right. */}
-      <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-14">
-        <div className="grid gap-12">
-          <AdaptationPanel lesson={lesson} />
-
-          <SectionCard id="versions-heading" title={t.versions.heading}>
-            <div className="grid gap-8 xl:grid-cols-2">
-              {versions.map((version) => (
-                // Keyed by content so the sheet resets when the AI replaces this version.
-                <VersionCard
-                  key={`${version.kind}-${version.content.length}`}
-                  lesson={lesson}
-                  version={version}
-                />
-              ))}
-            </div>
-          </SectionCard>
-
-          {/* Editors keep local drafts and reload them only when a new AI result arrives. */}
-          <GlossaryEditor key={`glossary-${aiRun}`} lesson={lesson} />
-          <QuizEditor key={`quiz-${aiRun}`} lesson={lesson} />
-          <HomeGuidanceEditor key={`home-${aiRun}`} lesson={lesson} />
-        </div>
-
-        <aside className="grid content-start gap-8 lg:sticky lg:top-6 lg:self-start">
-          <WorkflowSteps status={lesson.status} />
-          <ApprovalPanel lesson={lesson} />
-          <AssignPanel lesson={lesson} />
-        </aside>
-      </div>
+      {lesson.status === 'processing' ? (
+        <AiWorkingPanel />
+      ) : lesson.status === 'draft' ? (
+        <DraftPanel lesson={lesson} />
+      ) : (
+        // Keyed by AI run so the tab and editors start fresh when a new result arrives.
+        <LessonTabs key={lesson.adaptationCount ?? 0} lesson={lesson} />
+      )}
     </>
+  );
+}
+
+function DraftPanel({ lesson }: { lesson: SchoolLesson }) {
+  const t = text.lessonDetail;
+  const { generateAll } = useSchool();
+  const standard = findVersion(lesson, 'standard');
+  return (
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_19rem]">
+      <div className="rounded-[1.75rem] bg-card p-6 shadow-soft sm:p-8">
+        {standard && <TextVersionEditor lesson={lesson} version={standard} />}
+      </div>
+      <aside className="flex flex-col items-start gap-4 rounded-3xl bg-lilac p-6">
+        <AiPulse size="md" />
+        <h2 className="font-display text-xl font-semibold text-ink">{t.ai.draftTitle}</h2>
+        <p className="text-ink-soft">{t.ai.draftText}</p>
+        <Button
+          type="button"
+          onClick={() => void generateAll(lesson.id)}
+          className="h-12 px-6 text-base"
+        >
+          <SparkleIcon aria-hidden="true" weight="fill" />
+          {t.ai.start}
+        </Button>
+      </aside>
+    </div>
+  );
+}
+
+/** Opens on the first version that still waits for the teacher. */
+function firstOpenTab(lesson: SchoolLesson): Tab {
+  return ADAPTED_KINDS.find((kind) => !findVersion(lesson, kind)?.approvedByTeacher) ?? 'standard';
+}
+
+function LessonTabs({ lesson }: { lesson: SchoolLesson }) {
+  const t = text.lessonDetail;
+  const [tab, setTab] = useState<Tab>(() => firstOpenTab(lesson));
+  const tabs: Tab[] = ['standard', ...ADAPTED_KINDS, 'extras'];
+  const aiRun = lesson.adaptationCount ?? 0;
+
+  return (
+    <>
+      <Tabs.Root value={tab} onValueChange={(value) => setTab(value as Tab)}>
+        <Tabs.List
+          aria-label={t.tabsLabel}
+          className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-2 md:mx-0 md:flex-wrap md:px-0"
+        >
+          {tabs.map((value) => (
+            <TabButton key={value} lesson={lesson} value={value} active={tab === value} />
+          ))}
+        </Tabs.List>
+
+        <Tabs.Content value="standard" className="mt-6 focus-visible:outline-none">
+          <OriginalPanel lesson={lesson} />
+        </Tabs.Content>
+        {ADAPTED_KINDS.map((kind) => (
+          <Tabs.Content key={kind} value={kind} className="mt-6 focus-visible:outline-none">
+            <VersionPanel lesson={lesson} kind={kind} />
+          </Tabs.Content>
+        ))}
+        <Tabs.Content value="extras" className="mt-6 grid gap-12 focus-visible:outline-none">
+          {/* Editors keep local drafts and reload them only when a new AI result arrives. */}
+          <QuizEditor key={`quiz-${aiRun}`} lesson={lesson} />
+          <GlossaryEditor key={`glossary-${aiRun}`} lesson={lesson} />
+          <HomeGuidanceEditor key={`home-${aiRun}`} lesson={lesson} />
+        </Tabs.Content>
+      </Tabs.Root>
+
+      <PublishBar lesson={lesson} />
+    </>
+  );
+}
+
+function TabButton({
+  lesson,
+  value,
+  active,
+}: {
+  lesson: SchoolLesson;
+  value: Tab;
+  active: boolean;
+}) {
+  const t = text.lessonDetail;
+  const isExtras = value === 'extras';
+  const kindAppearance = isExtras ? undefined : versionAppearance[value];
+  const TabIcon = kindAppearance?.icon ?? ListChecksIcon;
+  const tone = kindAppearance?.tone ?? 'bg-mint text-mint-ink';
+  const isAiKind = !isExtras && value !== 'standard';
+  const version = isAiKind ? findVersion(lesson, value) : undefined;
+  const redoing = isAiKind && (lesson.regenerating?.includes(value) ?? false);
+  const label = isExtras ? t.extrasTab : t.kinds[value];
+
+  return (
+    <Tabs.Trigger
+      value={value}
+      className={cn(
+        'relative flex shrink-0 items-center gap-2 rounded-2xl py-2 pr-4 pl-2 font-display font-medium transition-colors',
+        active ? 'text-ink' : 'text-ink-soft hover:bg-card/70 hover:text-ink',
+      )}
+    >
+      {active && (
+        <motion.span
+          layoutId="lesson-tab-marker"
+          aria-hidden="true"
+          className="absolute inset-0 rounded-2xl bg-card shadow-soft"
+          transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+        />
+      )}
+      <span
+        aria-hidden="true"
+        className={cn('relative flex size-8 items-center justify-center', blobShape, tone)}
+      >
+        <TabIcon weight="duotone" className="size-4.5" />
+      </span>
+      <span className="relative">{label}</span>
+      {redoing ? (
+        <AiPulse size="sm" className="relative size-5" />
+      ) : (
+        isAiKind && (
+          <span className="relative">
+            {version?.approvedByTeacher ? (
+              <CheckCircleIcon aria-hidden="true" weight="fill" className="size-5 text-mint-ink" />
+            ) : (
+              <span aria-hidden="true" className="block size-2.5 rounded-full bg-butter-deep" />
+            )}
+            <span className="sr-only">
+              {version?.approvedByTeacher ? `, ${t.approved}` : `, ${t.aiSuggestion}`}
+            </span>
+          </span>
+        )
+      )}
+    </Tabs.Trigger>
+  );
+}
+
+function OriginalPanel({ lesson }: { lesson: SchoolLesson }) {
+  const t = text.lessonDetail;
+  const school = useSchool();
+  const standard = findVersion(lesson, 'standard');
+  const suggestions = school.suggestionsForAdaptation(lesson);
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_19rem]">
+      <div className="rounded-[1.75rem] bg-card p-6 shadow-soft sm:p-8">
+        <p className="mb-6 text-ink-soft">{t.kindHints.standard}</p>
+        {standard && <TextVersionEditor lesson={lesson} version={standard} />}
+      </div>
+      <aside className="grid content-start gap-6">
+        <section aria-labelledby="ai-again-heading" className="rounded-3xl bg-lilac/60 p-5">
+          <h2 id="ai-again-heading" className="sr-only">
+            {t.ai.again}
+          </h2>
+          <p className="text-sm text-ink-soft">{t.ai.againHint}</p>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void school.generateAll(lesson.id)}
+            className="mt-3 h-11 w-full border-lilac-ink/40 bg-card text-lilac-ink hover:border-lilac-ink hover:bg-card"
+          >
+            <ArrowClockwiseIcon aria-hidden="true" weight="bold" />
+            {t.ai.again}
+          </Button>
+        </section>
+        {suggestions.length > 0 && (
+          <section aria-labelledby="parent-notes-heading" className="rounded-3xl bg-blush/70 p-5">
+            <h2 id="parent-notes-heading" className="font-display font-semibold text-ink">
+              {t.ai.suggestionsIntro}
+            </h2>
+            <ul className="mt-2 grid gap-2 text-sm text-ink">
+              {suggestions.map((item) => (
+                <li key={item.id}>
+                  {school.getStudent(item.childId)?.firstName}: „{item.text}“
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </aside>
+    </div>
   );
 }

@@ -1,29 +1,43 @@
-import { CheckCircle2, Eye, PencilLine, Send, Sparkles, type LucideIcon } from 'lucide-react';
+import {
+  CheckCircleIcon,
+  EyeIcon,
+  PaperPlaneTiltIcon,
+  PencilSimpleIcon,
+  SparkleIcon,
+  type Icon,
+} from '@phosphor-icons/react';
+import type { LessonStatus } from '@/features/school/types';
 import { cn } from '@/shared/lib/utils';
-import { Badge } from '@/shared/ui/badge';
 import { text } from '@/text/sr-Latn';
-import type { LessonStatus } from '../types';
 
 // Each status has its own text and icon, so colour is never the only difference.
-const statusAppearance: Record<LessonStatus, { icon: LucideIcon; className: string }> = {
-  draft: { icon: PencilLine, className: 'border-border bg-paper text-ink' },
-  processing: { icon: Sparkles, className: 'border-lilac-deep bg-lilac text-lilac-ink' },
-  in_review: { icon: Eye, className: 'border-butter-deep bg-butter text-butter-ink' },
-  approved: { icon: CheckCircle2, className: 'border-sky-deep bg-sky text-sky-ink' },
-  assigned: { icon: Send, className: 'border-mint-deep bg-mint text-mint-ink' },
+const statusAppearance: Record<LessonStatus, { icon: Icon; className: string }> = {
+  draft: { icon: PencilSimpleIcon, className: 'text-ink-soft' },
+  processing: { icon: SparkleIcon, className: 'text-lilac-ink' },
+  in_review: { icon: EyeIcon, className: 'text-butter-ink' },
+  approved: { icon: CheckCircleIcon, className: 'text-sky-ink' },
+  assigned: { icon: PaperPlaneTiltIcon, className: 'text-mint-ink' },
 };
 
-interface LessonStatusBadgeProps {
+/** Icon and word in the status colour; no box around it, so lists stay calm. */
+export function LessonStatusBadge({
+  status,
+  className,
+}: {
   status: LessonStatus;
-}
-
-export function LessonStatusBadge({ status }: LessonStatusBadgeProps) {
-  const { icon: Icon, className } = statusAppearance[status];
-
+  className?: string;
+}) {
+  const { icon: StatusIcon, className: tone } = statusAppearance[status];
   return (
-    <Badge variant="outline" className={cn('gap-1.5 px-2.5 py-1 text-sm', className)}>
-      <Icon aria-hidden="true" className="size-3.5!" />
+    <span
+      className={cn(
+        'inline-flex shrink-0 items-center gap-1.5 font-display text-sm font-medium',
+        tone,
+        className,
+      )}
+    >
+      <StatusIcon aria-hidden="true" weight="duotone" className="size-5" />
       {text.lesson.statuses[status]}
-    </Badge>
+    </span>
   );
 }

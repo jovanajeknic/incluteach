@@ -6,7 +6,8 @@ import { TeacherStudentPage } from '@/features/class-overview/pages/TeacherStude
 import { LandingPage } from '@/features/landing/LandingPage';
 import { LessonDetailPage } from '@/features/lessons/pages/LessonDetailPage';
 import { NewLessonPage } from '@/features/lessons/pages/NewLessonPage';
-import { TeacherDashboardPage } from '@/features/lessons/pages/TeacherDashboardPage';
+import { TeacherHomePage } from '@/features/lessons/pages/TeacherHomePage';
+import { CoursePage } from '@/features/lessons/pages/CoursePage';
 import { teacherHomePath } from '@/features/lessons/paths';
 import { StudentHomePage } from '@/features/student/pages/StudentHomePage';
 import { StudentLessonPage } from '@/features/student/pages/StudentLessonPage';
@@ -47,7 +48,8 @@ export const routes: RouteObject[] = [
         path: teacherHomePath,
         element: <TeacherLayout />,
         children: [
-          { index: true, element: <TeacherDashboardPage /> },
+          { index: true, element: <TeacherHomePage /> },
+          { path: 'subjects/:subjectId/classes/:classId', element: <CoursePage /> },
           { path: 'lessons/new', element: <NewLessonPage /> },
           { path: 'lessons/:lessonId', element: <LessonDetailPage /> },
           { path: 'class', element: <ClassPage /> },

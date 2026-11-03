@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSchool } from '@/features/school/schoolContext';
+import { teacherClassIds } from '@/features/school/types';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { PageHeader } from '@/shared/components/PageHeader';
 import { cn } from '@/shared/lib/utils';
@@ -14,7 +15,7 @@ export function SuggestionsInboxPage() {
   const [filter, setFilter] = useState<Filter>('new');
   // Only suggestions about the teacher's own students.
   const ownStudents = new Set(
-    school.data.teacher.classIds.flatMap((id) => school.getClass(id)?.studentIds ?? []),
+    teacherClassIds(school.data.teacher).flatMap((id) => school.getClass(id)?.studentIds ?? []),
   );
   const suggestions = school.data.suggestions.filter(
     (item) =>

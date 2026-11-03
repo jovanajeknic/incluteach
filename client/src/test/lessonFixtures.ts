@@ -1,31 +1,41 @@
 import { demoSchoolData } from '@/features/school/demoSchoolData';
-import type { SchoolData, SchoolLesson } from '@/features/school/types';
+import { ADAPTED_KINDS, type SchoolData, type SchoolLesson } from '@/features/school/types';
+import type { LessonVersion } from '@/features/student/types';
 
-const base = {
-  glossary: [],
-  quiz: [],
-  assignedClassIds: [],
-  assignedStudentIds: [],
-} satisfies Partial<SchoolLesson>;
+const base = { glossary: [], quiz: [] } satisfies Partial<SchoolLesson>;
 
-/** Small, fictional, test-only lesson set with known status counts. */
+const standard = (content: string): LessonVersion => ({
+  kind: 'standard',
+  source: 'teacher',
+  approvedByTeacher: true,
+  content,
+});
+
+/** Every AI version, each with a short recognizable text. */
+const aiVersions = (approved: boolean): LessonVersion[] =>
+  ADAPTED_KINDS.map((kind) => ({
+    kind,
+    source: 'ai',
+    approvedByTeacher: approved,
+    content: kind === 'illustrations' ? '' : `Tekst: ${kind}.`,
+    illustrations:
+      kind === 'illustrations'
+        ? [{ id: 'img-1', src: '/illustrations/reading.svg', alt: 'Knjiga', caption: 'Opis.' }]
+        : undefined,
+  }));
+
+/** Small, fictional, test-only lessons, one per status that matters on teacher screens. */
 export const testLessons: SchoolLesson[] = [
   {
     ...base,
     id: 'test-1',
     title: 'Test lekcija jedan',
     subjectId: 'matematika',
-    grade: 2,
+    grade: 4,
+    classId: '4-1',
     status: 'in_review',
-    versions: [
-      {
-        kind: 'standard',
-        source: 'teacher',
-        approvedByTeacher: true,
-        content: 'Prvi pasus.\n\nDrugi pasus.',
-      },
-      { kind: 'simplified', source: 'ai', approvedByTeacher: false, content: 'Kratko.' },
-    ],
+    adaptationCount: 1,
+    versions: [standard('Prvi pasus.\n\nDrugi pasus.'), ...aiVersions(false)],
   },
   {
     ...base,
@@ -33,22 +43,20 @@ export const testLessons: SchoolLesson[] = [
     title: 'Test lekcija dva',
     subjectId: 'priroda',
     grade: 4,
+    classId: '4-2',
     status: 'assigned',
-    assignedClassIds: ['4-2'],
-    versions: [
-      { kind: 'standard', source: 'teacher', approvedByTeacher: true, content: 'Sadržaj.' },
-    ],
+    adaptationCount: 1,
+    versions: [standard('Sadržaj.'), ...aiVersions(true)],
   },
   {
     ...base,
     id: 'test-3',
     title: 'Test lekcija tri',
-    subjectId: 'jezik',
-    grade: 3,
+    subjectId: 'matematika',
+    grade: 4,
+    classId: '4-2',
     status: 'draft',
-    versions: [
-      { kind: 'standard', source: 'teacher', approvedByTeacher: true, content: 'Sadržaj.' },
-    ],
+    versions: [standard('Sadržaj.')],
   },
 ];
 
