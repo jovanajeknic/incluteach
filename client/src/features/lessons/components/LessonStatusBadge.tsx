@@ -1,4 +1,4 @@
-import { CheckCircle2, Eye, PencilLine, Send, type LucideIcon } from 'lucide-react';
+import { CheckCircle2, Eye, PencilLine, Send, Sparkles, type LucideIcon } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { Badge } from '@/shared/ui/badge';
 import { text } from '@/text/sr-Latn';
@@ -6,10 +6,11 @@ import type { LessonStatus } from '../types';
 
 // Each status has its own text and icon, so colour is never the only difference.
 const statusAppearance: Record<LessonStatus, { icon: LucideIcon; className: string }> = {
-  draft: { icon: PencilLine, className: 'border-[#d5d1c9] bg-[#efece6] text-[#3f4750]' },
-  in_review: { icon: Eye, className: 'border-[#f0d9a8] bg-[#fdf2da] text-[#7a4a00]' },
-  approved: { icon: CheckCircle2, className: 'border-[#c4d6f0] bg-[#e6eefa] text-[#1f4e8c]' },
-  assigned: { icon: Send, className: 'border-[#b9ddd4] bg-[#e1f2ed] text-[#0d5b53]' },
+  draft: { icon: PencilLine, className: 'border-border bg-paper text-ink' },
+  processing: { icon: Sparkles, className: 'border-lilac-deep bg-lilac text-lilac-ink' },
+  in_review: { icon: Eye, className: 'border-butter-deep bg-butter text-butter-ink' },
+  approved: { icon: CheckCircle2, className: 'border-sky-deep bg-sky text-sky-ink' },
+  assigned: { icon: Send, className: 'border-mint-deep bg-mint text-mint-ink' },
 };
 
 interface LessonStatusBadgeProps {

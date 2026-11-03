@@ -28,7 +28,7 @@ export function SuggestionList({ suggestions, lessonTitle }: SuggestionListProps
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-butter px-3 py-1 font-display font-medium text-butter-ink">
                   <Clock aria-hidden="true" className="size-4" />
-                  {t.statusPending}
+                  {text.suggestionStatus[suggestion.status]}
                 </span>
               </div>
               <p className="mt-2 whitespace-pre-line text-ink">{suggestion.text}</p>

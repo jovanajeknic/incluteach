@@ -1,4 +1,4 @@
-import type { StudentLesson, StudentProfile, Subject } from '../types';
+import type { StudentLesson, StudentProfile, Subject } from '@/features/student/types';
 
 /** Fictional demo student. Their support profile lists needs only, as the backend would. */
 export const demoStudent: StudentProfile = {
@@ -7,6 +7,7 @@ export const demoStudent: StudentProfile = {
   lastName: 'Petrović',
   supportProfile: {
     preferSimplifiedText: true,
+    preferMoreExamples: false,
     preferStepByStep: false,
     readingPreset: 'easier-reading',
   },
@@ -24,6 +25,7 @@ export const demoStudentLessons: StudentLesson[] = [
   {
     id: 'kruzenje-vode',
     subjectId: 'priroda',
+    grade: 4,
     title: 'Kruženje vode u prirodi',
     homeGuidance: [
       'Ostavite čašu vode na suncu i zajedno pratite kako se voda smanjuje.',
@@ -32,12 +34,14 @@ export const demoStudentLessons: StudentLesson[] = [
     versions: [
       {
         kind: 'standard',
+        source: 'teacher',
         approvedByTeacher: true,
         content:
           'Voda u prirodi stalno putuje. Sunce zagrijava vodu u morima, rijekama i jezerima, pa dolazi do isparavanja. Vodena para se diže visoko u vazduh.\n\nU visini je hladnije, pa se vodena para hladi i pretvara u sitne kapljice. Od mnogo kapljica nastaju oblaci.\n\nKada se kapljice u oblacima spoje i postanu teške, pada kiša. Zimi, kada je hladno, umjesto kiše pada snijeg.\n\nVoda se zatim vraća u rijeke, jezera i mora, a dio se upija u zemlju. Tako krug počinje iznova.',
       },
       {
         kind: 'simplified',
+        source: 'ai',
         approvedByTeacher: true,
         content:
           'Sunce grije vodu. Voda se pretvara u paru. To je isparavanje.\n\nPara se diže u nebo. Gore je hladno. Para pravi oblake.\n\nIz oblaka pada kiša. Kiša se vraća u rijeke i mora.\n\nI sve počinje ponovo!',
@@ -75,6 +79,7 @@ export const demoStudentLessons: StudentLesson[] = [
   {
     id: 'biljke',
     subjectId: 'priroda',
+    grade: 4,
     title: 'Djelovi biljke',
     homeGuidance: [
       'U parku ili kod kuće zajedno pronađite korijen, stablo, list i cvijet neke biljke.',
@@ -82,6 +87,7 @@ export const demoStudentLessons: StudentLesson[] = [
     versions: [
       {
         kind: 'standard',
+        source: 'teacher',
         approvedByTeacher: true,
         content:
           'Većina biljaka ima korijen, stablo, list, cvijet i plod. Svaki dio ima svoj zadatak.\n\nKorijen drži biljku u zemlji i upija vodu. Stablo nosi listove i vodi vodu do njih.\n\nListovi koriste sunčevu svjetlost da bi biljka rasla. Iz cvijeta nastaje plod, a u plodu su sjemenke za nove biljke.',
@@ -89,6 +95,7 @@ export const demoStudentLessons: StudentLesson[] = [
       {
         // Generated but not reviewed yet: students must not see it.
         kind: 'simplified',
+        source: 'ai',
         approvedByTeacher: false,
         content: 'Biljka ima korijen, stablo i list. Ova verzija još čeka pregled nastavnika.',
       },
@@ -117,6 +124,7 @@ export const demoStudentLessons: StudentLesson[] = [
   {
     id: 'sabiranje',
     subjectId: 'matematika',
+    grade: 4,
     title: 'Sabiranje do 100',
     homeGuidance: [
       'Sabirajte uz predmete: 3 grupe od po 10 kockica i još 4 kockice.',
@@ -125,12 +133,14 @@ export const demoStudentLessons: StudentLesson[] = [
     versions: [
       {
         kind: 'standard',
+        source: 'teacher',
         approvedByTeacher: true,
         content:
           'Kada sabiramo dva broja, prvo saberemo desetice, a zatim jedinice.\n\nPrimjer: 34 + 25. Desetice: 30 + 20 = 50. Jedinice: 4 + 5 = 9. Zajedno: 50 + 9 = 59.\n\nOvaj način nam pomaže da brže i tačnije računamo u glavi.',
       },
       {
         kind: 'simplified',
+        source: 'ai',
         approvedByTeacher: true,
         content:
           'Broj 34 ima 3 desetice i 4 jedinice.\n\nSaberi desetice: 30 + 20 = 50.\n\nSaberi jedinice: 4 + 5 = 9.\n\nSada spoji: 50 + 9 = 59.',
@@ -163,10 +173,12 @@ export const demoStudentLessons: StudentLesson[] = [
   {
     id: 'oduzimanje',
     subjectId: 'matematika',
+    grade: 4,
     title: 'Oduzimanje do 100',
     versions: [
       {
         kind: 'standard',
+        source: 'teacher',
         approvedByTeacher: true,
         content:
           'Kod oduzimanja od većeg broja oduzimamo manji. I ovdje prvo radimo sa deseticama, pa sa jedinicama.\n\nPrimjer: 68 − 23. Desetice: 60 − 20 = 40. Jedinice: 8 − 3 = 5. Rezultat je 45.',
@@ -186,17 +198,20 @@ export const demoStudentLessons: StudentLesson[] = [
   {
     id: 'imenice',
     subjectId: 'jezik',
+    grade: 4,
     title: 'Imenice',
     homeGuidance: ['Igrajte igru „Imenuj šta vidiš“: dijete imenuje pet stvari u sobi.'],
     versions: [
       {
         kind: 'standard',
+        source: 'teacher',
         approvedByTeacher: true,
         content:
           'Imenice su riječi kojima imenujemo bića, stvari i pojave. Na primjer: djevojčica, pas, sto, kiša.\n\nImenice mogu biti vlastite i zajedničke. Vlastite imenice pišemo velikim početnim slovom, na primjer: Ana, Podgorica, Morača.',
       },
       {
         kind: 'simplified',
+        source: 'ai',
         approvedByTeacher: true,
         content:
           'Imenice su riječi za bića i stvari.\n\nPrimjeri: pas, mama, sto, kiša.\n\nImena pišemo velikim slovom: Ana, Podgorica.',
@@ -223,10 +238,12 @@ export const demoStudentLessons: StudentLesson[] = [
   {
     id: 'boje-engleski',
     subjectId: 'engleski',
+    grade: 4,
     title: 'Boje na engleskom',
     versions: [
       {
         kind: 'standard',
+        source: 'teacher',
         approvedByTeacher: true,
         content:
           'Na engleskom jeziku crvena boja je red, plava je blue, a žuta je yellow.\n\nZelena boja se kaže green. Kad pitamo koje je boje nešto, kažemo: What colour is it?',

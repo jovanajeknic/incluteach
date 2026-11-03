@@ -3,8 +3,17 @@ import { testLessons } from '@/test/lessonFixtures';
 import { computeLessonStats } from './lessonStats';
 
 describe('computeLessonStats', () => {
-  it('counts lessons by status', () => {
+  it('counts lessons needing review and assigned lessons', () => {
     expect(computeLessonStats(testLessons)).toEqual({ total: 3, inReview: 1, assigned: 1 });
+  });
+
+  it('counts an assigned lesson with an unapproved AI version as needing review', () => {
+    const [first, second] = testLessons;
+    const assignedWithPending = {
+      ...second!,
+      versions: [...second!.versions, { ...first!.versions[1]! }],
+    };
+    expect(computeLessonStats([assignedWithPending]).inReview).toBe(1);
   });
 
   it('returns zeros for an empty list', () => {

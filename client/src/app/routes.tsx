@@ -1,5 +1,8 @@
 import { type RouteObject } from 'react-router';
 import { loginPath, registerPath } from '@/features/auth/paths';
+import { ClassPage } from '@/features/class-overview/pages/ClassPage';
+import { SuggestionsInboxPage } from '@/features/class-overview/pages/SuggestionsInboxPage';
+import { TeacherStudentPage } from '@/features/class-overview/pages/TeacherStudentPage';
 import { LandingPage } from '@/features/landing/LandingPage';
 import { LessonDetailPage } from '@/features/lessons/pages/LessonDetailPage';
 import { NewLessonPage } from '@/features/lessons/pages/NewLessonPage';
@@ -47,6 +50,9 @@ export const routes: RouteObject[] = [
           { index: true, element: <TeacherDashboardPage /> },
           { path: 'lessons/new', element: <NewLessonPage /> },
           { path: 'lessons/:lessonId', element: <LessonDetailPage /> },
+          { path: 'class', element: <ClassPage /> },
+          { path: 'students/:studentId', element: <TeacherStudentPage /> },
+          { path: 'suggestions', element: <SuggestionsInboxPage /> },
           { path: '*', element: <NotFoundPage homePath={teacherHomePath} /> },
         ],
       },

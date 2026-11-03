@@ -1,10 +1,11 @@
+import type { NewLessonInput } from '@/features/school/schoolContext';
 import { text } from '@/text/sr-Latn';
-import { GRADES, type Grade, type NewLessonInput } from './types';
+import { GRADES, type Grade } from './types';
 
 /** Raw form values exactly as the user typed or selected them. */
 export interface LessonFormValues {
   title: string;
-  subject: string;
+  subjectId: string;
   grade: string;
   content: string;
 }
@@ -18,7 +19,7 @@ export type LessonFormResult =
 
 export const emptyLessonForm: LessonFormValues = {
   title: '',
-  subject: '',
+  subjectId: '',
   grade: '',
   content: '',
 };
@@ -26,7 +27,7 @@ export const emptyLessonForm: LessonFormValues = {
 /** Field order used to decide which invalid field receives focus first. */
 export const lessonFormFieldOrder: readonly LessonFormField[] = [
   'title',
-  'subject',
+  'subjectId',
   'grade',
   'content',
 ];
@@ -39,22 +40,25 @@ function parseGrade(value: string): Grade | undefined {
  * Validates and normalizes the lesson form.
  * Values are trimmed, so input made only of spaces counts as empty.
  */
-export function validateLessonForm(values: LessonFormValues): LessonFormResult {
+export function validateLessonForm(
+  values: LessonFormValues,
+  subjectIds: readonly string[],
+): LessonFormResult {
   const title = values.title.trim();
-  const subject = values.subject.trim();
   const content = values.content.trim();
+  const subjectId = subjectIds.includes(values.subjectId) ? values.subjectId : undefined;
   const grade = parseGrade(values.grade);
   const messages = text.newLesson.errors;
 
   const errors: LessonFormErrors = {};
   if (!title) errors.title = messages.titleRequired;
-  if (!subject) errors.subject = messages.subjectRequired;
+  if (!subjectId) errors.subjectId = messages.subjectRequired;
   if (!grade) errors.grade = messages.gradeRequired;
   if (!content) errors.content = messages.contentRequired;
 
-  if (!grade || Object.keys(errors).length > 0) {
+  if (!subjectId || !grade || Object.keys(errors).length > 0) {
     return { ok: false, errors };
   }
 
-  return { ok: true, data: { title, subject, grade, content } };
+  return { ok: true, data: { title, subjectId, grade, content } };
 }

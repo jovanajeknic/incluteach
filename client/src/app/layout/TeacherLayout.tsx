@@ -1,6 +1,12 @@
-import { Home, Info, Plus, type LucideIcon } from 'lucide-react';
+import { Home, Info, MessageSquareHeart, Plus, Users, type LucideIcon } from 'lucide-react';
 import { Link, NavLink, Outlet, ScrollRestoration } from 'react-router';
-import { newLessonPath, teacherHomePath } from '@/features/lessons/paths';
+import {
+  classPath,
+  newLessonPath,
+  suggestionsPath,
+  teacherHomePath,
+} from '@/features/lessons/paths';
+import { useSchool } from '@/features/school/schoolContext';
 import { Logo } from '@/shared/brand/Logo';
 import { MAIN_CONTENT_ID, SkipLink } from '@/shared/components/SkipLink';
 import { cn } from '@/shared/lib/utils';
@@ -16,6 +22,8 @@ interface NavItem {
 const navItems: NavItem[] = [
   { to: teacherHomePath, label: text.nav.home, icon: Home },
   { to: newLessonPath, label: text.nav.newLesson, icon: Plus },
+  { to: classPath, label: text.nav.myClass, icon: Users },
+  { to: suggestionsPath, label: text.nav.suggestions, icon: MessageSquareHeart },
 ];
 
 /**
@@ -23,6 +31,11 @@ const navItems: NavItem[] = [
  * a sidebar from the `md` breakpoint up. This avoids duplicate menus for screen readers.
  */
 export function TeacherLayout() {
+  const { data } = useSchool();
+  const newSuggestions = data.suggestions.filter(
+    (item) => item.status === 'pending-teacher',
+  ).length;
+
   return (
     <div className="min-h-screen md:flex">
       <SkipLink />
@@ -34,7 +47,7 @@ export function TeacherLayout() {
           </Link>
         </div>
         <nav aria-label={text.app.mainNavigation} className="px-2 pb-2 md:px-3">
-          <ul className="flex gap-1 md:flex-col">
+          <ul className="flex flex-wrap gap-1 md:flex-col">
             {navItems.map(({ to, label, icon: Icon }) => (
               <li key={to}>
                 <NavLink
@@ -49,6 +62,12 @@ export function TeacherLayout() {
                 >
                   <Icon aria-hidden="true" className="size-5" />
                   {label}
+                  {to === suggestionsPath && newSuggestions > 0 && (
+                    <span className="ml-auto rounded-full bg-blush px-2 text-sm font-semibold text-blush-ink">
+                      {newSuggestions}
+                      <span className="sr-only"> {text.nav.newSuggestions}</span>
+                    </span>
+                  )}
                 </NavLink>
               </li>
             ))}

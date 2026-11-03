@@ -2,11 +2,8 @@ import { createContext, useContext } from 'react';
 import type { Subject } from '@/features/student/types';
 import type { ChildData, ParentProfile, Suggestion } from '../types';
 
-export interface NewSuggestion {
-  childId: string;
-  lessonId?: string;
-  text: string;
-}
+export type { NewSuggestion } from '@/features/school/schoolContext';
+import type { NewSuggestion } from '@/features/school/schoolContext';
 
 /** What parent screens may do. Only linked children are ever reachable through it. */
 export interface ParentStore {

@@ -1,73 +1,45 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
-import { pickLessonVersion } from '../lessonVersion';
-import type {
-  LessonProgress,
-  PracticeRecord,
-  StudentLesson,
-  StudentProfile,
-  Subject,
-} from '../types';
-import { demoStudent, demoStudentLessons, demoSubjects } from './demoStudentData';
+import { useMemo, type ReactNode } from 'react';
+import { demoStudent } from '@/features/school/demoSchoolData';
+import { useSchool } from '@/features/school/schoolContext';
 import { StudentContext, type StudentStore } from './studentContext';
 
 interface DemoStudentProviderProps {
   children: ReactNode;
-  /** Lets tests start from known data. */
-  profile?: StudentProfile;
-  subjects?: readonly Subject[];
-  lessons?: readonly StudentLesson[];
+  /** Which demo student is "signed in". */
+  studentId?: string;
 }
 
 /**
- * Demo-only student store kept in React state above the router: progress survives
- * navigation but is intentionally lost on page reload.
+ * The student's view of the shared demo school: only lessons assigned to them with an
+ * approved version, and only their own progress.
  */
 export function DemoStudentProvider({
   children,
-  profile = demoStudent,
-  subjects = demoSubjects,
-  lessons: allLessons = demoStudentLessons,
+  studentId = demoStudent.id,
 }: DemoStudentProviderProps) {
-  const [progress, setProgress] = useState<Record<string, LessonProgress>>({});
-  const [practice, setPractice] = useState<Record<string, PracticeRecord>>({});
+  const school = useSchool();
+  const profile = school.getStudent(studentId);
+  if (!profile) {
+    throw new Error(`Unknown demo student: ${studentId}`);
+  }
 
-  const lessons = useMemo(
-    () => allLessons.filter((lesson) => pickLessonVersion(lesson, profile.supportProfile)),
-    [allLessons, profile],
-  );
-
-  const markStarted = useCallback((lessonId: string) => {
-    setProgress((current) => (current[lessonId] ? current : { ...current, [lessonId]: 'started' }));
-  }, []);
-
-  const markCompleted = useCallback((lessonId: string, difficultQuestionIds: readonly string[]) => {
-    setProgress((current) => ({ ...current, [lessonId]: 'completed' }));
-    // Only the latest practice is kept: it shows where help is useful now.
-    setPractice((current) => ({
-      ...current,
-      [lessonId]: {
-        completedAt: new Date().toISOString(),
-        difficultQuestionIds: [...difficultQuestionIds],
-      },
-    }));
-  }, []);
-
-  const store = useMemo<StudentStore>(
-    () => ({
+  const store = useMemo<StudentStore>(() => {
+    const lessons = school.visibleLessonsFor(studentId);
+    return {
       profile,
-      subjects,
+      subjects: school.subjects,
       lessons,
-      getSubject: (id) => subjects.find((subject) => subject.id === id),
+      getSubject: (id) => school.subjects.find((subject) => subject.id === id),
       getLesson: (id) => lessons.find((lesson) => lesson.id === id),
       lessonsForSubject: (subjectId) => lessons.filter((lesson) => lesson.subjectId === subjectId),
-      progressOf: (lessonId) => progress[lessonId] ?? 'new',
-      practiceOf: (lessonId) => practice[lessonId],
-      markStarted,
-      markCompleted,
-      stars: Object.values(progress).filter((status) => status === 'completed').length,
-    }),
-    [profile, subjects, lessons, progress, practice, markStarted, markCompleted],
-  );
+      progressOf: (lessonId) => school.progressOf(studentId, lessonId),
+      practiceOf: (lessonId) => school.practiceOf(studentId, lessonId),
+      markStarted: (lessonId) => school.markStarted(studentId, lessonId),
+      markCompleted: (lessonId, difficult) => school.markCompleted(studentId, lessonId, difficult),
+      stars: lessons.filter((lesson) => school.progressOf(studentId, lesson.id) === 'completed')
+        .length,
+    };
+  }, [school, studentId, profile]);
 
   return <StudentContext value={store}>{children}</StudentContext>;
 }

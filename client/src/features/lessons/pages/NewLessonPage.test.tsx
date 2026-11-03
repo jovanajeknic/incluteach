@@ -1,6 +1,6 @@
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { testLessons } from '@/test/lessonFixtures';
+import { schoolWithLessons, testLessons } from '@/test/lessonFixtures';
 import { renderApp } from '@/test/renderApp';
 
 function totalLessonsCount() {
@@ -10,7 +10,10 @@ function totalLessonsCount() {
 
 describe('Creating a lesson draft', () => {
   it('saves a draft, opens its detail view and adds it to the list', async () => {
-    const { user, router } = renderApp({ path: '/teacher', lessons: testLessons });
+    const { user, router } = renderApp({
+      path: '/teacher',
+      school: schoolWithLessons(testLessons),
+    });
     expect(totalLessonsCount()).toBe('3');
 
     await user.click(
@@ -19,7 +22,7 @@ describe('Creating a lesson draft', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Nova lekcija' })).toBeInTheDocument();
 
     await user.type(screen.getByLabelText('Naslov'), '  Planete Sunčevog sistema  ');
-    await user.type(screen.getByLabelText('Predmet'), 'Priroda i društvo');
+    await user.selectOptions(screen.getByLabelText('Predmet'), 'Priroda i društvo');
     await user.selectOptions(screen.getByLabelText('Razred'), '5. razred');
     await user.type(
       screen.getByLabelText('Tekst lekcije'),
@@ -27,14 +30,14 @@ describe('Creating a lesson draft', () => {
     );
     await user.click(screen.getByRole('button', { name: 'Sačuvaj nacrt' }));
 
-    expect(router.state.location.pathname).toMatch(/^\/teacher\/lessons\/draft-/);
-    expect(screen.getByRole('status')).toHaveTextContent('Nacrt je sačuvan.');
+    expect(router.state.location.pathname).toMatch(/^\/teacher\/lessons\/lesson-/);
+    expect(screen.getByText(/Nacrt je sačuvan\./)).toBeInTheDocument();
     expect(
       screen.getByRole('heading', { level: 1, name: 'Planete Sunčevog sistema' }),
     ).toBeInTheDocument();
     expect(screen.getByText('Priroda i društvo')).toBeInTheDocument();
     expect(screen.getByText('5. razred')).toBeInTheDocument();
-    expect(screen.getByText('Nacrt')).toBeInTheDocument();
+    expect(screen.getAllByText('Nacrt').length).toBeGreaterThan(0);
     // Blank line splits the text into two paragraphs.
     const firstParagraph = screen.getByText('Sunce je zvijezda.').closest('p');
     const secondParagraph = screen.getByText('Oko Sunca kruži osam planeta.').closest('p');
@@ -48,13 +51,16 @@ describe('Creating a lesson draft', () => {
   });
 
   it('does not save an empty form and moves focus to the first invalid field', async () => {
-    const { user, router } = renderApp({ path: '/teacher/lessons/new', lessons: testLessons });
+    const { user, router } = renderApp({
+      path: '/teacher/lessons/new',
+      school: schoolWithLessons(testLessons),
+    });
 
     await user.click(screen.getByRole('button', { name: 'Sačuvaj nacrt' }));
 
     expect(router.state.location.pathname).toBe('/teacher/lessons/new');
     expect(screen.getByText('Unesite naslov lekcije.')).toBeInTheDocument();
-    expect(screen.getByText('Unesite predmet.')).toBeInTheDocument();
+    expect(screen.getByText('Izaberite predmet.')).toBeInTheDocument();
     expect(screen.getByText('Izaberite razred.')).toBeInTheDocument();
     expect(screen.getByText('Unesite tekst lekcije.')).toBeInTheDocument();
 
@@ -65,10 +71,13 @@ describe('Creating a lesson draft', () => {
   });
 
   it('rejects fields that contain only spaces', async () => {
-    const { user, router } = renderApp({ path: '/teacher/lessons/new', lessons: testLessons });
+    const { user, router } = renderApp({
+      path: '/teacher/lessons/new',
+      school: schoolWithLessons(testLessons),
+    });
 
     await user.type(screen.getByLabelText('Naslov'), '     ');
-    await user.type(screen.getByLabelText('Predmet'), 'Matematika');
+    await user.selectOptions(screen.getByLabelText('Predmet'), 'Matematika');
     await user.selectOptions(screen.getByLabelText('Razred'), '2. razred');
     await user.type(screen.getByLabelText('Tekst lekcije'), '   ');
     await user.click(screen.getByRole('button', { name: 'Sačuvaj nacrt' }));
@@ -76,7 +85,7 @@ describe('Creating a lesson draft', () => {
     expect(router.state.location.pathname).toBe('/teacher/lessons/new');
     expect(screen.getByText('Unesite naslov lekcije.')).toBeInTheDocument();
     expect(screen.getByText('Unesite tekst lekcije.')).toBeInTheDocument();
-    expect(screen.queryByText('Unesite predmet.')).not.toBeInTheDocument();
+    expect(screen.queryByText('Izaberite predmet.')).not.toBeInTheDocument();
 
     // Nothing was added to the lesson list.
     await user.click(screen.getByRole('button', { name: 'Odustani' }));
@@ -85,7 +94,10 @@ describe('Creating a lesson draft', () => {
   });
 
   it('clears an error once the field is corrected', async () => {
-    const { user } = renderApp({ path: '/teacher/lessons/new', lessons: testLessons });
+    const { user } = renderApp({
+      path: '/teacher/lessons/new',
+      school: schoolWithLessons(testLessons),
+    });
 
     await user.click(screen.getByRole('button', { name: 'Sačuvaj nacrt' }));
     expect(screen.getByText('Unesite naslov lekcije.')).toBeInTheDocument();

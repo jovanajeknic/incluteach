@@ -10,12 +10,20 @@ export interface Subject {
   icon: SubjectIcon;
 }
 
+/**
+ * standard: the teacher's own text. simplified: shorter, simpler sentences.
+ * examples: the same content with more everyday examples.
+ */
+export type LessonVersionKind = 'standard' | 'simplified' | 'examples';
+
 export interface LessonVersion {
-  kind: 'standard' | 'simplified';
+  kind: LessonVersionKind;
   /** Plain text; a blank line separates paragraphs. */
   content: string;
   /** AI-adapted versions reach students only after a teacher approves them. */
   approvedByTeacher: boolean;
+  /** Who wrote it; AI suggestions are labelled until the teacher approves them. */
+  source: 'teacher' | 'ai';
 }
 
 export interface GlossaryEntry {
@@ -34,6 +42,7 @@ export interface QuizQuestion {
 export interface StudentLesson {
   id: string;
   subjectId: string;
+  grade: number;
   title: string;
   versions: LessonVersion[];
   glossary: GlossaryEntry[];
@@ -43,12 +52,12 @@ export interface StudentLesson {
 }
 
 /**
- * What the student's lessons should adapt to. The backend derives it from what the school
- * and parents record; it deliberately contains needs, never diagnoses, so no diagnosis can
- * ever reach the student's screen.
+ * What the student's lessons should adapt to. It deliberately contains needs, never
+ * diagnoses, so no diagnosis can ever reach a screen.
  */
 export interface SupportProfile {
   preferSimplifiedText: boolean;
+  preferMoreExamples: boolean;
   preferStepByStep: boolean;
   readingPreset: 'standard' | 'easier-reading';
 }

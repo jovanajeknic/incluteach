@@ -291,7 +291,6 @@ export const text = {
       listHeading: 'Vaši prijedlozi',
       forLesson: (title: string) => `Lekcija: ${title}`,
       general: 'Opšti prijedlog',
-      statusPending: 'Čeka pregled nastavnika',
     },
   },
 
@@ -305,14 +304,18 @@ export const text = {
   },
 
   nav: {
-    home: 'Početna',
+    home: 'Lekcije',
     newLesson: 'Nova lekcija',
+    myClass: 'Moj razred',
+    suggestions: 'Prijedlozi roditelja',
+    newSuggestions: 'novih',
   },
 
   dashboard: {
-    pageTitle: 'Početna',
+    pageTitle: 'Lekcije',
     welcome: (name: string) => `Dobro došli, ${name}`,
-    intro: 'Ovdje pripremate lekcije prilagođene svojim učenicima i pratite njihov status.',
+    intro:
+      'Unesite lekciju, a AI će pripremiti verzije prilagođene potrebama vaših učenika. Vi pregledate, odobravate i dodjeljujete.',
     statsHeading: 'Pregled lekcija',
     statTotal: 'Ukupno lekcija',
     statInReview: 'Za pregled',
@@ -321,6 +324,12 @@ export const text = {
     newLessonButton: 'Nova lekcija',
     emptyTitle: 'Još nemate lekcija',
     emptyDescription: 'Napravite prvu lekciju i ona će se pojaviti ovdje.',
+    filterSubject: 'Predmet',
+    filterStatus: 'Status',
+    allSubjects: 'Svi predmeti',
+    allStatuses: 'Svi statusi',
+    noMatches: 'Nijedna lekcija ne odgovara izabranim filterima.',
+    pendingReview: 'Ima AI prijedloga za pregled',
   },
 
   lesson: {
@@ -331,6 +340,7 @@ export const text = {
     content: 'Sadržaj lekcije',
     statuses: {
       draft: 'Nacrt',
+      processing: 'AI obrada',
       in_review: 'Za pregled',
       approved: 'Odobrena',
       assigned: 'Dodijeljena',
@@ -340,20 +350,21 @@ export const text = {
   newLesson: {
     pageTitle: 'Nova lekcija',
     heading: 'Nova lekcija',
-    intro: 'Unesite osnovne podatke i tekst lekcije. Lekcija se čuva kao nacrt.',
+    intro:
+      'Unesite tekst lekcije kakav koristite u nastavi. Nakon čuvanja možete zatražiti AI prilagođavanje.',
     allFieldsRequired: 'Sva polja su obavezna.',
     titleLabel: 'Naslov',
     subjectLabel: 'Predmet',
-    subjectHint: 'Na primjer: Matematika ili Priroda i društvo',
+    subjectPlaceholder: 'Izaberite predmet',
     gradeLabel: 'Razred',
     gradePlaceholder: 'Izaberite razred',
     contentLabel: 'Tekst lekcije',
-    contentHint: 'Prazan red odvaja pasuse.',
+    contentHint: 'Zalijepite ili ukucajte tekst. Prazan red odvaja pasuse.',
     save: 'Sačuvaj nacrt',
     cancel: 'Odustani',
     errors: {
       titleRequired: 'Unesite naslov lekcije.',
-      subjectRequired: 'Unesite predmet.',
+      subjectRequired: 'Izaberite predmet.',
       gradeRequired: 'Izaberite razred.',
       contentRequired: 'Unesite tekst lekcije.',
     },
@@ -361,10 +372,162 @@ export const text = {
 
   lessonDetail: {
     backToLessons: 'Nazad na lekcije',
-    savedMessage: 'Nacrt je sačuvan.',
+    savedMessage: 'Nacrt je sačuvan. Sada možete zatražiti AI prilagođavanje.',
     notFoundTitle: 'Lekcija nije pronađena',
     notFoundDescription:
       'Tražena lekcija ne postoji. Moguće je da je adresa netačna ili da je lekcija napravljena prije osvježavanja stranice, pa je izgubljena.',
+    steps: {
+      label: 'Faze lekcije',
+      draft: 'Nacrt',
+      adapt: 'AI prilagođavanje',
+      review: 'Pregled i odobrenje',
+      assign: 'Dodjela',
+      current: 'trenutna faza',
+      done: 'završeno',
+    },
+    adaptation: {
+      heading: 'AI prilagođavanje',
+      intro: 'AI priprema verzije prema potrebama učenika kojima je lekcija namijenjena:',
+      neededSimplified: (count: number) => `Kraća i jednostavnija verzija — za ${count} učenika`,
+      neededExamples: (count: number) => `Verzija sa više primjera — za ${count} učenika`,
+      noneNeeded: 'Nijednom učeniku ne treba posebna verzija teksta; svi čitaju vaš tekst.',
+      always: 'Uz to: objašnjenja težih riječi i pitanja za vježbu.',
+      suggestionsIntro: 'AI će uzeti u obzir prijedloge roditelja koje ste odabrali:',
+      start: 'Prilagodi pomoću AI',
+      again: 'Ponovo prilagodi',
+      processing: 'AI priprema prilagođene verzije…',
+      done: 'AI prijedlozi su spremni za pregled.',
+      demoNote:
+        'Demo: AI je simuliran. Prijedlozi su unaprijed pripremljeni ili napravljeni po jednostavnim pravilima i ništa se ne šalje na internet.',
+    },
+    versions: {
+      heading: 'Verzije lekcije',
+      kinds: {
+        standard: 'Vaš tekst',
+        simplified: 'Kraća i jednostavnija',
+        examples: 'Sa više primjera',
+      },
+      aiPending: 'AI prijedlog — čeka odobrenje',
+      approved: 'Odobreno',
+      edit: 'Uredi',
+      save: 'Sačuvaj',
+      cancel: 'Odustani',
+      remove: 'Ukloni verziju',
+      editLabel: (kind: string) => `Tekst verzije: ${kind}`,
+      emptyError: 'Tekst ne može biti prazan.',
+    },
+    glossary: {
+      heading: 'Objašnjenja težih riječi',
+      intro: 'Učenik dodirne podvučenu riječ u lekciji i vidi objašnjenje.',
+      term: (n: number) => `Riječ ${n}`,
+      definition: (n: number) => `Objašnjenje ${n}`,
+      add: 'Dodaj riječ',
+      remove: (n: number) => `Ukloni riječ ${n}`,
+      empty: 'Još nema riječi. Dodajte ih ili zatražite AI prilagođavanje.',
+    },
+    quiz: {
+      heading: 'Pitanja za vježbu',
+      intro: 'Vježba je bez ocjene: učenik nakon svakog odgovora dobije objašnjenje.',
+      question: (n: number) => `Pitanje ${n}`,
+      option: (q: number, n: number) => `Pitanje ${q}, odgovor ${n}`,
+      correct: (q: number) => `Tačan odgovor na pitanje ${q}`,
+      correctOption: (n: number) => `Odgovor ${n}`,
+      explanation: (n: number) => `Objašnjenje za pitanje ${n}`,
+      addQuestion: 'Dodaj pitanje',
+      removeQuestion: (n: number) => `Ukloni pitanje ${n}`,
+      empty: 'Još nema pitanja. Dodajte ih ili zatražite AI prilagođavanje.',
+    },
+    home: {
+      heading: 'Uputstva za roditelje',
+      intro: 'Kratki savjeti za rad kod kuće. Svaki red je jedan savjet.',
+      label: 'Savjeti za rad kod kuće',
+    },
+    saveSection: 'Sačuvaj izmjene',
+    sectionSaved: 'Izmjene su sačuvane.',
+    sectionInvalid: 'Popunite sva polja ili uklonite prazne redove.',
+    approval: {
+      heading: 'Odobrenje',
+      intro:
+        'Učenici vide samo odobren sadržaj. Odobravanjem potvrđujete da ste pregledali sve verzije, objašnjenja i pitanja.',
+      approve: 'Odobri lekciju',
+      confirmText: 'Da li ste pregledali sve verzije, objašnjenja i pitanja?',
+      confirm: 'Da, odobri',
+      cancel: 'Odustani',
+      approved: 'Lekcija je odobrena.',
+      nothingToApprove: 'Sav sadržaj je odobren.',
+      waitForAi: 'Sačekajte da AI završi obradu.',
+    },
+    assign: {
+      heading: 'Dodjela učenicima',
+      intro: 'Izaberite cijeli razred ili pojedine učenike.',
+      notApproved: 'Lekciju možete dodijeliti tek kad je odobrite.',
+      wholeClass: (name: string) => `Cijeli razred ${name}`,
+      students: 'Pojedini učenici',
+      assign: 'Dodijeli',
+      nothingSelected: 'Izaberite razred ili bar jednog učenika.',
+      assigned: 'Lekcija je dodijeljena. Učenici je sada vide u svom dijelu aplikacije.',
+      currentTarget: 'Trenutno dodijeljeno:',
+      classTarget: (name: string) => `razred ${name}`,
+    },
+  },
+
+  classView: {
+    pageTitle: 'Moj razred',
+    heading: (name: string) => `Razred ${name}`,
+    intro:
+      'Napredak učenika i njihove potrebe. Potrebe opisuju šta učeniku pomaže; dijagnoze se ne unose.',
+    studentsHeading: 'Učenici',
+    progress: (completed: number, total: number) =>
+      `Završene vježbe: ${completed} od ${total} lekcija`,
+    noNeeds: 'Bez posebnih potreba',
+    pendingSuggestions: (count: number) => `Novi prijedlozi roditelja: ${count}`,
+  },
+
+  needs: {
+    preferSimplifiedText: 'Kraći i jednostavniji tekst',
+    preferMoreExamples: 'Više primjera',
+    preferStepByStep: 'Korak po korak',
+    easierReading: 'Lakše čitanje (posebna slova, veći razmaci)',
+  },
+
+  studentView: {
+    backToClass: 'Nazad na razred',
+    needsHeading: 'Potrebe učenika',
+    needsIntro:
+      'Na osnovu ovoga AI bira verzije lekcija i početna podešavanja čitanja. Učenik ne vidi ove podatke, a dijagnoze se ne unose.',
+    saveNeeds: 'Sačuvaj potrebe',
+    needsSaved:
+      'Potrebe su sačuvane. Važe od sljedećeg otvaranja lekcije i za sljedeće AI prilagođavanje.',
+    lessonsHeading: 'Lekcije i vježbe',
+    noLessons: 'Učeniku još nije dodijeljena nijedna lekcija.',
+    practiceDone: (date: string) => `Vježba urađena ${date}`,
+    practiceNotDone: 'Vježba još nije urađena',
+    difficult: 'Teže je bilo:',
+    suggestionsHeading: 'Prijedlozi roditelja',
+    noSuggestions: 'Roditelji još nijesu poslali prijedloge.',
+    forbiddenTitle: 'Nemate pristup',
+    forbiddenDescription: 'Ovaj učenik nije u vašem razredu.',
+  },
+
+  suggestionsInbox: {
+    pageTitle: 'Prijedlozi roditelja',
+    heading: 'Prijedlozi roditelja',
+    intro:
+      'Roditelji opisuju šta pomaže njihovom djetetu. Odaberite prijedloge koje AI treba da uzme u obzir pri sljedećem prilagođavanju.',
+    filterNew: 'Novi',
+    filterAll: 'Svi',
+    filterLabel: 'Prikaz prijedloga',
+    empty: 'Nema prijedloga za prikaz.',
+    forStudent: (name: string) => `Za: ${name}`,
+    useForAdaptation: 'Koristi pri prilagođavanju',
+    markRead: 'Označi kao pročitano',
+    openStudent: 'Otvori učenika',
+  },
+
+  suggestionStatus: {
+    'pending-teacher': 'Čeka pregled nastavnika',
+    'use-for-adaptation': 'Nastavnik ga koristi pri prilagođavanju',
+    read: 'Nastavnik je pročitao',
   },
 
   notFound: {

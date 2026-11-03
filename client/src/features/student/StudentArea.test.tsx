@@ -1,17 +1,13 @@
 import { screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderApp } from '@/test/renderApp';
-import { demoStudent } from './data/demoStudentData';
-import type { StudentProfile } from './types';
+import type { SupportProfile } from './types';
 
-const standardReader: StudentProfile = {
-  ...demoStudent,
-  id: 'test-standard-reader',
-  supportProfile: {
-    preferSimplifiedText: false,
-    preferStepByStep: false,
-    readingPreset: 'standard',
-  },
+const standardReader: Partial<SupportProfile> = {
+  preferSimplifiedText: false,
+  preferMoreExamples: false,
+  preferStepByStep: false,
+  readingPreset: 'standard',
 };
 
 /** Finds a whole lesson sentence even when glossary words split it into several elements. */
@@ -86,7 +82,7 @@ describe('Adapted lesson versions', () => {
   });
 
   it('shows the standard version to a student without that need', () => {
-    renderApp({ path: '/student/lessons/kruzenje-vode', student: standardReader });
+    renderApp({ path: '/student/lessons/kruzenje-vode', studentNeeds: standardReader });
 
     expect(screen.queryByText('Kraća verzija')).not.toBeInTheDocument();
     expect(screen.getByText(/Voda u prirodi stalno putuje\./)).toBeInTheDocument();

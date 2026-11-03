@@ -1,10 +1,9 @@
 import { useNavigate } from 'react-router';
+import { useSchool, type NewLessonInput } from '@/features/school/schoolContext';
 import { PageHeader } from '@/shared/components/PageHeader';
 import { text } from '@/text/sr-Latn';
 import { LessonForm } from '../components/LessonForm';
-import { useLessons } from '../data/lessonsContext';
 import { lessonPath, teacherHomePath } from '../paths';
-import type { NewLessonInput } from '../types';
 
 export interface LessonDetailLocationState {
   justCreated?: boolean;
@@ -12,7 +11,7 @@ export interface LessonDetailLocationState {
 
 export function NewLessonPage() {
   const t = text.newLesson;
-  const { createDraft } = useLessons();
+  const { createDraft, subjects } = useSchool();
   const navigate = useNavigate();
 
   function handleSubmit(input: NewLessonInput) {
@@ -25,8 +24,12 @@ export function NewLessonPage() {
     <>
       <title>{text.app.pageTitle(t.pageTitle)}</title>
       <PageHeader title={t.heading} description={t.intro} />
-      <div className="max-w-3xl rounded-xl border bg-card p-5 shadow-sm sm:p-8">
-        <LessonForm onSubmit={handleSubmit} onCancel={() => navigate(teacherHomePath)} />
+      <div className="max-w-3xl rounded-3xl border bg-card p-5 shadow-soft sm:p-8">
+        <LessonForm
+          subjects={subjects}
+          onSubmit={handleSubmit}
+          onCancel={() => navigate(teacherHomePath)}
+        />
       </div>
     </>
   );

@@ -13,28 +13,32 @@ import {
   type LessonFormField,
   type LessonFormValues,
 } from '../lessonForm';
-import { GRADES, type NewLessonInput } from '../types';
+import type { NewLessonInput } from '@/features/school/schoolContext';
+import type { Subject } from '@/features/student/types';
+import { GRADES } from '../types';
 
 interface LessonFormProps {
+  subjects: readonly Subject[];
   onSubmit: (input: NewLessonInput) => void;
   onCancel: () => void;
 }
 
 const controlClassName = 'h-11 bg-card text-base md:text-base';
 
-export function LessonForm({ onSubmit, onCancel }: LessonFormProps) {
+export function LessonForm({ subjects, onSubmit, onCancel }: LessonFormProps) {
   const t = text.newLesson;
   const [values, setValues] = useState<LessonFormValues>(emptyLessonForm);
   const [errors, setErrors] = useState<LessonFormErrors>({});
   const [submitted, setSubmitted] = useState(false);
   const fieldRefs = useRef<Partial<Record<LessonFormField, HTMLElement | null>>>({});
+  const subjectIds = subjects.map((subject) => subject.id);
 
   function updateField(field: LessonFormField, value: string) {
     const next = { ...values, [field]: value };
     setValues(next);
     // Errors appear only after the first submit attempt, then follow the user's corrections.
     if (submitted) {
-      const result = validateLessonForm(next);
+      const result = validateLessonForm(next, subjectIds);
       setErrors(result.ok ? {} : result.errors);
     }
   }
@@ -42,7 +46,7 @@ export function LessonForm({ onSubmit, onCancel }: LessonFormProps) {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitted(true);
-    const result = validateLessonForm(values);
+    const result = validateLessonForm(values, subjectIds);
     if (!result.ok) {
       setErrors(result.errors);
       const firstInvalid = lessonFormFieldOrder.find((field) => result.errors[field]);
@@ -75,22 +79,23 @@ export function LessonForm({ onSubmit, onCancel }: LessonFormProps) {
       </FormField>
 
       <div className="grid gap-6 sm:grid-cols-2">
-        <FormField
-          id="lesson-subject"
-          label={t.subjectLabel}
-          hint={t.subjectHint}
-          error={errors.subject}
-          required
-        >
+        <FormField id="lesson-subject" label={t.subjectLabel} error={errors.subjectId} required>
           {(props) => (
-            <Input
+            <NativeSelect
               {...props}
-              ref={setRef('subject')}
-              name="subject"
-              value={values.subject}
-              onChange={(event) => updateField('subject', event.target.value)}
+              ref={setRef('subjectId')}
+              name="subjectId"
+              value={values.subjectId}
+              onChange={(event) => updateField('subjectId', event.target.value)}
               className={controlClassName}
-            />
+            >
+              <NativeSelectOption value="">{t.subjectPlaceholder}</NativeSelectOption>
+              {subjects.map((subject) => (
+                <NativeSelectOption key={subject.id} value={subject.id}>
+                  {subject.name}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
           )}
         </FormField>
 
