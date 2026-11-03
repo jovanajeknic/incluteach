@@ -67,3 +67,31 @@ These rules apply to every task unless the project owner explicitly agrees other
 - Clearly distinguish what is implemented, what is simulated (mocked) and what is planned.
 - Explain decisions in a beginner-friendly way, with a short explanation of new terms.
 - Record important agreements in the project documentation, not only in chat.
+
+## 8. Frontend
+
+The frontend lives in `client/` and is developed separately from the backend.
+The plan, task list and open questions are in [docs/FRONTEND-PLAN.md](docs/FRONTEND-PLAN.md).
+
+Agreed technologies (added as packages only when a task needs them):
+
+- React + TypeScript with strict type checking
+- Vite
+- React Router
+- Tailwind CSS and shadcn/ui
+- React Hook Form and Zod for forms and validation
+- TanStack Query for server data
+- MSW for mocking the API during development and tests
+- Vitest and React Testing Library for tests
+- Playwright for the most important user flows
+- ESLint, Prettier and npm
+
+Do not add other libraries or another framework without a clear reason and agreement.
+
+Responsibility boundary:
+
+- The backend owns real authentication, access control, document processing, AI generation and data storage. Backend technologies and the authentication method are decided by the backend developer, not by frontend work.
+- The frontend never holds secret API keys and never calls an AI service directly.
+- Frontend role checks are for navigation only, not security.
+- A demo role picker is not authentication and must be clearly labelled as demo mode.
+- Mocked API responses must follow the same agreed format as the real API.
