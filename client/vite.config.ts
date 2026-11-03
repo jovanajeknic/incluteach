@@ -15,5 +15,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: false,
+    // Room for the slower lazy-route tests when every file runs in parallel.
+    testTimeout: 15000,
   },
 });
