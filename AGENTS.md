@@ -46,8 +46,9 @@ These rules apply to every task unless the project owner explicitly agrees other
 - Use a separate branch for each self-contained task.
 - Never overwrite or discard existing changes, including a teammate's changes.
 - No force push, destructive reset or branch deletion without the owner's approval.
-- Before committing, show a summary of the changes and the verification results.
-- Commit, push and merge into `main` only when the owner explicitly asks.
+- For an approved task, make local commits after each meaningful, verified unit of work, without asking for separate confirmation each time. Before each commit, run the relevant checks and give a short summary of what is being committed and the check results.
+- Commit only files that belong to that unit of work. Never commit secrets, `node_modules` or build output.
+- Push and merge into `main` only when the owner explicitly asks.
 - Plan small, easy-to-review pull requests.
 
 ## 6. Security and data
