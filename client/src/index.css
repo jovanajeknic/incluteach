@@ -1,0 +1,98 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens. Names follow shadcn/ui conventions so its components pick them up.
+ * Colours were chosen for WCAG AA contrast against the light background
+ * (normal text >= 4.5:1, focus ring and borders of controls >= 3:1).
+ */
+:root {
+  --radius: 0.75rem;
+
+  --background: #faf8f4;
+  --foreground: #1f2933;
+
+  --card: #ffffff;
+  --card-foreground: #1f2933;
+  --popover: #ffffff;
+  --popover-foreground: #1f2933;
+
+  --primary: #0f766e;
+  --primary-foreground: #ffffff;
+  --secondary: #e6f2ef;
+  --secondary-foreground: #134e48;
+
+  --muted: #f1eee8;
+  --muted-foreground: #56616b;
+  --accent: #e6f2ef;
+  --accent-foreground: #134e48;
+
+  --destructive: #b42318;
+  --destructive-foreground: #ffffff;
+
+  --border: #e3ded5;
+  --input: #8a939b;
+  --ring: #0f766e;
+}
+
+@theme inline {
+  --font-sans:
+    'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    line-height: 1.6;
+  }
+
+  /* A strong, consistent focus indicator for everything, including plain links. */
+  :focus-visible {
+    outline: 3px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+/* Respect users who ask the operating system for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
