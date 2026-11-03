@@ -24,20 +24,21 @@ Each task states which API it works against:
 
 **First visual demo**: a public landing page at `/` and the start of the teacher area at `/teacher`. It is a demo with fictional data kept in memory, with no backend and no real sign-in.
 
-| Task         | Coverage                                                                                                                                                                                                                                                                                                                                                                     |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| FE-01        | Done. Commands are in the root [README.md](../README.md).                                                                                                                                                                                                                                                                                                                    |
-| FE-02        | Mostly done. Visual identity, logo and design tokens are defined in [DESIGN.md](DESIGN.md); Tailwind CSS and shadcn/ui use them. The teacher area inherits the tokens but has not been redesigned yet.                                                                                                                                                                       |
-| FE-03        | Partly done. Teacher layout (sidebar on desktop, top navigation on phones), skip link, not-found page and route error page are in place.                                                                                                                                                                                                                                     |
-| FE-06        | Partly done. A lesson list with status, plus counters computed from the data.                                                                                                                                                                                                                                                                                                |
-| FE-07        | Partly done. Text-only form; saves a local draft. No file upload and no AI request.                                                                                                                                                                                                                                                                                          |
-| FE-09        | Partly done. The shared `LessonContent` renderer and a read-only lesson view. No editing.                                                                                                                                                                                                                                                                                    |
-| Landing page | Done (not in the original task list). Public page at `/` built from the owner's mockup: header with section links, hero with illustration, "Za koga je", "Kako funkcioniše" and "Naša priča". Student and parent are marked as coming soon. "Prijavi se" and "Registruj se" lead to `/login` and `/register`, which say accounts are coming soon and offer the teacher demo. |
+| Task                     | Coverage                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FE-01                    | Done. Commands are in the root [README.md](../README.md).                                                                                                                                                                                                                                                                                                                    |
+| FE-02                    | Mostly done. Visual identity, logo and design tokens are defined in [DESIGN.md](DESIGN.md); Tailwind CSS and shadcn/ui use them. The teacher area inherits the tokens but has not been redesigned yet.                                                                                                                                                                       |
+| FE-03                    | Partly done. Teacher layout (sidebar on desktop, top navigation on phones), skip link, not-found page and route error page are in place.                                                                                                                                                                                                                                     |
+| FE-06                    | Partly done. A lesson list with status, plus counters computed from the data.                                                                                                                                                                                                                                                                                                |
+| FE-07                    | Partly done. Text-only form; saves a local draft. No file upload and no AI request.                                                                                                                                                                                                                                                                                          |
+| FE-09                    | Partly done. The shared `LessonContent` renderer and a read-only lesson view. No editing.                                                                                                                                                                                                                                                                                    |
+| Landing page             | Done (not in the original task list). Public page at `/` built from the owner's mockup: header with section links, hero with illustration, "Za koga je", "Kako funkcioniše" and "Naša priča". Student and parent are marked as coming soon. "Prijavi se" and "Registruj se" lead to `/login` and `/register`, which say accounts are coming soon and offer the teacher demo. |
+| Sign-in and registration | Demo. Forms with React Hook Form + Zod validation and a separate demo auth service that sends and stores nothing. Real authentication waits for the backend (FE-05, FE-17).                                                                                                                                                                                                  |
 
 Differences from this plan, all intentional for this step:
 
 - **No MSW yet (FE-04).** Demo data comes from an in-memory store behind a `LessonsStore` interface (`client/src/features/lessons/data/`). Screens use only that interface, so it can be replaced by API calls later.
-- **No React Hook Form or Zod yet.** The four-field form uses a small, tested validation function. These libraries should be introduced with FE-07, when the form also has file upload.
+- **React Hook Form and Zod** are now used by the sign-in and registration forms. The lesson form still uses its small validation function and can move to them with FE-07.
 - **React Router 7, not 8.** Version 8 requires Node.js 22.22 or newer; the installed version is 22.18.0.
 - **Approved visual identity**: see [DESIGN.md](DESIGN.md). Details will be refined after the owner reviews the screens.
 - **`/` is a public landing page**, not a redirect. Signed-in users will reach their role's home page through sign-in (FE-05).
@@ -171,13 +172,13 @@ _Proposal._ Route names, parameters and nesting may change when the API contract
 
 ### Public and shared
 
-| Route        | Screen       | Notes                                                                                            |
-| ------------ | ------------ | ------------------------------------------------------------------------------------------------ |
-| `/login`     | Sign-in      | Now a "coming soon" page. Later: sign-in form; in demo mode, also a clearly labelled role picker |
-| `/register`  | Registration | Now a "coming soon" page. Whether self-registration is in v1 is an open question                 |
-| `/`          | Landing page | Public page that explains the platform (decided by the owner)                                    |
-| `/forbidden` | Forbidden    | Shown when a role opens a page it cannot use                                                     |
-| `*`          | Not found    | Any unknown route                                                                                |
+| Route        | Screen       | Notes                                                                         |
+| ------------ | ------------ | ----------------------------------------------------------------------------- |
+| `/login`     | Sign-in      | Demo form (email, password); validates only, no real sign-in yet              |
+| `/register`  | Registration | Demo form for teachers and parents; validates only, no account is created yet |
+| `/`          | Landing page | Public page that explains the platform (decided by the owner)                 |
+| `/forbidden` | Forbidden    | Shown when a role opens a page it cannot use                                  |
+| `*`          | Not found    | Any unknown route                                                             |
 
 ### Teacher (`/teacher`)
 
@@ -472,7 +473,7 @@ Every task also follows the verification rules in [AGENTS.md](../AGENTS.md#4-ver
 3. **Demo mode**: only during development, or also in a public demo build?
 4. **Teacher view of support needs**: may the teacher UI show any information about a student's needs, and in what wording? (Students and peers never see diagnoses.)
 5. **Quiz rules**: question types, whether retries are allowed, and how results are described to students and parents.
-6. **Registration**: the landing page now has a "Registruj se" button. Should anyone be able to create an account (self-registration was out of scope for v1), or do schools create accounts for teachers, students and parents? Agree with the backend developer.
+6. **Registration**: decided by the owner: teachers and parents register themselves through the public form; students do not (the school adds them). Still to agree with the backend developer: the password policy (the frontend uses a temporary 12-character minimum), email verification and how a parent is linked to a child.
 
 ### For the backend developer
 
