@@ -101,6 +101,18 @@ Components use role tokens with shadcn/ui names (`--primary`, `--muted`, `--bord
 - Keep source photos out of the repository; commit only the web-ready file (JPEG or WebP, under about 250 KB).
 - Illustrations of features that do not exist yet are labelled as illustrative and marked "U pripremi".
 
+## Notebook style (lesson pages)
+
+The owner wants the app to feel made by a creative person, not generated. Lesson pages (student and teacher) are the first to use a "notebook / classroom" style; the rest of the site will follow after review.
+
+- **Paper, not boxes**: a lesson sits on a sheet (`.paper-sheet`) with a red margin line and two slightly crooked sheets underneath (`.paper-stack`). Avoid stacking identical rounded cards.
+- **Sections like a worksheet**: separate sections with a dashed rule and a heading, not with a card per section.
+- **Handwritten notes**: Caveat (`.hand-note`, `font-hand`) only for short margin notes such as "kraća verzija", "← sada" or a hint with an arrow. Never for lesson text, labels or anything long.
+- **Tabs on the paper**: tools that change the page (reading settings, step by step) are index tabs on the sheet's top edge.
+- **Worksheet inputs**: editable lists use underline-style inputs (`blankInputClassName`), with a visible forest underline and tint on focus.
+- **Copy**: short and natural; say it once. Footnotes for side remarks (for example that the AI is simulated) instead of repeated notices.
+- **Fewer badges and icon bubbles**: use plain text or a handwritten tick where a pill or a coloured icon circle is not needed.
+
 ## Motion
 
 | Effect            | Details                                                                                                                                                       |
