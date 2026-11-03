@@ -66,10 +66,6 @@ export const text = {
 
   auth: {
     demoNotice: 'Demo prikaz — prijava i kreiranje naloga još nijesu povezani sa serverom.',
-    welcomePanel: {
-      title: 'Učimo različito. Rastemo zajedno.',
-      text: 'IncluTeach povezuje nastavnike, učenike i roditelje u podršci svakom djetetu.',
-    },
     fields: {
       email: 'Email adresa',
       password: 'Lozinka',
