@@ -36,6 +36,7 @@ export const text = {
       demoLinks: {
         teacher: 'Nastavnički demo',
         student: 'Učenički demo',
+        parent: 'Roditeljski demo',
       },
       teacher: {
         title: 'Za nastavnike',
@@ -229,6 +230,68 @@ export const text = {
       again: 'Ponovi vježbu',
       backToLesson: 'Nazad na lekciju',
       backToSubjects: 'Moji predmeti',
+    },
+  },
+
+  parent: {
+    demoNotice:
+      'Demo verzija sa izmišljenim podacima. Prijedlozi se ne šalju stvarno i gube se osvježavanjem stranice.',
+    profile: {
+      role: 'Roditelj',
+      badge: 'Demo profil',
+    },
+    nav: {
+      label: 'Roditeljska navigacija',
+      children: 'Moja djeca',
+    },
+    home: {
+      pageTitle: 'Moja djeca',
+      greeting: (name: string) => `Dobro došli, ${name}`,
+      intro: 'Pratite šta vaše dijete uči i pomozite nam da lekcije prilagodimo baš njemu.',
+      childrenHeading: 'Povezana djeca',
+      lessonsSummary: (started: number, completed: number) =>
+        `Započetih lekcija: ${started} · Završenih: ${completed}`,
+      open: 'Pogledaj',
+    },
+    child: {
+      backToChildren: 'Nazad na djecu',
+      lessonsHeading: 'Lekcije po predmetima',
+      noLessons: 'U ovom predmetu još nema lekcija.',
+      forbiddenTitle: 'Nemate pristup',
+      forbiddenDescription: 'Ovo dijete nije povezano sa vašim nalogom.',
+    },
+    lesson: {
+      backToChild: (name: string) => `Nazad na: ${name}`,
+      versionHeading: (name: string) => `Lekcija kako je vidi ${name}`,
+      shorterVersion: 'Kraća verzija',
+      standardVersion: 'Osnovna verzija',
+      practiceHeading: 'Vježba',
+      practiceNotDone: 'Vježba još nije urađena.',
+      practiceDone: (date: string) => `Vježba je urađena ${date}.`,
+      difficultHeading: 'Gdje je bilo teško',
+      difficultIntro: 'Na ovim pitanjima prvi odgovor nije bio tačan. Možete ih ponoviti zajedno:',
+      noDifficult: 'Sva pitanja su odgovorena tačno iz prvog pokušaja.',
+      homeHeading: 'Za rad kod kuće',
+      notFoundTitle: 'Lekcija nije pronađena',
+      notFoundDescription: 'Ova lekcija ne postoji ili nije dodijeljena vašem djetetu.',
+    },
+    suggestions: {
+      heading: 'Prijedlozi za prilagođavanje',
+      intro:
+        'Opišite šta vašem djetetu pomaže u učenju. Prijedlog prvo čita nastavnik, koji odlučuje kako će ga AI uzeti u obzir pri prilagođavanju lekcija.',
+      lessonIntro: 'Prijedlog će se odnositi na ovu lekciju.',
+      label: 'Vaš prijedlog',
+      hint: 'Na primjer: „Bolje razumije kad su rečenice kratke i kad ima primjer iz svakodnevnog života.“ Dijagnoza nije potrebna.',
+      privacy: 'Prijedlog vidi samo nastavnik. Dijete ga ne vidi.',
+      submit: 'Pošalji nastavniku',
+      required: 'Napišite prijedlog prije slanja.',
+      tooLong: (max: number) => `Prijedlog može imati najviše ${max} znakova.`,
+      demoSent:
+        'Prijedlog je zabilježen. Ovo je demo prikaz: ništa nije stvarno poslato nastavniku.',
+      listHeading: 'Vaši prijedlozi',
+      forLesson: (title: string) => `Lekcija: ${title}`,
+      general: 'Opšti prijedlog',
+      statusPending: 'Čeka pregled nastavnika',
     },
   },
 

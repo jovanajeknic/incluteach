@@ -10,6 +10,11 @@ import { StudentLessonPage } from '@/features/student/pages/StudentLessonPage';
 import { StudentQuizPage } from '@/features/student/pages/StudentQuizPage';
 import { SubjectPage } from '@/features/student/pages/SubjectPage';
 import { studentHomePath } from '@/features/student/paths';
+import { ChildLessonPage } from '@/features/parent/pages/ChildLessonPage';
+import { ChildPage } from '@/features/parent/pages/ChildPage';
+import { ParentHomePage } from '@/features/parent/pages/ParentHomePage';
+import { parentHomePath } from '@/features/parent/paths';
+import { ParentLayout } from './layout/ParentLayout';
 import { PublicLayout } from './layout/PublicLayout';
 import { StudentLayout } from './layout/StudentLayout';
 import { TeacherLayout } from './layout/TeacherLayout';
@@ -54,6 +59,16 @@ export const routes: RouteObject[] = [
           { path: 'lessons/:lessonId', element: <StudentLessonPage /> },
           { path: 'lessons/:lessonId/quiz', element: <StudentQuizPage /> },
           { path: '*', element: <NotFoundPage homePath={studentHomePath} /> },
+        ],
+      },
+      {
+        path: parentHomePath,
+        element: <ParentLayout />,
+        children: [
+          { index: true, element: <ParentHomePage /> },
+          { path: 'children/:childId', element: <ChildPage /> },
+          { path: 'children/:childId/lessons/:lessonId', element: <ChildLessonPage /> },
+          { path: '*', element: <NotFoundPage homePath={parentHomePath} /> },
         ],
       },
       {

@@ -2,6 +2,7 @@ import { ArrowRight } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
 import { Link } from 'react-router';
 import { teacherHomePath } from '@/features/lessons/paths';
+import { parentHomePath } from '@/features/parent/paths';
 import { studentHomePath } from '@/features/student/paths';
 import { text } from '@/text/sr-Latn';
 import { sectionIds } from '../sections';
@@ -17,7 +18,7 @@ interface Audience {
 const audiences: Audience[] = [
   { key: 'teacher', icon: <TeacherIcon />, demoPath: teacherHomePath },
   { key: 'student', icon: <StudentIcon />, demoPath: studentHomePath },
-  { key: 'parent', icon: <ParentIcon /> },
+  { key: 'parent', icon: <ParentIcon />, demoPath: parentHomePath },
 ];
 
 export function AudiencesSection() {
@@ -52,7 +53,7 @@ export function AudiencesSection() {
                       to={demoPath}
                       className="group mt-3 inline-flex items-center gap-1.5 rounded-full font-display font-medium text-forest hover:underline"
                     >
-                      {t.demoLinks[key as 'teacher' | 'student']}
+                      {t.demoLinks[key]}
                       <ArrowRight
                         aria-hidden="true"
                         className="size-4 transition-transform group-hover:translate-x-0.5"

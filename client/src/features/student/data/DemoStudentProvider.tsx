@@ -1,6 +1,12 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { pickLessonVersion } from '../lessonVersion';
-import type { LessonProgress, StudentLesson, StudentProfile, Subject } from '../types';
+import type {
+  LessonProgress,
+  PracticeRecord,
+  StudentLesson,
+  StudentProfile,
+  Subject,
+} from '../types';
 import { demoStudent, demoStudentLessons, demoSubjects } from './demoStudentData';
 import { StudentContext, type StudentStore } from './studentContext';
 
@@ -23,6 +29,7 @@ export function DemoStudentProvider({
   lessons: allLessons = demoStudentLessons,
 }: DemoStudentProviderProps) {
   const [progress, setProgress] = useState<Record<string, LessonProgress>>({});
+  const [practice, setPractice] = useState<Record<string, PracticeRecord>>({});
 
   const lessons = useMemo(
     () => allLessons.filter((lesson) => pickLessonVersion(lesson, profile.supportProfile)),
@@ -33,8 +40,16 @@ export function DemoStudentProvider({
     setProgress((current) => (current[lessonId] ? current : { ...current, [lessonId]: 'started' }));
   }, []);
 
-  const markCompleted = useCallback((lessonId: string) => {
+  const markCompleted = useCallback((lessonId: string, difficultQuestionIds: readonly string[]) => {
     setProgress((current) => ({ ...current, [lessonId]: 'completed' }));
+    // Only the latest practice is kept: it shows where help is useful now.
+    setPractice((current) => ({
+      ...current,
+      [lessonId]: {
+        completedAt: new Date().toISOString(),
+        difficultQuestionIds: [...difficultQuestionIds],
+      },
+    }));
   }, []);
 
   const store = useMemo<StudentStore>(
@@ -46,11 +61,12 @@ export function DemoStudentProvider({
       getLesson: (id) => lessons.find((lesson) => lesson.id === id),
       lessonsForSubject: (subjectId) => lessons.filter((lesson) => lesson.subjectId === subjectId),
       progressOf: (lessonId) => progress[lessonId] ?? 'new',
+      practiceOf: (lessonId) => practice[lessonId],
       markStarted,
       markCompleted,
       stars: Object.values(progress).filter((status) => status === 'completed').length,
     }),
-    [profile, subjects, lessons, progress, markStarted, markCompleted],
+    [profile, subjects, lessons, progress, practice, markStarted, markCompleted],
   );
 
   return <StudentContext value={store}>{children}</StudentContext>;

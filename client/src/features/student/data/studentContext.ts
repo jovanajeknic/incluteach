@@ -1,5 +1,11 @@
 import { createContext, useContext } from 'react';
-import type { LessonProgress, StudentLesson, StudentProfile, Subject } from '../types';
+import type {
+  LessonProgress,
+  PracticeRecord,
+  StudentLesson,
+  StudentProfile,
+  Subject,
+} from '../types';
 
 /**
  * What student screens may do. Screens depend only on this interface,
@@ -15,7 +21,8 @@ export interface StudentStore {
   lessonsForSubject: (subjectId: string) => StudentLesson[];
   progressOf: (lessonId: string) => LessonProgress;
   markStarted: (lessonId: string) => void;
-  markCompleted: (lessonId: string) => void;
+  practiceOf: (lessonId: string) => PracticeRecord | undefined;
+  markCompleted: (lessonId: string, difficultQuestionIds: readonly string[]) => void;
   /** One star per lesson whose practice was finished; there is no score or ranking. */
   stars: number;
 }

@@ -73,7 +73,7 @@ describe('LandingPage', () => {
     expect(screen.getByRole('heading', { level: 2, name: 'Naša priča' })).toBeInTheDocument();
   });
 
-  it('shows the three audiences with demo links, and parents as coming soon', () => {
+  it('shows the three audiences, each with a demo link', () => {
     renderApp({ path: '/' });
 
     const section = screen.getByRole('region', { name: 'Zajedno stvaramo prostor za svakoga.' });
@@ -91,8 +91,10 @@ describe('LandingPage', () => {
       'href',
       '/student',
     );
-    expect(items[2]).toHaveTextContent('U pripremi');
-    expect(within(items[2]!).queryByRole('link')).not.toBeInTheDocument();
+    expect(within(items[2]!).getByRole('link', { name: 'Roditeljski demo' })).toHaveAttribute(
+      'href',
+      '/parent',
+    );
   });
 
   describe('mobile menu', () => {
@@ -138,7 +140,7 @@ describe('LandingPage', () => {
       if (href.startsWith('#')) {
         expect(document.getElementById(href.slice(1)), href).toBeInTheDocument();
       } else {
-        expect(['/', '/teacher', '/student', '/login', '/register']).toContain(href);
+        expect(['/', '/teacher', '/student', '/parent', '/login', '/register']).toContain(href);
       }
     }
   });

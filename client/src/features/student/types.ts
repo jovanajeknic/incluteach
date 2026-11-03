@@ -38,6 +38,8 @@ export interface StudentLesson {
   versions: LessonVersion[];
   glossary: GlossaryEntry[];
   quiz: QuizQuestion[];
+  /** Short, teacher-approved tips for parents on practising at home. */
+  homeGuidance?: string[];
 }
 
 /**
@@ -59,3 +61,10 @@ export interface StudentProfile {
 }
 
 export type LessonProgress = 'new' | 'started' | 'completed';
+
+/** The latest finished practice for a lesson. There is no score, by design. */
+export interface PracticeRecord {
+  completedAt: string;
+  /** Questions answered wrongly on the first try, so parents know what to revisit. */
+  difficultQuestionIds: string[];
+}

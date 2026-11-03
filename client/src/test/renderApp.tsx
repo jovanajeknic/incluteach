@@ -4,6 +4,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import { routes } from '@/app/routes';
 import { DemoLessonsProvider } from '@/features/lessons/data/DemoLessonsProvider';
 import type { Lesson } from '@/features/lessons/types';
+import { DemoParentProvider } from '@/features/parent/data/DemoParentProvider';
 import { DemoStudentProvider } from '@/features/student/data/DemoStudentProvider';
 import type { StudentLesson, StudentProfile } from '@/features/student/types';
 
@@ -26,7 +27,9 @@ export function renderApp({
   const result = render(
     <DemoLessonsProvider initialLessons={lessons}>
       <DemoStudentProvider profile={student} lessons={studentLessons}>
-        <RouterProvider router={router} />
+        <DemoParentProvider>
+          <RouterProvider router={router} />
+        </DemoParentProvider>
       </DemoStudentProvider>
     </DemoLessonsProvider>,
   );

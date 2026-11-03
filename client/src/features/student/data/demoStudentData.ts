@@ -25,6 +25,10 @@ export const demoStudentLessons: StudentLesson[] = [
     id: 'kruzenje-vode',
     subjectId: 'priroda',
     title: 'Kruženje vode u prirodi',
+    homeGuidance: [
+      'Ostavite čašu vode na suncu i zajedno pratite kako se voda smanjuje.',
+      'Kad pada kiša, pitajte dijete odakle je ta voda došla.',
+    ],
     versions: [
       {
         kind: 'standard',
@@ -72,6 +76,9 @@ export const demoStudentLessons: StudentLesson[] = [
     id: 'biljke',
     subjectId: 'priroda',
     title: 'Djelovi biljke',
+    homeGuidance: [
+      'U parku ili kod kuće zajedno pronađite korijen, stablo, list i cvijet neke biljke.',
+    ],
     versions: [
       {
         kind: 'standard',
@@ -111,6 +118,10 @@ export const demoStudentLessons: StudentLesson[] = [
     id: 'sabiranje',
     subjectId: 'matematika',
     title: 'Sabiranje do 100',
+    homeGuidance: [
+      'Sabirajte uz predmete: 3 grupe od po 10 kockica i još 4 kockice.',
+      'Pustite dijete da prvo kaže desetice, pa jedinice.',
+    ],
     versions: [
       {
         kind: 'standard',
@@ -176,6 +187,7 @@ export const demoStudentLessons: StudentLesson[] = [
     id: 'imenice',
     subjectId: 'jezik',
     title: 'Imenice',
+    homeGuidance: ['Igrajte igru „Imenuj šta vidiš“: dijete imenuje pet stvari u sobi.'],
     versions: [
       {
         kind: 'standard',

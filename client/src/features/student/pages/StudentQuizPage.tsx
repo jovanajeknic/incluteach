@@ -45,6 +45,8 @@ function Quiz({ lesson }: { lesson: StudentLesson }) {
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [finished, setFinished] = useState(false);
+  // Questions missed on the first try; parents see them to know what to practise.
+  const [difficult, setDifficult] = useState<string[]>([]);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const nextRef = useRef<HTMLButtonElement>(null);
 
@@ -65,7 +67,7 @@ function Quiz({ lesson }: { lesson: StudentLesson }) {
 
   function next() {
     if (isLast) {
-      markCompleted(lesson.id);
+      markCompleted(lesson.id, difficult);
       setFinished(true);
       return;
     }
@@ -73,10 +75,18 @@ function Quiz({ lesson }: { lesson: StudentLesson }) {
     setSelected(null);
   }
 
+  function choose(optionIndex: number) {
+    setSelected(optionIndex);
+    if (optionIndex !== question.correctIndex) {
+      setDifficult((current) => [...current, question.id]);
+    }
+  }
+
   function restart() {
     setIndex(0);
     setSelected(null);
     setFinished(false);
+    setDifficult([]);
   }
 
   if (finished) {
@@ -153,7 +163,7 @@ function Quiz({ lesson }: { lesson: StudentLesson }) {
                     type="button"
                     disabled={answered}
                     aria-pressed={isSelected}
-                    onClick={() => setSelected(optionIndex)}
+                    onClick={() => choose(optionIndex)}
                     className={cn(
                       'flex w-full items-center justify-between gap-3 rounded-2xl border-2 border-border bg-card px-5 py-4 text-left font-display text-lg text-ink transition-colors enabled:hover:border-forest/50 enabled:hover:bg-mint/40',
                       answered && isCorrectOption && 'border-forest bg-mint',
