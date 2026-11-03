@@ -6,6 +6,7 @@ export const text = {
   app: {
     name: 'IncluTeach',
     pageTitle: (page: string) => `${page} · IncluTeach`,
+    homeLinkLabel: 'IncluTeach – početna stranica',
     skipToContent: 'Preskoči na sadržaj',
     mainNavigation: 'Glavna navigacija',
   },

@@ -1,49 +1,83 @@
 @import 'tailwindcss';
+/* Self-hosted fonts: no third-party requests, and the latin-ext subset covers č ć đ š ž. */
+@import '@fontsource-variable/fraunces';
+@import '@fontsource-variable/atkinson-hyperlegible-next';
 
 /*
- * Design tokens. Names follow shadcn/ui conventions so its components pick them up.
- * Colours were chosen for WCAG AA contrast against the light background
- * (normal text >= 4.5:1, focus ring and borders of controls >= 3:1).
+ * Design tokens. See docs/DESIGN.md for the reasoning and usage rules.
+ * Brand tokens hold the raw palette; the shadcn/ui-named tokens below map it to roles,
+ * so every component and screen inherits the identity from one place.
+ * All text pairings were checked for WCAG AA (normal text >= 4.5:1, UI parts >= 3:1).
  */
 :root {
-  --radius: 0.75rem;
+  /* Brand palette */
+  --brand-paper: #fbf7f0;
+  --brand-paper-deep: #f4ecdf;
+  --brand-card: #fffdf9;
+  --brand-ink: #1a2b2f;
+  --brand-ink-soft: #4b5b60;
+  --brand-petrol: #0f5257;
+  --brand-petrol-deep: #0a3a3e;
+  --brand-petrol-tint: #ddebe8;
+  --brand-apricot: #f0a066;
+  --brand-apricot-tint: #fce9d9;
+  --brand-apricot-ink: #8a4417;
+  --brand-gold: #e5b54a;
+  --brand-gold-tint: #fbf1d3;
 
-  --background: #faf8f4;
-  --foreground: #1f2933;
+  /* Roles (shadcn/ui names) */
+  --radius: 0.875rem;
 
-  --card: #ffffff;
-  --card-foreground: #1f2933;
-  --popover: #ffffff;
-  --popover-foreground: #1f2933;
+  --background: var(--brand-paper);
+  --foreground: var(--brand-ink);
 
-  --primary: #0f766e;
+  --card: var(--brand-card);
+  --card-foreground: var(--brand-ink);
+  --popover: var(--brand-card);
+  --popover-foreground: var(--brand-ink);
+
+  --primary: var(--brand-petrol);
   --primary-foreground: #ffffff;
-  /* Darker on hover: lightening the button would drop white text below 4.5:1. */
-  --primary-hover: #115e59;
-  --secondary: #e6f2ef;
-  --secondary-foreground: #134e48;
+  /* Darker on hover: lightening the button would lower the contrast of its text. */
+  --primary-hover: var(--brand-petrol-deep);
+  --secondary: var(--brand-petrol-tint);
+  --secondary-foreground: var(--brand-petrol-deep);
 
-  --muted: #f1eee8;
-  --muted-foreground: #56616b;
-  --accent: #e6f2ef;
-  --accent-foreground: #134e48;
+  --muted: var(--brand-paper-deep);
+  --muted-foreground: var(--brand-ink-soft);
+  --accent: var(--brand-petrol-tint);
+  --accent-foreground: var(--brand-petrol-deep);
 
   --destructive: #b42318;
   --destructive-foreground: #ffffff;
 
-  --border: #e3ded5;
-  --input: #8a939b;
-  --ring: #0f766e;
+  --border: #e7decf;
+  --input: #868b85;
+  --ring: var(--brand-petrol);
+
+  /* Elevation: warm, low-contrast shadows tinted with the ink colour. */
+  --shadow-soft: 0 1px 2px rgb(26 43 47 / 0.06), 0 4px 14px rgb(26 43 47 / 0.06);
+  --shadow-lifted: 0 2px 4px rgb(26 43 47 / 0.06), 0 12px 32px rgb(26 43 47 / 0.1);
+
+  /* Motion */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --ease-out-soft: cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 
 @theme inline {
   --font-sans:
-    'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    'Atkinson Hyperlegible Next Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+  --font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 12px);
+
+  --shadow-soft: var(--shadow-soft);
+  --shadow-lifted: var(--shadow-lifted);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -65,6 +99,21 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  --color-paper: var(--brand-paper);
+  --color-paper-deep: var(--brand-paper-deep);
+  --color-ink: var(--brand-ink);
+  --color-ink-soft: var(--brand-ink-soft);
+  --color-petrol: var(--brand-petrol);
+  --color-petrol-deep: var(--brand-petrol-deep);
+  --color-petrol-tint: var(--brand-petrol-tint);
+  --color-apricot: var(--brand-apricot);
+  --color-apricot-tint: var(--brand-apricot-tint);
+  --color-apricot-ink: var(--brand-apricot-ink);
+  --color-gold: var(--brand-gold);
+  --color-gold-tint: var(--brand-gold-tint);
+
+  --ease-out-soft: var(--ease-out-soft);
 }
 
 @layer base {
@@ -74,6 +123,7 @@
 
   html {
     -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
   }
 
   body {
@@ -81,15 +131,54 @@
     line-height: 1.6;
   }
 
+  /* Anchor targets must not hide under the sticky site header. */
+  [id] {
+    scroll-margin-top: 6rem;
+  }
+
   /* A strong, consistent focus indicator for everything, including plain links. */
   :focus-visible {
     outline: 3px solid var(--ring);
     outline-offset: 2px;
   }
+
+  /* On dark surfaces the petrol ring would disappear, so it switches to apricot. */
+  .surface-dark :focus-visible {
+    outline-color: var(--brand-apricot);
+  }
+}
+
+@layer components {
+  /* Gentle reveal on scroll. Progressive enhancement only: content is fully visible
+     without it, and it never runs for users who prefer reduced motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .reveal-on-scroll {
+        animation: reveal-up linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 40%;
+      }
+    }
+  }
+
+  @keyframes reveal-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 }
 
 /* Respect users who ask the operating system for less motion. */
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   *,
   *::before,
   *::after {

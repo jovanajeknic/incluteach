@@ -1,6 +1,7 @@
 import { Home, Info, Plus, type LucideIcon } from 'lucide-react';
-import { NavLink, Outlet, ScrollRestoration } from 'react-router';
+import { Link, NavLink, Outlet, ScrollRestoration } from 'react-router';
 import { newLessonPath, teacherHomePath } from '@/features/lessons/paths';
+import { Logo } from '@/shared/brand/Logo';
 import { cn } from '@/shared/lib/utils';
 import { text } from '@/text/sr-Latn';
 
@@ -32,7 +33,9 @@ export function TeacherLayout() {
 
       <aside className="border-b bg-card md:sticky md:top-0 md:flex md:h-screen md:w-64 md:shrink-0 md:flex-col md:border-r md:border-b-0">
         <div className="px-4 pt-4 pb-3 md:px-6 md:pt-7 md:pb-8">
-          <p className="text-xl font-bold tracking-tight text-primary">{text.app.name}</p>
+          <Link to="/" aria-label={text.app.homeLinkLabel} className="inline-flex rounded-md">
+            <Logo />
+          </Link>
         </div>
         <nav aria-label={text.app.mainNavigation} className="px-2 pb-2 md:px-3">
           <ul className="flex gap-1 md:flex-col">
