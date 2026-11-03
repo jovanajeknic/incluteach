@@ -4,16 +4,15 @@ import { cn } from '@/shared/lib/utils';
 import { Slot } from 'radix-ui';
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-full font-display text-sm font-bold whitespace-nowrap transition-[background-color,color,box-shadow,transform] duration-200 ease-out-soft outline-none hover:-translate-y-0.5 active:translate-y-[3px] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-full font-display text-sm font-semibold whitespace-nowrap transition-[background-color,color,box-shadow,transform] duration-200 ease-out-soft outline-none hover:-translate-y-px active:translate-y-0 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default:
-          'bg-primary text-primary-foreground shadow-[0_4px_0_var(--primary-edge)] hover:bg-primary-hover hover:shadow-[0_4px_0_#6b2a1f] active:shadow-[0_1px_0_var(--primary-edge)]',
+        default: 'bg-primary text-primary-foreground hover:bg-primary-hover',
         destructive:
           'bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40',
         outline:
-          'border-2 border-ink/15 bg-card shadow-[0_4px_0_rgb(34_49_58/0.12)] hover:border-ink/25 hover:bg-mint hover:text-mint-ink active:shadow-[0_1px_0_rgb(34_49_58/0.12)] dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
+          'border-2 border-forest/25 bg-transparent text-forest hover:border-forest hover:bg-forest/5 dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
         accent:
           'bg-butter-deep text-ink shadow-[0_4px_0_#c9a344] hover:bg-blush-deep hover:shadow-[0_4px_0_#c97f72] active:shadow-[0_1px_0_#c9a344]',
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',

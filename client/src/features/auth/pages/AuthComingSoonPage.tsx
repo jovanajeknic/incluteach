@@ -19,17 +19,17 @@ export function AuthComingSoonPage({ kind }: AuthComingSoonPageProps) {
   return (
     <div className="mx-auto max-w-xl py-12 sm:py-20">
       <title>{text.app.pageTitle(page.pageTitle)}</title>
-      <div className="rounded-[2.5rem] bg-blush p-8 text-center shadow-soft sm:p-12">
+      <div className="rounded-[2rem] border border-line bg-card p-8 text-center shadow-soft sm:p-12">
         <span
           aria-hidden="true"
-          className="mx-auto flex size-16 items-center justify-center rounded-full bg-card text-blush-ink"
+          className="mx-auto flex size-16 items-center justify-center rounded-full bg-ochre text-ink"
         >
           <Hourglass className="size-8" />
         </span>
-        <h1 className="mt-6 font-display text-3xl font-black tracking-tight text-ink">
+        <h1 className="mt-6 font-display text-3xl font-bold tracking-tight text-ink">
           {page.heading}
         </h1>
-        <p className="mt-4 text-lg text-ink">{t.description}</p>
+        <p className="mt-4 text-lg text-ink-soft">{t.description}</p>
         <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
           <Button asChild size="lg" className="h-12 px-6 text-base">
             <Link to={teacherHomePath}>

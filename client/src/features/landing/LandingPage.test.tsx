@@ -2,14 +2,43 @@ import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { renderApp } from '@/test/renderApp';
 
+const sectionNavigation = [
+  { name: 'O nama', id: 'o-nama' },
+  { name: 'Kako funkcioniše', id: 'kako-funkcionise' },
+  { name: 'Za koga je', id: 'za-koga-je' },
+];
+
+const getMenuButton = () => screen.getByRole('button', { name: 'Meni' });
+const getMenu = () => document.getElementById('site-mobile-menu');
+
 describe('LandingPage', () => {
-  it('states what the app is for in a heading and one sentence', () => {
+  it('shows the headline, eyebrow and short description', () => {
     renderApp({ path: '/' });
 
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Različiti načini učenja. Jednake prilike.' }),
+      screen.getByRole('heading', { level: 1, name: 'Učimo različito. Rastemo zajedno.' }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/pomaže nastavnicima da svaku lekciju prilagode/)).toBeInTheDocument();
+    expect(screen.getByText('Učenje koje nas povezuje')).toBeInTheDocument();
+    expect(
+      screen.getByText('Prostor za znanje, podršku i prilike za svako dijete.'),
+    ).toBeInTheDocument();
+  });
+
+  it('describes the illustration for screen readers', () => {
+    renderApp({ path: '/' });
+    expect(screen.getByRole('img', { name: /invalidskim kolicima/ })).toBeInTheDocument();
+  });
+
+  it('links header navigation to sections that exist on the page', () => {
+    renderApp({ path: '/' });
+
+    const nav = within(screen.getByRole('banner')).getByRole('navigation', {
+      name: 'Glavna navigacija',
+    });
+    for (const { name, id } of sectionNavigation) {
+      expect(within(nav).getByRole('link', { name })).toHaveAttribute('href', `#${id}`);
+      expect(document.getElementById(id)).toBeInTheDocument();
+    }
   });
 
   it.each([
@@ -18,47 +47,74 @@ describe('LandingPage', () => {
   ])('header "%s" opens %s, which says it is coming soon', async (name, path, heading) => {
     const { user, router } = renderApp({ path: '/' });
 
-    const header = screen.getByRole('banner');
-    await user.click(within(header).getByRole('link', { name }));
+    await user.click(within(screen.getByRole('banner')).getByRole('link', { name }));
 
     expect(router.state.location.pathname).toBe(path);
     expect(screen.getByRole('heading', { level: 1, name: heading })).toBeInTheDocument();
   });
 
-  it('offers the teacher demo from the coming-soon page', async () => {
-    const { user, router } = renderApp({ path: '/login' });
-
-    await user.click(screen.getByRole('link', { name: /Isprobaj nastavnički demo/ }));
-
-    expect(router.state.location.pathname).toBe('/teacher');
-  });
-
-  it('opens the teacher demo from the hero', async () => {
+  it('opens the teacher demo from "Istraži IncluTeach"', async () => {
     const { user, router } = renderApp({ path: '/' });
 
-    await user.click(screen.getByRole('link', { name: 'Isprobaj demo' }));
+    await user.click(screen.getByRole('link', { name: 'Istraži IncluTeach' }));
 
     expect(router.state.location.pathname).toBe('/teacher');
-    expect(screen.getByRole('heading', { level: 1, name: /Dobro došli/ })).toBeInTheDocument();
   });
 
-  it('shows the three roles and marks the unfinished ones as coming soon', () => {
+  it('points "Naša priča" to the about section', () => {
+    renderApp({ path: '/' });
+    expect(screen.getByRole('link', { name: 'Naša priča' })).toHaveAttribute('href', '#o-nama');
+    expect(screen.getByRole('heading', { level: 2, name: 'Naša priča' })).toBeInTheDocument();
+  });
+
+  it('shows the three audiences and marks unfinished ones as coming soon', () => {
     renderApp({ path: '/' });
 
-    const roles = screen.getByRole('region', { name: 'Za koga je IncluTeach' });
-    const items = within(roles).getAllByRole('listitem');
-    expect(items).toHaveLength(3);
-    expect(items[0]).toHaveTextContent('Nastavnik');
-    expect(items[0]).toHaveTextContent('Dostupno u demou');
-    expect(items[1]).toHaveTextContent('Učenik');
+    const section = screen.getByRole('region', { name: 'Zajedno stvaramo prostor za svakoga.' });
+    const items = within(section).getAllByRole('listitem');
+    expect(items.map((item) => within(item).getByRole('heading').textContent)).toEqual([
+      'Za nastavnike',
+      'Za učenike',
+      'Za roditelje',
+    ]);
+    expect(items[0]).not.toHaveTextContent('U pripremi');
     expect(items[1]).toHaveTextContent('U pripremi');
-    expect(items[2]).toHaveTextContent('Roditelj');
     expect(items[2]).toHaveTextContent('U pripremi');
   });
 
-  it('labels the hero visual as illustrative', () => {
-    renderApp({ path: '/' });
-    expect(screen.getByRole('figure')).toHaveAccessibleName(/Ilustrativni prikaz/);
+  describe('mobile menu', () => {
+    it('opens and closes with the menu button', async () => {
+      const { user } = renderApp({ path: '/' });
+      expect(getMenuButton()).toHaveAttribute('aria-expanded', 'false');
+      expect(getMenu()).not.toBeInTheDocument();
+
+      await user.click(getMenuButton());
+      expect(getMenuButton()).toHaveAttribute('aria-expanded', 'true');
+      expect(within(getMenu()!).getByRole('link', { name: 'O nama' })).toBeInTheDocument();
+      expect(within(getMenu()!).getByRole('link', { name: 'Prijavi se' })).toBeInTheDocument();
+
+      await user.click(getMenuButton());
+      expect(getMenu()).not.toBeInTheDocument();
+    });
+
+    it('closes on Escape and returns focus to the menu button', async () => {
+      const { user } = renderApp({ path: '/' });
+      await user.click(getMenuButton());
+
+      await user.keyboard('{Escape}');
+
+      expect(getMenu()).not.toBeInTheDocument();
+      expect(getMenuButton()).toHaveFocus();
+    });
+
+    it('closes after choosing a section', async () => {
+      const { user } = renderApp({ path: '/' });
+      await user.click(getMenuButton());
+
+      await user.click(within(getMenu()!).getByRole('link', { name: 'Kako funkcioniše' }));
+
+      expect(getMenu()).not.toBeInTheDocument();
+    });
   });
 
   it('only contains links with a real destination', () => {

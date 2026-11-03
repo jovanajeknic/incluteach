@@ -7,7 +7,7 @@ describe('App routes', () => {
     const { router } = renderApp({ path: '/' });
     expect(router.state.location.pathname).toBe('/');
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Različiti načini učenja. Jednake prilike.' }),
+      screen.getByRole('heading', { level: 1, name: 'Učimo različito. Rastemo zajedno.' }),
     ).toBeInTheDocument();
   });
 

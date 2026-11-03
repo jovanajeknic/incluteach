@@ -8,7 +8,7 @@ export function PublicLayout() {
   return (
     <div className="min-h-screen bg-paper">
       <SkipLink />
-      <header className="bg-mint">
+      <header className="border-b border-line">
         <div className="mx-auto flex h-18 max-w-6xl items-center px-4 sm:px-6 lg:px-8">
           <Link to="/" aria-label={text.app.homeLinkLabel} className="rounded-md">
             <Logo />

@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 /* Self-hosted fonts: no third-party requests, and the latin-ext subset covers č ć đ š ž. */
-@import '@fontsource-variable/nunito';
+@import '@fontsource-variable/lexend';
 @import '@fontsource-variable/atkinson-hyperlegible-next';
 
 /*
@@ -11,12 +11,16 @@
  */
 :root {
   /* Base */
-  --brand-paper: #fffaf5;
+  --brand-paper: #fdf6ec;
   --brand-card: #ffffff;
-  --brand-ink: #22313a;
-  --brand-ink-soft: #4f5b63;
-  --brand-teal: #2d6b64;
-  --brand-teal-deep: #1f4f4a;
+  --brand-ink: #112b28;
+  --brand-ink-soft: #4a5654;
+  --brand-forest: #1b5244;
+  --brand-forest-deep: #123a30;
+  /* Landing page accents taken from the owner's design: sage, ochre and a fine sage line. */
+  --brand-sage: #869e75;
+  --brand-ochre: #fdc76b;
+  --brand-line: #b5bda6;
 
   /*
    * Six pastels. The owner chose mint and blush as the base; the other four widen the
@@ -44,9 +48,14 @@
   --brand-pistachio-deep: #b3d48e;
   --brand-pistachio-ink: #3f5f1c;
 
-  /* Logo book pages: a soft teal pair that anchors the pastel figures. */
-  --logo-page-left: #4c8c84;
-  --logo-page-right: #6aa8a0;
+  /* Logo: five learners in soft but clear colours over a forest-green book. */
+  --logo-figure-1: #6fa8dc;
+  --logo-figure-2: #5d9a82;
+  --logo-figure-3: #f78c61;
+  --logo-figure-4: #f6c25b;
+  --logo-figure-5: #a58bd6;
+  --logo-page-left: #1b5244;
+  --logo-page-right: #2a6b59;
 
   /* Roles (shadcn/ui names) */
   --radius: 1.5rem;
@@ -59,12 +68,12 @@
   --popover: var(--brand-card);
   --popover-foreground: var(--brand-ink);
 
-  --primary: var(--brand-teal);
+  --primary: var(--brand-forest);
   --primary-foreground: #ffffff;
-  /* Playful colour swap on hover; white text keeps 6.9:1 on blush ink. */
-  --primary-hover: var(--brand-blush-ink);
+  /* Darker on hover; white text stays above 12:1. */
+  --primary-hover: var(--brand-forest-deep);
   /* The "pressed" edge under chunky buttons. */
-  --primary-edge: var(--brand-teal-deep);
+  --primary-edge: var(--brand-forest-deep);
   --secondary: var(--brand-mint);
   --secondary-foreground: var(--brand-mint-ink);
 
@@ -76,9 +85,9 @@
   --destructive: #b42318;
   --destructive-foreground: #ffffff;
 
-  --border: #ece3da;
+  --border: #e6dccb;
   --input: #7d8a90;
-  --ring: var(--brand-teal);
+  --ring: var(--brand-forest);
 
   /* Elevation: soft, low-contrast shadows tinted with the ink colour. */
   --shadow-soft: 0 1px 2px rgb(34 49 58 / 0.05), 0 6px 18px rgb(34 49 58 / 0.07);
@@ -92,8 +101,7 @@
 @theme inline {
   --font-sans:
     'Atkinson Hyperlegible Next Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
-  --font-display:
-    'Nunito Variable', 'Segoe UI Rounded', 'Arial Rounded MT Bold', system-ui, sans-serif;
+  --font-display: 'Lexend Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
 
   --radius-sm: calc(var(--radius) - 14px);
   --radius-md: calc(var(--radius) - 10px);
@@ -130,8 +138,11 @@
   --color-paper: var(--brand-paper);
   --color-ink: var(--brand-ink);
   --color-ink-soft: var(--brand-ink-soft);
-  --color-teal: var(--brand-teal);
-  --color-teal-deep: var(--brand-teal-deep);
+  --color-forest: var(--brand-forest);
+  --color-forest-deep: var(--brand-forest-deep);
+  --color-sage: var(--brand-sage);
+  --color-ochre: var(--brand-ochre);
+  --color-line: var(--brand-line);
   --color-mint: var(--brand-mint);
   --color-mint-deep: var(--brand-mint-deep);
   --color-mint-ink: var(--brand-mint-ink);

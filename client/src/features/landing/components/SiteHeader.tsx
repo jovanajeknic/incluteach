@@ -1,43 +1,108 @@
+import { Menu, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { loginPath, registerPath } from '@/features/auth/paths';
 import { Logo, LogoMark } from '@/shared/brand/Logo';
 import { Button } from '@/shared/ui/button';
 import { text } from '@/text/sr-Latn';
+import { sectionLinks } from '../sections';
+
+const MENU_ID = 'site-mobile-menu';
+
+const navLinkClassName =
+  'rounded-full px-3 py-2 font-display text-[0.95rem] text-ink transition-colors duration-150 hover:text-forest';
 
 export function SiteHeader() {
   const t = text.landing.nav;
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Escape closes the menu and returns focus to the button that opened it.
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [menuOpen]);
+
+  const closeMenu = () => setMenuOpen(false);
 
   return (
-    <header className="sticky top-0 z-40 bg-mint/90 backdrop-blur supports-[backdrop-filter]:bg-mint/80">
-      <div className="mx-auto flex h-18 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
-        <Link to="/" aria-label={text.app.homeLinkLabel} className="rounded-xl">
-          {/* On narrow phones only the symbol fits next to both buttons. */}
-          <LogoMark className="h-10 min-[440px]:hidden" />
-          <Logo className="hidden min-[440px]:inline-flex" />
+    <header className="sticky top-0 z-40 bg-paper/95 backdrop-blur supports-[backdrop-filter]:bg-paper/85">
+      <div className="mx-auto flex h-20 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <Link to="/" aria-label={text.app.homeLinkLabel} className="shrink-0 rounded-xl">
+          {/* On narrow phones only the symbol fits next to the buttons. */}
+          <LogoMark className="h-10 min-[400px]:hidden" />
+          <Logo className="hidden min-[400px]:inline-flex" markClassName="h-10" />
         </Link>
 
-        <nav aria-label={t.label}>
-          <ul className="flex items-center gap-2 sm:gap-3">
-            <li>
-              <Button
-                asChild
-                variant="outline"
-                className="h-11 px-3 text-sm min-[360px]:px-4 min-[360px]:text-base sm:px-5"
-              >
-                <Link to={loginPath}>{t.login}</Link>
-              </Button>
-            </li>
-            <li>
-              <Button
-                asChild
-                className="h-11 px-3 text-sm min-[360px]:px-4 min-[360px]:text-base sm:px-5"
-              >
-                <Link to={registerPath}>{t.register}</Link>
-              </Button>
-            </li>
+        <nav aria-label={t.label} className="hidden lg:block">
+          <ul className="flex items-center gap-6">
+            {sectionLinks.map((link) => (
+              <li key={link.id}>
+                <a href={`#${link.id}`} className={navLinkClassName}>
+                  {link.label}
+                </a>
+              </li>
+            ))}
           </ul>
         </nav>
+
+        <div className="flex items-center gap-2 sm:gap-4">
+          <Link to={loginPath} className={`${navLinkClassName} hidden sm:inline-flex`}>
+            {t.login}
+          </Link>
+          <Button asChild className="h-11 px-4 text-[0.95rem] sm:px-5">
+            <Link to={registerPath}>{t.register}</Link>
+          </Button>
+          <Button
+            ref={menuButtonRef}
+            type="button"
+            variant="outline"
+            className="h-11 px-3 text-[0.95rem] sm:px-4 lg:hidden"
+            aria-expanded={menuOpen}
+            aria-controls={MENU_ID}
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            {menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+            {t.menu}
+          </Button>
+        </div>
       </div>
+
+      {menuOpen && (
+        <div id={MENU_ID} className="border-t border-line bg-paper lg:hidden">
+          <nav aria-label={t.label} className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
+            <ul className="flex flex-col gap-1">
+              {sectionLinks.map((link) => (
+                <li key={link.id}>
+                  <a
+                    href={`#${link.id}`}
+                    onClick={closeMenu}
+                    className="block rounded-2xl px-4 py-3 font-display text-lg text-ink hover:bg-forest/5"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+              <li className="sm:hidden">
+                <Link
+                  to={loginPath}
+                  onClick={closeMenu}
+                  className="block rounded-2xl px-4 py-3 font-display text-lg text-forest hover:bg-forest/5"
+                >
+                  {t.login}
+                </Link>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

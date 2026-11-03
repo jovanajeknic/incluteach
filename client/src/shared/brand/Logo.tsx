@@ -4,13 +4,13 @@ import { cn } from '@/shared/lib/utils';
 type LogoTone = 'color' | 'mono' | 'inverse';
 
 // Five learners of different colours behind one open book. Geometry follows the owner's
-// logo; colours are the pastel brand palette (see docs/DESIGN.md).
+// logo; colours are the logo tokens (see docs/DESIGN.md).
 const figures = [
-  { color: 'var(--brand-sky-deep)', head: [88.5, 101, 28.5], body: [53, 140, 71, 120] },
-  { color: 'var(--brand-mint-deep)', head: [168, 75, 28], body: [133, 114, 71, 146] },
-  { color: 'var(--brand-blush-deep)', head: [247.5, 54, 28], body: [212, 93.5, 72, 144.5] },
-  { color: 'var(--brand-butter-deep)', head: [327, 75, 28], body: [292, 114, 71, 146] },
-  { color: 'var(--brand-lilac-deep)', head: [407, 101, 28.5], body: [372, 140, 71, 120] },
+  { color: 'var(--logo-figure-1)', head: [88.5, 101, 28.5], body: [53, 140, 71, 120] },
+  { color: 'var(--logo-figure-2)', head: [168, 75, 28], body: [133, 114, 71, 146] },
+  { color: 'var(--logo-figure-3)', head: [247.5, 54, 28], body: [212, 93.5, 72, 144.5] },
+  { color: 'var(--logo-figure-4)', head: [327, 75, 28], body: [292, 114, 71, 146] },
+  { color: 'var(--logo-figure-5)', head: [407, 101, 28.5], body: [372, 140, 71, 120] },
 ] as const;
 
 const leftPage = 'M43 212C75 194 160 190 237 240V349C200 318 120 300 43 320Z';
@@ -77,9 +77,8 @@ export function Logo({ className, tone = 'color', markClassName, markRef, markSt
       )}
     >
       <LogoMark tone={tone} className={markClassName} ref={markRef} style={markStyle} />
-      <span className="font-display text-[1.5rem] leading-none font-extrabold tracking-tight">
-        Inclu
-        <span className={cn(tone === 'color' && 'text-teal')}>Teach</span>
+      <span className="font-display text-[1.45rem] leading-none font-bold tracking-tight">
+        IncluTeach
       </span>
     </span>
   );

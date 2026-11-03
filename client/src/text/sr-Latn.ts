@@ -12,44 +12,54 @@ export const text = {
   },
 
   landing: {
-    pageTitle: 'IncluTeach – inkluzivno obrazovanje',
+    pageTitle: 'IncluTeach – učenje koje nas povezuje',
     nav: {
-      label: 'Nalog',
+      label: 'Glavna navigacija',
+      about: 'O nama',
+      howItWorks: 'Kako funkcioniše',
+      audiences: 'Za koga je',
       login: 'Prijavi se',
       register: 'Registruj se',
-    },
-    badges: {
-      inDemo: 'Dostupno u demou',
-      comingSoon: 'U pripremi',
-      illustrative: 'Ilustrativni prikaz',
+      menu: 'Meni',
     },
     hero: {
-      title: 'Različiti načini učenja. Jednake prilike.',
-      description:
-        'IncluTeach pomaže nastavnicima da svaku lekciju prilagode svakom učeniku, a roditeljima da podrže učenje kod kuće.',
-      demoAction: 'Isprobaj demo',
-      demoNote: 'Demo za nastavnike, bez prijave.',
+      eyebrow: 'Učenje koje nas povezuje',
+      titleFirst: 'Učimo različito.',
+      titleSecond: 'Rastemo zajedno.',
+      description: 'Prostor za znanje, podršku i prilike za svako dijete.',
+      explore: 'Istraži IncluTeach',
+      ourStory: 'Naša priča',
+      imageAlt:
+        'Ilustracija: nastavnica i djeca, među kojima je i dječak u invalidskim kolicima, zajedno čitaju knjigu za stolom ispod drveta.',
     },
-    visual: {
-      caption: 'Ilustrativni prikaz: jedna lekcija na četiri načina.',
-      lessonMeta: 'Priroda i društvo · 4. razred',
-      lessonTitle: 'Kruženje vode u prirodi',
-      modeText: 'Tekst',
-      modeSummary: 'Sažetak',
-      modeVisual: 'Slika',
-      modeAudio: 'Slušanje',
-      textLines: [
-        'Sunce zagrijava vodu u morima, rijekama i jezerima, pa ona isparava.',
-        'U vazduhu se vodena para hladi i pravi oblake.',
+    audiences: {
+      title: 'Zajedno stvaramo prostor za svakoga.',
+      comingSoon: 'U pripremi',
+      teacher: {
+        title: 'Za nastavnike',
+        description: 'Alati i podrška za inkluzivno i fleksibilno učenje.',
+      },
+      student: {
+        title: 'Za učenike',
+        description: 'Prilike da uče na način koji odgovara njihovim potrebama.',
+      },
+      parent: {
+        title: 'Za roditelje',
+        description: 'Sigurnost da dijete dobija podršku koja mu je potrebna.',
+      },
+    },
+    howItWorks: {
+      title: 'Kako funkcioniše',
+      steps: [
+        'Nastavnik unosi lekciju.',
+        'Platforma pomaže da se lekcija prilagodi, a nastavnik je pregleda.',
+        'Učenik uči na svoj način, a roditelj prati i podržava.',
       ],
-      summaryItems: ['Sunce zagrijava vodu.', 'Para pravi oblake.', 'Kiša vraća vodu u rijeke.'],
-      audioLabel: 'Poslušaj lekciju',
+      note: 'Ovo je planirani tok. Demo trenutno prikazuje početni nastavnički dio.',
     },
-    roles: {
-      heading: 'Za koga je IncluTeach',
-      teacher: { title: 'Nastavnik', description: 'Prilagođava lekcije svakom učeniku.' },
-      student: { title: 'Učenik', description: 'Uči na način koji mu odgovara.' },
-      parent: { title: 'Roditelj', description: 'Prati i podržava učenje kod kuće.' },
+    about: {
+      title: 'Naša priča',
+      text: 'IncluTeach nastaje iz uvjerenja da svako dijete zaslužuje da uči na način koji mu odgovara. Povezujemo nastavnike, učenike i roditelje, kako bi podrška djetetu bila zajednička.',
     },
     footer: {
       note: 'Demo projekat sa izmišljenim podacima.',
