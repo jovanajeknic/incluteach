@@ -14,12 +14,9 @@ export const text = {
   landing: {
     pageTitle: 'IncluTeach – inkluzivno obrazovanje',
     nav: {
-      label: 'Navigacija po stranici',
-      howItWorks: 'Kako radi',
-      audiences: 'Za koga je',
-      accessibility: 'Pristupačnost',
-      tryDemo: 'Isprobaj demo',
-      menu: 'Meni',
+      label: 'Nalog',
+      login: 'Prijavi se',
+      register: 'Registruj se',
     },
     badges: {
       inDemo: 'Dostupno u demou',
@@ -27,22 +24,19 @@ export const text = {
       illustrative: 'Ilustrativni prikaz',
     },
     hero: {
-      eyebrow: 'Platforma za inkluzivno obrazovanje',
       title: 'Različiti načini učenja. Jednake prilike.',
       description:
-        'IncluTeach povezuje nastavnike, učenike i roditelje. Nastavnik od jednog materijala priprema lekciju prilagođenu različitim potrebama, učenik uči na način koji mu odgovara, a roditelj zna kako da podrži učenje kod kuće.',
-      primaryAction: 'Isprobaj nastavnički demo',
-      secondaryAction: 'Kako funkcioniše',
-      demoNote: 'Demo koristi izmišljene podatke i ne traži prijavu.',
+        'IncluTeach pomaže nastavnicima da svaku lekciju prilagode svakom učeniku, a roditeljima da podrže učenje kod kuće.',
+      demoAction: 'Isprobaj demo',
+      demoNote: 'Demo za nastavnike, bez prijave.',
     },
     visual: {
-      caption:
-        'Ilustrativni prikaz: jedna lekcija na četiri načina. U demou je dostupan tekstualni prikaz lekcije, a sažetak, vizuelna podrška i slušanje su u pripremi.',
+      caption: 'Ilustrativni prikaz: jedna lekcija na četiri načina.',
       lessonMeta: 'Priroda i društvo · 4. razred',
       lessonTitle: 'Kruženje vode u prirodi',
       modeText: 'Tekst',
       modeSummary: 'Sažetak',
-      modeVisual: 'Vizuelna podrška',
+      modeVisual: 'Slika',
       modeAudio: 'Slušanje',
       textLines: [
         'Sunce zagrijava vodu u morima, rijekama i jezerima, pa ona isparava.',
@@ -51,119 +45,30 @@ export const text = {
       summaryItems: ['Sunce zagrijava vodu.', 'Para pravi oblake.', 'Kiša vraća vodu u rijeke.'],
       audioLabel: 'Poslušaj lekciju',
     },
-    howItWorks: {
-      eyebrow: 'Kako radi',
-      title: 'Od jednog materijala do lekcije za svakog učenika',
-      plannedNote:
-        'Ovo je planirani tok platforme. Trenutni demo prikazuje početni nastavnički dio: unos lekcije, čuvanje nacrta i njegov pregled.',
-      steps: [
-        {
-          actor: 'Nastavnik',
-          title: 'Nastavnik unosi materijal',
-          description: 'Tekst lekcije koju već koristi u nastavi, sa predmetom i razredom.',
-        },
-        {
-          actor: 'Platforma i nastavnik',
-          title: 'Platforma pomaže, nastavnik odlučuje',
-          description:
-            'Platforma predlaže prilagođene verzije, a nastavnik ih pregleda i uređuje. Ništa ne stiže do učenika bez njegovog odobrenja.',
-        },
-        {
-          actor: 'Učenik i roditelj',
-          title: 'Učenik uči, roditelj podržava',
-          description:
-            'Učenik koristi materijal prilagođen sebi, a roditelj dobija jasne smjernice kako da pomogne kod kuće.',
-        },
-      ],
-    },
-    audiences: {
-      eyebrow: 'Za koga je',
-      title: 'Tri kutka, jedan zajednički cilj',
-      intro:
-        'Svaka uloga dobija ono što joj treba, a svi prate isto: da svako dijete uči sa razumijevanjem.',
-      teacher: {
-        label: 'Nastavnički kutak',
-        title: 'Manje vremena na pripremu, više vremena za učenike',
-        benefits: [
-          'Unesite materijal jednom i pripremite ga za različite potrebe u odjeljenju.',
-          'Pregledajte i uredite svaki prijedlog prije nego što stigne do učenika.',
-          'Pratite status svih lekcija na jednom mjestu.',
-        ],
-        availability: 'Početni dio je dostupan u demou: unos lekcije, nacrt i pregled.',
-        action: 'Otvori nastavnički demo',
-      },
-      student: {
-        label: 'Učenički kutak',
-        title: 'Učenje koje se prilagođava meni',
-        benefits: [
-          'Čitanje uz podesivu veličinu teksta, prored i kontrast.',
-          'Sažetak, slike i slušanje uz istu lekciju.',
-          'Kviz koji pokazuje napredak, bez poređenja sa drugima.',
-        ],
-      },
-      parent: {
-        label: 'Roditeljski kutak',
-        title: 'Podrška kod kuće, bez nagađanja',
-        benefits: [
-          'Pregled lekcija i aktivnosti svog djeteta.',
-          'Kratka i jasna uputstva za rad kod kuće.',
-          'Vidite samo podatke svog djeteta.',
-        ],
-      },
-    },
-    accessibility: {
-      eyebrow: 'Pristupačnost',
-      title: 'Pristupačnost nije dodatak, već polazna tačka',
-      intro:
-        'Gradimo platformu tako da je može koristiti svako: uz tastaturu, čitač ekrana, uvećan tekst ili na malom ekranu.',
-      principles: [
-        {
-          title: 'Jasan sadržaj',
-          description: 'Kratke rečenice, jasna struktura i lekcije koje nastavnik uvijek pregleda.',
-        },
-        {
-          title: 'Prilagodljiv prikaz',
-          description: 'Isti sadržaj, prikazan onako kako je učeniku najlakše da ga čita.',
-        },
-        {
-          title: 'Različiti načini učenja',
-          description: 'Tekst, sažetak, slika i zvuk kao ravnopravni putevi do istog znanja.',
-        },
-        {
-          title: 'Poštovanje privatnosti',
-          description: 'Dijagnoze se ne prikazuju učenicima ni njihovim vršnjacima.',
-        },
-      ],
-      availableTitle: 'Već radi u demou',
-      available: [
-        'Rad tastaturom i jasno vidljiv fokus',
-        'Kontrast boja prema WCAG AA preporukama',
-        'Polja forme sa jasnim oznakama i porukama o greškama',
-        'Prikaz prilagođen telefonu, tabletu i računaru',
-        'Poštovanje podešavanja za smanjene animacije',
-        'Font dizajniran za lakše čitanje',
-      ],
-      plannedTitle: 'Planirano',
-      planned: [
-        'Podešavanje veličine teksta, proreda i kontrasta',
-        'Sažeci i pojednostavljene verzije koje pregleda nastavnik',
-        'Vizuelna podrška uz tekst lekcije',
-        'Slušanje lekcije',
-      ],
-    },
-    finalCta: {
-      title: 'Pogledajte kako počinje priprema prilagođene lekcije',
-      description:
-        'Napravite nacrt lekcije u nastavničkom demou. Podaci su izmišljeni i ne traži se prijava.',
-      action: 'Isprobaj nastavnički demo',
+    roles: {
+      heading: 'Za koga je IncluTeach',
+      teacher: { title: 'Nastavnik', description: 'Prilagođava lekcije svakom učeniku.' },
+      student: { title: 'Učenik', description: 'Uči na način koji mu odgovara.' },
+      parent: { title: 'Roditelj', description: 'Prati i podržava učenje kod kuće.' },
     },
     footer: {
-      description:
-        'Platforma za inkluzivno obrazovanje koja povezuje nastavnike, učenike i roditelje.',
-      linksLabel: 'Linkovi u podnožju',
-      teacherDemo: 'Nastavnički demo',
       note: 'Demo projekat sa izmišljenim podacima.',
     },
+  },
+
+  auth: {
+    login: {
+      pageTitle: 'Prijava',
+      heading: 'Prijava je u pripremi',
+    },
+    register: {
+      pageTitle: 'Registracija',
+      heading: 'Registracija je u pripremi',
+    },
+    description:
+      'Nalozi će biti dostupni kada aplikaciju povežemo sa serverom. Do tada možete bez naloga isprobati nastavnički demo.',
+    tryDemo: 'Isprobaj nastavnički demo',
+    backHome: 'Nazad na početnu',
   },
 
   demo: {

@@ -1,4 +1,6 @@
 import { type RouteObject } from 'react-router';
+import { AuthComingSoonPage } from '@/features/auth/pages/AuthComingSoonPage';
+import { loginPath, registerPath } from '@/features/auth/paths';
 import { LandingPage } from '@/features/landing/LandingPage';
 import { LessonDetailPage } from '@/features/lessons/pages/LessonDetailPage';
 import { NewLessonPage } from '@/features/lessons/pages/NewLessonPage';
@@ -26,7 +28,11 @@ export const routes: RouteObject[] = [
       },
       {
         element: <PublicLayout />,
-        children: [{ path: '*', element: <NotFoundPage homePath="/" /> }],
+        children: [
+          { path: loginPath, element: <AuthComingSoonPage kind="login" /> },
+          { path: registerPath, element: <AuthComingSoonPage kind="register" /> },
+          { path: '*', element: <NotFoundPage homePath="/" /> },
+        ],
       },
     ],
   },
