@@ -6,7 +6,7 @@ IncluTeach is an innovative AI-driven digital platform whose primary goal is to 
 | Folder | Contents |
 |---|---|
 | `client/` | Frontend (React, TypeScript, Vite, Tailwind CSS, shadcn/ui) |
-| `docs/` | Project documentation, including the [frontend plan](docs/FRONTEND-PLAN.md) |
+| `docs/` | Project documentation: the [frontend plan](docs/FRONTEND-PLAN.md) and the [design system](docs/DESIGN.md) |
 
 Working rules for contributors and AI agents are in [AGENTS.md](AGENTS.md).
 
@@ -32,7 +32,7 @@ npm install
 npm run dev
 ```
 
-Then open <http://localhost:5173/> in a browser.
+Then open <http://localhost:5173/> in a browser for the landing page, or <http://localhost:5173/teacher> for the teacher demo.
 
 To try it on a phone in the same Wi-Fi network, run `npm run dev -- --host` and open the `Network` address that Vite prints.
 
