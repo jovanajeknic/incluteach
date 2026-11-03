@@ -310,11 +310,13 @@ export const text = {
   },
 
   nav: {
-    home: 'Lekcije',
-    newLesson: 'Nova lekcija',
-    myClass: 'Moj razred',
+    home: 'Moji predmeti',
+    newLesson: 'Dodaj lekciju',
+    myClass: 'Učenici',
     suggestions: 'Prijedlozi roditelja',
     newSuggestions: 'novih',
+    openMenu: 'Otvori meni',
+    closeMenu: 'Zatvori meni',
   },
 
   dashboard: {

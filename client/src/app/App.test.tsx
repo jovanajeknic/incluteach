@@ -34,7 +34,7 @@ describe('App routes', () => {
 
   it('marks the current page in the teacher navigation', () => {
     renderApp({ path: '/teacher' });
-    expect(screen.getByRole('link', { name: 'Lekcije' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Moji predmeti' })).toHaveAttribute('aria-current', 'page');
   });
 
   it('links the logo in the teacher area to the public home page', async () => {

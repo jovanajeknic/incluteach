@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { schoolWithLessons, testLessons } from '@/test/lessonFixtures';
 import { renderApp } from '@/test/renderApp';
@@ -16,9 +16,7 @@ describe('Creating a lesson draft', () => {
     });
     expect(totalLessonsCount()).toBe('3');
 
-    await user.click(
-      within(screen.getByRole('navigation')).getByRole('link', { name: 'Nova lekcija' }),
-    );
+    await user.click(screen.getByRole('link', { name: 'Dodaj lekciju' }));
     expect(screen.getByRole('heading', { level: 1, name: 'Nova lekcija' })).toBeInTheDocument();
 
     await user.type(screen.getByLabelText('Naslov'), '  Planete Sunčevog sistema  ');

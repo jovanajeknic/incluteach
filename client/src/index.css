@@ -2,6 +2,11 @@
 /* Self-hosted fonts: no third-party requests, and the latin-ext subset covers č ć đ š ž. */
 @import '@fontsource-variable/lexend';
 @import '@fontsource-variable/atkinson-hyperlegible-next';
+/* Teacher area: rounded, lively headings (Fredoka) over a warm, readable text face (Nunito). */
+@import '@fontsource-variable/fredoka';
+@import '@fontsource-variable/nunito';
+/* Smooth scrolling in the teacher area; the library expects its small stylesheet. */
+@import 'lenis/dist/lenis.css';
 /* Optional dyslexia-friendly reading font; the browser downloads it only when a lesson uses it. */
 @import '@fontsource/opendyslexic/400.css';
 /* Handwriting for small margin notes only, never for lesson text. */
@@ -98,15 +103,22 @@
   --shadow-soft: 0 1px 2px rgb(34 49 58 / 0.05), 0 6px 18px rgb(34 49 58 / 0.07);
   --shadow-lifted: 0 2px 4px rgb(34 49 58 / 0.05), 0 16px 40px rgb(34 49 58 / 0.1);
 
+  /*
+   * Fonts are indirect so one area (the teacher area) can switch faces with a class,
+   * without touching every component.
+   */
+  --app-font-sans:
+    'Atkinson Hyperlegible Next Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+  --app-font-display: 'Lexend Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+
   /* Motion */
   --ease-out-soft: cubic-bezier(0.2, 0.7, 0.3, 1);
   --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @theme inline {
-  --font-sans:
-    'Atkinson Hyperlegible Next Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
-  --font-display: 'Lexend Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+  --font-sans: var(--app-font-sans);
+  --font-display: var(--app-font-display);
   --font-hand: 'Caveat', 'Segoe Print', 'Comic Sans MS', cursive;
   --font-dyslexic: 'OpenDyslexic', 'Atkinson Hyperlegible Next Variable', system-ui, sans-serif;
 
@@ -201,6 +213,51 @@
 }
 
 @layer components {
+  /* The teacher area's own type: see docs/DESIGN.md, "Teacher area". */
+  .teacher-theme {
+    --app-font-sans: 'Nunito Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+    --app-font-display: 'Fredoka Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+    font-family: var(--app-font-sans);
+  }
+
+  /*
+   * The current teacher page is a tab cut out of the dark sidebar: two concave corners
+   * above and below the link flow into the page background.
+   */
+  @media (min-width: 768px) {
+    .teacher-nav-link[aria-current='page'] {
+      position: relative;
+    }
+
+    .teacher-nav-link[aria-current='page']::before,
+    .teacher-nav-link[aria-current='page']::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      width: 1.5rem;
+      height: 1.5rem;
+      pointer-events: none;
+    }
+
+    .teacher-nav-link[aria-current='page']::before {
+      top: -1.5rem;
+      background: radial-gradient(
+        circle at 0 0,
+        transparent 1.5rem,
+        var(--background) calc(1.5rem + 0.5px)
+      );
+    }
+
+    .teacher-nav-link[aria-current='page']::after {
+      bottom: -1.5rem;
+      background: radial-gradient(
+        circle at 0 100%,
+        transparent 1.5rem,
+        var(--background) calc(1.5rem + 0.5px)
+      );
+    }
+  }
+
   /*
    * Reveal on scroll. The `js-reveal` class is added to <html> by useScrollReveal only when
    * motion is allowed, so without JavaScript or with reduced motion everything is visible.
