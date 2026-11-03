@@ -20,6 +20,26 @@ Each task states which API it works against:
 - **Mock API**: works against MSW (Mock Service Worker), which intercepts network requests in the browser and in tests and returns fictional data. No backend needed.
 - **Real backend**: needs the backend developer's running API.
 
+## Current status
+
+**First visual demo of the teacher area** (branch `feat/frontend-foundation`). It is a demo with fictional data kept in memory, with no backend and no real sign-in.
+
+| Task | Coverage |
+|---|---|
+| FE-01 | Done. Commands are in the root [README.md](../README.md). |
+| FE-02 | Partly done. Tailwind CSS, shadcn/ui, design tokens with checked contrast, and a visible focus ring are in place. |
+| FE-03 | Partly done. Teacher layout (sidebar on desktop, top navigation on phones), skip link, not-found page and route error page are in place. |
+| FE-06 | Partly done. A lesson list with status, plus counters computed from the data. |
+| FE-07 | Partly done. Text-only form; saves a local draft. No file upload and no AI request. |
+| FE-09 | Partly done. The shared `LessonContent` renderer and a read-only lesson view. No editing. |
+
+Differences from this plan, all intentional for this step:
+
+- **No MSW yet (FE-04).** Demo data comes from an in-memory store behind a `LessonsStore` interface (`client/src/features/lessons/data/`). Screens use only that interface, so it can be replaced by API calls later.
+- **No React Hook Form or Zod yet.** The four-field form uses a small, tested validation function. These libraries should be introduced with FE-07, when the form also has file upload.
+- **React Router 7, not 8.** Version 8 requires Node.js 22.22 or newer; the installed version is 22.18.0.
+- **Approved initial visual direction**: light background, calm teal as the main colour, readable type, moderately rounded cards and subtle shadows. Details will be refined after the owner reviews the app.
+
 ## 1. Goal and scope of v1
 
 IncluTeach helps a teacher prepare adapted lessons, helps a student use them, and lets a parent follow their child's activity.
@@ -244,7 +264,7 @@ Every task also follows the verification rules in [AGENTS.md](../AGENTS.md#4-ver
   - `npm run build`, `npm run lint`, `npm run typecheck` and `npm test` all pass.
   - `tsconfig` has `strict: true`.
   - At least one component test runs and passes.
-  - `client/README.md` explains how to install and run the scripts.
+  - The root `README.md` explains how to install and run the scripts.
   - No secrets and no `.env` file are committed. `.env.example` exists if any variable is used.
 
 ### FE-02 Shared design foundation
@@ -444,7 +464,7 @@ Every task also follows the verification rules in [AGENTS.md](../AGENTS.md#4-ver
 
 ### For the project owner
 
-1. **Design direction**: colours, font, logo and overall style. Needed before FE-02 is finished.
+1. **Design details**: the initial direction is approved (see [Current status](#current-status)); logo, font and final colours are still open.
 2. **Reading preferences storage**: only on the device, or saved to the student's profile so they follow the student across devices?
 3. **Demo mode**: only during development, or also in a public demo build?
 4. **Teacher view of support needs**: may the teacher UI show any information about a student's needs, and in what wording? (Students and peers never see diagnoses.)
@@ -469,7 +489,6 @@ Every task also follows the verification rules in [AGENTS.md](../AGENTS.md#4-ver
 
 | Document | When |
 |---|---|
-| `client/README.md` | In FE-01, when there is something to run |
 | `docs/API-CONTRACT.md` (or an OpenAPI file) | With the backend developer, before FE-04 schemas stop being provisional and before FE-17 |
 | `docs/DESIGN.md` | When the owner approves the design direction (during FE-02) |
 | `docs/ARCHITECTURE.md` | When backend technologies and authentication are decided |
