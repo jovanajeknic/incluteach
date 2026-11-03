@@ -33,6 +33,10 @@ export const text = {
     audiences: {
       title: 'Zajedno stvaramo prostor za svakoga.',
       comingSoon: 'U pripremi',
+      demoLinks: {
+        teacher: 'Nastavnički demo',
+        student: 'Učenički demo',
+      },
       teacher: {
         title: 'Za nastavnike',
         description: 'Alati i podrška za inkluzivno i fleksibilno učenje.',
@@ -116,6 +120,115 @@ export const text = {
         'Forma je uspješno provjerena. Ovo je demo prikaz: nalog nije stvarno napravljen.',
       switchPrompt: 'Već imate nalog?',
       switchLink: 'Prijavite se.',
+    },
+  },
+
+  student: {
+    demoNotice:
+      'Demo verzija sa izmišljenim podacima. Napredak se ne čuva nakon osvježavanja stranice.',
+    profile: {
+      role: 'Učenik',
+      badge: 'Demo profil',
+    },
+    nav: {
+      label: 'Učenička navigacija',
+      subjects: 'Moji predmeti',
+    },
+    home: {
+      pageTitle: 'Moji predmeti',
+      greeting: (name: string) => `Zdravo, ${name}!`,
+      intro: 'Izaberi predmet i nastavi da učiš.',
+      subjectsHeading: 'Predmeti',
+      lessonCount: (count: number) => {
+        if (count === 0) return 'Još nema lekcija';
+        if (count === 1) return '1 lekcija';
+        if (count >= 2 && count <= 4) return `${count} lekcije`;
+        return `${count} lekcija`;
+      },
+      starsLabel: 'Zvjezdice za trud',
+      starsHint: 'Zvjezdicu dobijaš kad završiš vježbu uz lekciju.',
+    },
+    subject: {
+      backToSubjects: 'Nazad na predmete',
+      lessonsHeading: 'Lekcije',
+      empty: 'U ovom predmetu još nema lekcija. Uskoro stižu!',
+      status: {
+        new: 'Nova',
+        started: 'Započeta',
+        completed: 'Završena',
+      },
+      notFoundTitle: 'Predmet nije pronađen',
+      notFoundDescription: 'Ovaj predmet ne postoji ili ti nije dodijeljen.',
+    },
+    lesson: {
+      backToSubject: (subject: string) => `Nazad na: ${subject}`,
+      shorterVersion: 'Kraća verzija',
+      readingSettings: 'Podešavanja čitanja',
+      stepByStep: 'Korak po korak',
+      stepProgress: (step: number, total: number) => `Korak ${step} od ${total}`,
+      previousStep: 'Prethodni korak',
+      nextStep: 'Sljedeći korak',
+      glossaryHint: 'Podvučene riječi imaju objašnjenje. Dodirni riječ da ga vidiš.',
+      startQuiz: 'Uradi vježbu',
+      notFoundTitle: 'Lekcija nije pronađena',
+      notFoundDescription: 'Ova lekcija ne postoji ili ti još nije dodijeljena.',
+    },
+    reading: {
+      title: 'Podešavanja čitanja',
+      font: {
+        label: 'Slova',
+        standard: 'Obična',
+        rounded: 'Zaobljena',
+        dyslexic: 'Za lakše čitanje',
+      },
+      size: { label: 'Veličina slova', m: 'Srednja', l: 'Velika', xl: 'Najveća' },
+      lineSpacing: {
+        label: 'Razmak između redova',
+        normal: 'Običan',
+        relaxed: 'Veći',
+        loose: 'Najveći',
+      },
+      letterSpacing: { label: 'Razmak između slova', normal: 'Običan', wide: 'Veći' },
+      background: {
+        label: 'Boja podloge',
+        white: 'Bijela',
+        cream: 'Krem',
+        mint: 'Menta',
+        sky: 'Plava',
+        butter: 'Žuta',
+      },
+      reset: 'Vrati početna podešavanja',
+      savedNote: 'Podešavanja se pamte na ovom uređaju.',
+    },
+    audio: {
+      listen: 'Poslušaj lekciju',
+      pause: 'Pauza',
+      resume: 'Nastavi',
+      stop: 'Zaustavi',
+      speed: 'Brzina čitanja',
+      speeds: { slow: 'Sporije', normal: 'Obično', fast: 'Brže' },
+      unsupported: 'Ovaj pregledač ne može da čita naglas.',
+      noVoice: 'Na ovom uređaju nema glasa koji čita na našem jeziku.',
+    },
+    glossary: {
+      closeHint: 'Dodirni riječ ponovo da zatvoriš objašnjenje.',
+    },
+    quiz: {
+      pageTitle: (lesson: string) => `Vježba: ${lesson}`,
+      heading: 'Vježba',
+      intro: 'Ovo je vježba, ne ocjena. Polako, imaš vremena.',
+      progress: (current: number, total: number) => `Pitanje ${current} od ${total}`,
+      answersLabel: 'Odgovori',
+      correct: 'Tačno!',
+      incorrect: 'Nije baš tako.',
+      correctAnswerIs: (answer: string) => `Tačan odgovor: ${answer}`,
+      next: 'Sljedeće pitanje',
+      finish: 'Završi vježbu',
+      doneTitle: 'Bravo! Vježba je završena.',
+      doneText: 'Zvjezdica za trud je tvoja.',
+      again: 'Ponovi vježbu',
+      backToLesson: 'Nazad na lekciju',
+      backToSubjects: 'Moji predmeti',
     },
   },
 

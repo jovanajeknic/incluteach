@@ -2,6 +2,8 @@
 /* Self-hosted fonts: no third-party requests, and the latin-ext subset covers č ć đ š ž. */
 @import '@fontsource-variable/lexend';
 @import '@fontsource-variable/atkinson-hyperlegible-next';
+/* Optional dyslexia-friendly reading font; the browser downloads it only when a lesson uses it. */
+@import '@fontsource/opendyslexic/400.css';
 
 /*
  * Design tokens. See docs/DESIGN.md for the reasoning and usage rules.
@@ -102,6 +104,7 @@
   --font-sans:
     'Atkinson Hyperlegible Next Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
   --font-display: 'Lexend Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+  --font-dyslexic: 'OpenDyslexic', 'Atkinson Hyperlegible Next Variable', system-ui, sans-serif;
 
   --radius-sm: calc(var(--radius) - 14px);
   --radius-md: calc(var(--radius) - 10px);

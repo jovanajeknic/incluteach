@@ -73,7 +73,7 @@ describe('LandingPage', () => {
     expect(screen.getByRole('heading', { level: 2, name: 'Naša priča' })).toBeInTheDocument();
   });
 
-  it('shows the three audiences and marks unfinished ones as coming soon', () => {
+  it('shows the three audiences with demo links, and parents as coming soon', () => {
     renderApp({ path: '/' });
 
     const section = screen.getByRole('region', { name: 'Zajedno stvaramo prostor za svakoga.' });
@@ -83,9 +83,16 @@ describe('LandingPage', () => {
       'Za učenike',
       'Za roditelje',
     ]);
-    expect(items[0]).not.toHaveTextContent('U pripremi');
-    expect(items[1]).toHaveTextContent('U pripremi');
+    expect(within(items[0]!).getByRole('link', { name: 'Nastavnički demo' })).toHaveAttribute(
+      'href',
+      '/teacher',
+    );
+    expect(within(items[1]!).getByRole('link', { name: 'Učenički demo' })).toHaveAttribute(
+      'href',
+      '/student',
+    );
     expect(items[2]).toHaveTextContent('U pripremi');
+    expect(within(items[2]!).queryByRole('link')).not.toBeInTheDocument();
   });
 
   describe('mobile menu', () => {
@@ -131,7 +138,7 @@ describe('LandingPage', () => {
       if (href.startsWith('#')) {
         expect(document.getElementById(href.slice(1)), href).toBeInTheDocument();
       } else {
-        expect(['/', '/teacher', '/login', '/register']).toContain(href);
+        expect(['/', '/teacher', '/student', '/login', '/register']).toContain(href);
       }
     }
   });

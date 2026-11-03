@@ -1,4 +1,8 @@
+import { ArrowRight } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
+import { Link } from 'react-router';
+import { teacherHomePath } from '@/features/lessons/paths';
+import { studentHomePath } from '@/features/student/paths';
 import { text } from '@/text/sr-Latn';
 import { sectionIds } from '../sections';
 import { ParentIcon, StudentIcon, TeacherIcon } from './RoleIcons';
@@ -6,14 +10,14 @@ import { ParentIcon, StudentIcon, TeacherIcon } from './RoleIcons';
 interface Audience {
   key: 'teacher' | 'student' | 'parent';
   icon: ReactNode;
-  /** Only the teacher part exists in the demo; the others are still being built. */
-  comingSoon: boolean;
+  /** Where the demo for this role lives; without one, the role is marked as coming soon. */
+  demoPath?: string;
 }
 
 const audiences: Audience[] = [
-  { key: 'teacher', icon: <TeacherIcon />, comingSoon: false },
-  { key: 'student', icon: <StudentIcon />, comingSoon: true },
-  { key: 'parent', icon: <ParentIcon />, comingSoon: true },
+  { key: 'teacher', icon: <TeacherIcon />, demoPath: teacherHomePath },
+  { key: 'student', icon: <StudentIcon />, demoPath: studentHomePath },
+  { key: 'parent', icon: <ParentIcon /> },
 ];
 
 export function AudiencesSection() {
@@ -32,7 +36,7 @@ export function AudiencesSection() {
             {t.title}
           </h2>
           <ul className="mt-10 grid gap-10 sm:grid-cols-3 sm:gap-8">
-            {audiences.map(({ key, icon, comingSoon }, index) => (
+            {audiences.map(({ key, icon, demoPath }, index) => (
               <li
                 key={key}
                 data-reveal=""
@@ -43,8 +47,19 @@ export function AudiencesSection() {
                 <div>
                   <h3 className="font-display text-xl font-bold text-ink">{t[key].title}</h3>
                   <p className="mt-2 text-ink-soft">{t[key].description}</p>
-                  {comingSoon && (
-                    <p className="mt-2 font-display text-sm font-medium text-sage">
+                  {demoPath ? (
+                    <Link
+                      to={demoPath}
+                      className="group mt-3 inline-flex items-center gap-1.5 rounded-full font-display font-medium text-forest hover:underline"
+                    >
+                      {t.demoLinks[key as 'teacher' | 'student']}
+                      <ArrowRight
+                        aria-hidden="true"
+                        className="size-4 transition-transform group-hover:translate-x-0.5"
+                      />
+                    </Link>
+                  ) : (
+                    <p className="mt-2 font-display text-sm font-medium text-ink-soft">
                       {t.comingSoon}
                     </p>
                   )}

@@ -5,7 +5,13 @@ import { LessonDetailPage } from '@/features/lessons/pages/LessonDetailPage';
 import { NewLessonPage } from '@/features/lessons/pages/NewLessonPage';
 import { TeacherDashboardPage } from '@/features/lessons/pages/TeacherDashboardPage';
 import { teacherHomePath } from '@/features/lessons/paths';
+import { StudentHomePage } from '@/features/student/pages/StudentHomePage';
+import { StudentLessonPage } from '@/features/student/pages/StudentLessonPage';
+import { StudentQuizPage } from '@/features/student/pages/StudentQuizPage';
+import { SubjectPage } from '@/features/student/pages/SubjectPage';
+import { studentHomePath } from '@/features/student/paths';
 import { PublicLayout } from './layout/PublicLayout';
+import { StudentLayout } from './layout/StudentLayout';
 import { TeacherLayout } from './layout/TeacherLayout';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { RouteErrorPage } from './pages/RouteErrorPage';
@@ -37,6 +43,17 @@ export const routes: RouteObject[] = [
           { path: 'lessons/new', element: <NewLessonPage /> },
           { path: 'lessons/:lessonId', element: <LessonDetailPage /> },
           { path: '*', element: <NotFoundPage homePath={teacherHomePath} /> },
+        ],
+      },
+      {
+        path: studentHomePath,
+        element: <StudentLayout />,
+        children: [
+          { index: true, element: <StudentHomePage /> },
+          { path: 'subjects/:subjectId', element: <SubjectPage /> },
+          { path: 'lessons/:lessonId', element: <StudentLessonPage /> },
+          { path: 'lessons/:lessonId/quiz', element: <StudentQuizPage /> },
+          { path: '*', element: <NotFoundPage homePath={studentHomePath} /> },
         ],
       },
       {

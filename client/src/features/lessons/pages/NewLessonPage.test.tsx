@@ -36,8 +36,11 @@ describe('Creating a lesson draft', () => {
     expect(screen.getByText('5. razred')).toBeInTheDocument();
     expect(screen.getByText('Nacrt')).toBeInTheDocument();
     // Blank line splits the text into two paragraphs.
-    expect(screen.getByText('Sunce je zvijezda.').tagName).toBe('P');
-    expect(screen.getByText('Oko Sunca kruži osam planeta.').tagName).toBe('P');
+    const firstParagraph = screen.getByText('Sunce je zvijezda.').closest('p');
+    const secondParagraph = screen.getByText('Oko Sunca kruži osam planeta.').closest('p');
+    expect(firstParagraph).not.toBeNull();
+    expect(secondParagraph).not.toBeNull();
+    expect(firstParagraph).not.toBe(secondParagraph);
 
     await user.click(screen.getByRole('link', { name: 'Nazad na lekcije' }));
     expect(totalLessonsCount()).toBe('4');
