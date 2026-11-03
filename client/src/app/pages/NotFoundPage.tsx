@@ -1,10 +1,14 @@
 import { Link } from 'react-router';
-import { teacherHomePath } from '@/features/lessons/paths';
 import { MessagePage } from '@/shared/components/MessagePage';
 import { Button } from '@/shared/ui/button';
 import { text } from '@/text/sr-Latn';
 
-export function NotFoundPage() {
+interface NotFoundPageProps {
+  /** Where "back home" leads: the public home page or the teacher home page. */
+  homePath: string;
+}
+
+export function NotFoundPage({ homePath }: NotFoundPageProps) {
   const t = text.notFound;
   return (
     <>
@@ -14,7 +18,7 @@ export function NotFoundPage() {
         description={t.description}
         action={
           <Button asChild variant="outline" size="lg">
-            <Link to={teacherHomePath}>{t.backHome}</Link>
+            <Link to={homePath}>{t.backHome}</Link>
           </Button>
         }
       />

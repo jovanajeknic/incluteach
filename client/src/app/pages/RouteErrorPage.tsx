@@ -1,4 +1,3 @@
-import { teacherHomePath } from '@/features/lessons/paths';
 import { MessagePage } from '@/shared/components/MessagePage';
 import { Button } from '@/shared/ui/button';
 import { text } from '@/text/sr-Latn';
@@ -15,7 +14,7 @@ export function RouteErrorPage() {
         action={
           // A full page load resets the app after an unexpected error.
           <Button asChild variant="outline" size="lg">
-            <a href={teacherHomePath}>{t.backHome}</a>
+            <a href="/">{t.backHome}</a>
           </Button>
         }
       />

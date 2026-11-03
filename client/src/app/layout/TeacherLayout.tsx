@@ -2,6 +2,7 @@ import { Home, Info, Plus, type LucideIcon } from 'lucide-react';
 import { Link, NavLink, Outlet, ScrollRestoration } from 'react-router';
 import { newLessonPath, teacherHomePath } from '@/features/lessons/paths';
 import { Logo } from '@/shared/brand/Logo';
+import { MAIN_CONTENT_ID, SkipLink } from '@/shared/components/SkipLink';
 import { cn } from '@/shared/lib/utils';
 import { text } from '@/text/sr-Latn';
 
@@ -24,12 +25,7 @@ const navItems: NavItem[] = [
 export function TeacherLayout() {
   return (
     <div className="min-h-screen md:flex">
-      <a
-        href="#main-content"
-        className="sr-only z-50 rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
-      >
-        {text.app.skipToContent}
-      </a>
+      <SkipLink />
 
       <aside className="border-b bg-card md:sticky md:top-0 md:flex md:h-screen md:w-64 md:shrink-0 md:flex-col md:border-r md:border-b-0">
         <div className="px-4 pt-4 pb-3 md:px-6 md:pt-7 md:pb-8">
@@ -86,7 +82,7 @@ export function TeacherLayout() {
 
         {/* tabIndex lets the skip link move keyboard focus into the main area. */}
         <main
-          id="main-content"
+          id={MAIN_CONTENT_ID}
           tabIndex={-1}
           className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 focus:outline-none md:px-8 md:py-10"
         >

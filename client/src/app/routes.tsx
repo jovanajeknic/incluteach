@@ -1,24 +1,33 @@
-import { Navigate, type RouteObject } from 'react-router';
+import { type RouteObject } from 'react-router';
+import { LandingPage } from '@/features/landing/LandingPage';
 import { LessonDetailPage } from '@/features/lessons/pages/LessonDetailPage';
 import { NewLessonPage } from '@/features/lessons/pages/NewLessonPage';
 import { TeacherDashboardPage } from '@/features/lessons/pages/TeacherDashboardPage';
 import { teacherHomePath } from '@/features/lessons/paths';
+import { PublicLayout } from './layout/PublicLayout';
 import { TeacherLayout } from './layout/TeacherLayout';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { RouteErrorPage } from './pages/RouteErrorPage';
 
-// Only the teacher area exists so far, so its layout wraps every route.
 export const routes: RouteObject[] = [
   {
-    path: '/',
-    element: <TeacherLayout />,
     errorElement: <RouteErrorPage />,
     children: [
-      { index: true, element: <Navigate to={teacherHomePath} replace /> },
-      { path: 'teacher', element: <TeacherDashboardPage /> },
-      { path: 'teacher/lessons/new', element: <NewLessonPage /> },
-      { path: 'teacher/lessons/:lessonId', element: <LessonDetailPage /> },
-      { path: '*', element: <NotFoundPage /> },
+      { path: '/', element: <LandingPage /> },
+      {
+        path: teacherHomePath,
+        element: <TeacherLayout />,
+        children: [
+          { index: true, element: <TeacherDashboardPage /> },
+          { path: 'lessons/new', element: <NewLessonPage /> },
+          { path: 'lessons/:lessonId', element: <LessonDetailPage /> },
+          { path: '*', element: <NotFoundPage homePath={teacherHomePath} /> },
+        ],
+      },
+      {
+        element: <PublicLayout />,
+        children: [{ path: '*', element: <NotFoundPage homePath="/" /> }],
+      },
     ],
   },
 ];
