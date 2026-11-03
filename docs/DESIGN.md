@@ -113,14 +113,14 @@ Motion should make the page feel alive, never distract a child from reading.
 
 | Effect           | Details                                                                                                                                                     |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Logo intro       | On every landing visit: the logo appears large on mint, shrinks into the header and the page shows (about 1.6 s). Any click or key skips it                 |
 | Reveal on scroll | Blocks marked `data-reveal` (`''`, `left`, `right`, `pop`) slide or pop in once as they enter the screen, 700 ms, with a 90 ms stagger via `--reveal-order` |
 | Hover hop        | `.hover-hop`: cards and illustrations lift 6 px and tilt 1° with a small bounce                                                                             |
 | Buttons          | Lift on hover, press down on click, colour swap; 200 ms                                                                                                     |
 
 Rules:
 
-- Everything runs in plain CSS and browser APIs (IntersectionObserver, Web Animations API). There is no animation library.
-- With `prefers-reduced-motion: reduce`, there is no intro, no reveal and no hop; content is simply there.
+- Everything runs in plain CSS and the IntersectionObserver browser API. There is no animation library.
+- No intro or splash animation: the page appears at once and the first blocks gently reveal themselves (the owner found a logo intro unnatural).
+- With `prefers-reduced-motion: reduce`, there is no reveal and no hop; content is simply there.
 - Content never depends on motion: without JavaScript, every block is visible.
 - Not allowed: carousels that move on their own, flashing, strong parallax, autoplaying sound and decorations that move constantly.

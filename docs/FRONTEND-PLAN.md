@@ -24,15 +24,15 @@ Each task states which API it works against:
 
 **First visual demo**: a public landing page at `/` and the start of the teacher area at `/teacher`. It is a demo with fictional data kept in memory, with no backend and no real sign-in.
 
-| Task | Coverage |
-|---|---|
-| FE-01 | Done. Commands are in the root [README.md](../README.md). |
-| FE-02 | Mostly done. Visual identity, logo and design tokens are defined in [DESIGN.md](DESIGN.md); Tailwind CSS and shadcn/ui use them. The teacher area inherits the tokens but has not been redesigned yet. |
-| FE-03 | Partly done. Teacher layout (sidebar on desktop, top navigation on phones), skip link, not-found page and route error page are in place. |
-| FE-06 | Partly done. A lesson list with status, plus counters computed from the data. |
-| FE-07 | Partly done. Text-only form; saves a local draft. No file upload and no AI request. |
-| FE-09 | Partly done. The shared `LessonContent` renderer and a read-only lesson view. No editing. |
-| Landing page | Done (not in the original task list). Public page at `/` explaining the platform; student and parent parts are marked as coming soon. |
+| Task         | Coverage                                                                                                                                                                                                                                                                                                |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FE-01        | Done. Commands are in the root [README.md](../README.md).                                                                                                                                                                                                                                               |
+| FE-02        | Mostly done. Visual identity, logo and design tokens are defined in [DESIGN.md](DESIGN.md); Tailwind CSS and shadcn/ui use them. The teacher area inherits the tokens but has not been redesigned yet.                                                                                                  |
+| FE-03        | Partly done. Teacher layout (sidebar on desktop, top navigation on phones), skip link, not-found page and route error page are in place.                                                                                                                                                                |
+| FE-06        | Partly done. A lesson list with status, plus counters computed from the data.                                                                                                                                                                                                                           |
+| FE-07        | Partly done. Text-only form; saves a local draft. No file upload and no AI request.                                                                                                                                                                                                                     |
+| FE-09        | Partly done. The shared `LessonContent` renderer and a read-only lesson view. No editing.                                                                                                                                                                                                               |
+| Landing page | Done (not in the original task list). Short public page at `/`: headline, one sentence, an illustration and three roles. Student and parent are marked as coming soon. "Prijavi se" and "Registruj se" lead to `/login` and `/register`, which say accounts are coming soon and offer the teacher demo. |
 
 Differences from this plan, all intentional for this step:
 
@@ -93,37 +93,37 @@ Self-registration, password recovery, chat, team games, leaderboards, advanced g
 
 The binding list of agreed technologies is in [AGENTS.md](../AGENTS.md#8-frontend). Below is a short reason for each.
 
-| Technology | Why |
-|---|---|
-| React + TypeScript (strict) | Component model fits a UI with many reusable parts. Strict types catch mistakes early, especially around API data. |
-| Vite | Fast development server and simple build for a single-page app. |
-| React Router | Standard routing for React. Supports nested layouts per role and route-level error handling. |
-| Tailwind CSS | Utility classes keep styling consistent and make spacing and contrast variants easy to apply. |
-| shadcn/ui | Accessible building blocks (based on Radix UI) copied into the project, so they can be adapted instead of fought. |
-| React Hook Form + Zod | Forms with little boilerplate. Zod schemas give one source of truth for validation rules and TypeScript types. |
-| TanStack Query | Handles loading, error, caching and refetching of server data, so screens do not reimplement it. |
-| MSW | Lets the frontend be built and tested before the backend is ready, using the same request format as the real API. |
-| Vitest + React Testing Library | Fast unit and component tests that check behaviour the way a user experiences it. |
-| Playwright | End-to-end tests for the most important user flows in a real browser. |
-| ESLint + Prettier | Consistent code style and early detection of common mistakes. |
-| npm | Already installed (npm 10.8.1, Node.js 22.18.0). No extra tool needed. |
+| Technology                     | Why                                                                                                                |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| React + TypeScript (strict)    | Component model fits a UI with many reusable parts. Strict types catch mistakes early, especially around API data. |
+| Vite                           | Fast development server and simple build for a single-page app.                                                    |
+| React Router                   | Standard routing for React. Supports nested layouts per role and route-level error handling.                       |
+| Tailwind CSS                   | Utility classes keep styling consistent and make spacing and contrast variants easy to apply.                      |
+| shadcn/ui                      | Accessible building blocks (based on Radix UI) copied into the project, so they can be adapted instead of fought.  |
+| React Hook Form + Zod          | Forms with little boilerplate. Zod schemas give one source of truth for validation rules and TypeScript types.     |
+| TanStack Query                 | Handles loading, error, caching and refetching of server data, so screens do not reimplement it.                   |
+| MSW                            | Lets the frontend be built and tested before the backend is ready, using the same request format as the real API.  |
+| Vitest + React Testing Library | Fast unit and component tests that check behaviour the way a user experiences it.                                  |
+| Playwright                     | End-to-end tests for the most important user flows in a real browser.                                              |
+| ESLint + Prettier              | Consistent code style and early detection of common mistakes.                                                      |
+| npm                            | Already installed (npm 10.8.1, Node.js 22.18.0). No extra tool needed.                                             |
 
 Packages are added only when a task needs them. Version compatibility (for example with Node.js 22.18.0) is checked at install time. No other libraries or frameworks are added without a clear reason and agreement.
 
 ## 4. Responsibility boundary with the backend
 
-| Area | Frontend | Backend |
-|---|---|---|
-| Authentication | Sign-in form, session state in the UI, sign-out | Verifying identity, issuing and ending sessions |
-| Access control | Hiding navigation the role cannot use; showing a forbidden page | Enforcing who can see and change what |
-| Documents | File picker; client-side type and size check for quick feedback | Storing, validating and extracting text from PDF/DOCX |
-| AI adaptation | Requesting it, showing status, editing the result | Calling the AI service, holding API keys |
-| Data | Display, forms, validation for user feedback | Storage, validation as source of truth |
-| Contract | Typed client and MSW mocks that follow the contract | Implementing the contract |
+| Area           | Frontend                                                        | Backend                                               |
+| -------------- | --------------------------------------------------------------- | ----------------------------------------------------- |
+| Authentication | Sign-in form, session state in the UI, sign-out                 | Verifying identity, issuing and ending sessions       |
+| Access control | Hiding navigation the role cannot use; showing a forbidden page | Enforcing who can see and change what                 |
+| Documents      | File picker; client-side type and size check for quick feedback | Storing, validating and extracting text from PDF/DOCX |
+| AI adaptation  | Requesting it, showing status, editing the result               | Calling the AI service, holding API keys              |
+| Data           | Display, forms, validation for user feedback                    | Storage, validation as source of truth                |
+| Contract       | Typed client and MSW mocks that follow the contract             | Implementing the contract                             |
 
 ## 5. Proposed `client/src/` structure
 
-*Proposal.* Organized by feature, so each feature keeps its screens, components, data hooks and schemas together.
+_Proposal._ Organized by feature, so each feature keeps its screens, components, data hooks and schemas together.
 
 ```
 client/src/
@@ -167,80 +167,81 @@ Notes:
 
 ## 6. Screen and route map
 
-*Proposal.* Route names, parameters and nesting may change when the API contract is agreed.
+_Proposal._ Route names, parameters and nesting may change when the API contract is agreed.
 
 ### Public and shared
 
-| Route | Screen | Notes |
-|---|---|---|
-| `/login` | Sign-in | In demo mode, also a clearly labelled role picker |
-| `/` | Landing page | Public page that explains the platform (decided by the owner) |
-| `/forbidden` | Forbidden | Shown when a role opens a page it cannot use |
-| `*` | Not found | Any unknown route |
+| Route        | Screen       | Notes                                                                                            |
+| ------------ | ------------ | ------------------------------------------------------------------------------------------------ |
+| `/login`     | Sign-in      | Now a "coming soon" page. Later: sign-in form; in demo mode, also a clearly labelled role picker |
+| `/register`  | Registration | Now a "coming soon" page. Whether self-registration is in v1 is an open question                 |
+| `/`          | Landing page | Public page that explains the platform (decided by the owner)                                    |
+| `/forbidden` | Forbidden    | Shown when a role opens a page it cannot use                                                     |
+| `*`          | Not found    | Any unknown route                                                                                |
 
 ### Teacher (`/teacher`)
 
-| Route | Screen |
-|---|---|
-| `/teacher/lessons` | Lesson list with status per lesson |
-| `/teacher/lessons/new` | New lesson: text input or PDF/DOCX upload |
-| `/teacher/lessons/:lessonId` | Lesson detail: processing status and list of versions |
-| `/teacher/lessons/:lessonId/versions/:versionId` | Review and edit a version, then approve it |
-| `/teacher/lessons/:lessonId/assign` | Assign an approved version to students or a class |
-| `/teacher/classes` | List of the teacher's classes |
-| `/teacher/classes/:classId` | Class overview: students and their lesson activity |
-| `/teacher/classes/:classId/students/:studentId` | Basic student overview |
+| Route                                            | Screen                                                |
+| ------------------------------------------------ | ----------------------------------------------------- |
+| `/teacher/lessons`                               | Lesson list with status per lesson                    |
+| `/teacher/lessons/new`                           | New lesson: text input or PDF/DOCX upload             |
+| `/teacher/lessons/:lessonId`                     | Lesson detail: processing status and list of versions |
+| `/teacher/lessons/:lessonId/versions/:versionId` | Review and edit a version, then approve it            |
+| `/teacher/lessons/:lessonId/assign`              | Assign an approved version to students or a class     |
+| `/teacher/classes`                               | List of the teacher's classes                         |
+| `/teacher/classes/:classId`                      | Class overview: students and their lesson activity    |
+| `/teacher/classes/:classId/students/:studentId`  | Basic student overview                                |
 
 ### Student (`/student`)
 
-| Route | Screen |
-|---|---|
-| `/student/lessons` | Assigned lessons |
-| `/student/lessons/:assignmentId` | Reading view, with reading preferences and audio controls |
-| `/student/lessons/:assignmentId/quiz` | Quiz |
-| `/student/lessons/:assignmentId/result` | Quiz result |
+| Route                                   | Screen                                                    |
+| --------------------------------------- | --------------------------------------------------------- |
+| `/student/lessons`                      | Assigned lessons                                          |
+| `/student/lessons/:assignmentId`        | Reading view, with reading preferences and audio controls |
+| `/student/lessons/:assignmentId/quiz`   | Quiz                                                      |
+| `/student/lessons/:assignmentId/result` | Quiz result                                               |
 
 Reading preferences open as a panel from the reading view and the header, not as a separate page.
 
 ### Parent (`/parent`)
 
-| Route | Screen |
-|---|---|
-| `/parent/children` | Linked children |
-| `/parent/children/:childId` | Child's lessons and results |
+| Route                                             | Screen                            |
+| ------------------------------------------------- | --------------------------------- |
+| `/parent/children`                                | Linked children                   |
+| `/parent/children/:childId`                       | Child's lessons and results       |
 | `/parent/children/:childId/lessons/:assignmentId` | Lesson activity and home guidance |
 
 ## 7. Shared UI components
 
-*Proposal.* Built once and reused across features.
+_Proposal._ Built once and reused across features.
 
 **Primitives** (from shadcn/ui, added only when first needed): Button, Input, Textarea, Label, Select, Checkbox, RadioGroup, Dialog, Tabs, Card, Badge, Alert, Progress, Skeleton.
 
 **App components:**
 
-| Component | Purpose |
-|---|---|
-| `AppShell` / role layouts | Header, navigation for the role, main area, sign-out |
-| `SkipLink` | "Skip to content" link for keyboard users |
-| `DemoModeBanner` | Always-visible label while demo mode is active |
-| `PageHeader` | Page title and optional actions, sets the document title |
-| `LoadingState` | Consistent loading indicator, announced to screen readers |
-| `EmptyState` | Message and optional action when a list is empty |
-| `ErrorState` | Error message with a retry action |
-| `ForbiddenPage`, `NotFoundPage` | Full-page states for 403 and 404 |
-| `QueryBoundary` | Picks loading, error, empty or content for a TanStack Query result |
-| `RequireRole` | Route guard: redirects to sign-in or to the forbidden page |
-| `FormField` | Label, hint and error message wired to the input for screen readers |
-| `FileUpload` | Accessible PDF/DOCX picker with type and size feedback |
-| `StatusBadge` | Lesson processing and approval status with text, not only colour |
-| `ConfirmDialog` | Confirmation for important actions such as approve and assign |
-| `LessonContent` | **Shared** lesson renderer used by teacher review and student reading |
-| `ReadingPreferencesPanel` | Controls for text size, line spacing, contrast and reduced motion |
-| `AudioControls` | Play, pause and speed, shown only when audio is available |
+| Component                       | Purpose                                                               |
+| ------------------------------- | --------------------------------------------------------------------- |
+| `AppShell` / role layouts       | Header, navigation for the role, main area, sign-out                  |
+| `SkipLink`                      | "Skip to content" link for keyboard users                             |
+| `DemoModeBanner`                | Always-visible label while demo mode is active                        |
+| `PageHeader`                    | Page title and optional actions, sets the document title              |
+| `LoadingState`                  | Consistent loading indicator, announced to screen readers             |
+| `EmptyState`                    | Message and optional action when a list is empty                      |
+| `ErrorState`                    | Error message with a retry action                                     |
+| `ForbiddenPage`, `NotFoundPage` | Full-page states for 403 and 404                                      |
+| `QueryBoundary`                 | Picks loading, error, empty or content for a TanStack Query result    |
+| `RequireRole`                   | Route guard: redirects to sign-in or to the forbidden page            |
+| `FormField`                     | Label, hint and error message wired to the input for screen readers   |
+| `FileUpload`                    | Accessible PDF/DOCX picker with type and size feedback                |
+| `StatusBadge`                   | Lesson processing and approval status with text, not only colour      |
+| `ConfirmDialog`                 | Confirmation for important actions such as approve and assign         |
+| `LessonContent`                 | **Shared** lesson renderer used by teacher review and student reading |
+| `ReadingPreferencesPanel`       | Controls for text size, line spacing, contrast and reduced motion     |
+| `AudioControls`                 | Play, pause and speed, shown only when audio is available             |
 
 ## 8. Mock and real API approach
 
-*Proposal.*
+_Proposal._
 
 - All network calls go through `shared/api/`. Screens never call `fetch` directly.
 - Request and response shapes are defined once as Zod schemas. Both the API client and the MSW handlers use them, so mocks cannot drift from the types the screens rely on.
@@ -471,6 +472,7 @@ Every task also follows the verification rules in [AGENTS.md](../AGENTS.md#4-ver
 3. **Demo mode**: only during development, or also in a public demo build?
 4. **Teacher view of support needs**: may the teacher UI show any information about a student's needs, and in what wording? (Students and peers never see diagnoses.)
 5. **Quiz rules**: question types, whether retries are allowed, and how results are described to students and parents.
+6. **Registration**: the landing page now has a "Registruj se" button. Should anyone be able to create an account (self-registration was out of scope for v1), or do schools create accounts for teachers, students and parents? Agree with the backend developer.
 
 ### For the backend developer
 
@@ -489,8 +491,8 @@ Every task also follows the verification rules in [AGENTS.md](../AGENTS.md#4-ver
 
 ## 11. Documents to prepare later
 
-| Document | When |
-|---|---|
+| Document                                    | When                                                                                     |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | `docs/API-CONTRACT.md` (or an OpenAPI file) | With the backend developer, before FE-04 schemas stop being provisional and before FE-17 |
-| `docs/ARCHITECTURE.md` | When backend technologies and authentication are decided |
-| Accessibility checklist | During FE-02/FE-03, as a short reusable checklist for UI tasks |
+| `docs/ARCHITECTURE.md`                      | When backend technologies and authentication are decided                                 |
+| Accessibility checklist                     | During FE-02/FE-03, as a short reusable checklist for UI tasks                           |
