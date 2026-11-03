@@ -31,7 +31,7 @@ export function AccessibilitySection() {
               const Icon = principleIcons[index] ?? Layers;
               return (
                 <li key={principle.title}>
-                  <Icon aria-hidden="true" className="size-6 text-petrol" />
+                  <Icon aria-hidden="true" className="size-6 text-navy" />
                   <h3 className="mt-3 text-lg font-bold text-ink">{principle.title}</h3>
                   <p className="mt-1 text-ink-soft">{principle.description}</p>
                 </li>
@@ -42,7 +42,7 @@ export function AccessibilitySection() {
 
         <div className="reveal-on-scroll self-start rounded-[2rem] border bg-card p-7 shadow-soft sm:p-9">
           <h3 className="flex items-center gap-2 text-lg font-bold text-ink">
-            <CheckCircle2 aria-hidden="true" className="size-5 text-petrol" />
+            <CheckCircle2 aria-hidden="true" className="size-5 text-navy" />
             {t.availableTitle}
           </h3>
           <ul className="mt-4 space-y-3">
@@ -50,7 +50,7 @@ export function AccessibilitySection() {
               <li key={item} className="flex gap-3 text-ink">
                 <span
                   aria-hidden="true"
-                  className="mt-2.5 size-1.5 shrink-0 rounded-full bg-petrol"
+                  className="mt-2.5 size-1.5 shrink-0 rounded-full bg-navy"
                 />
                 {item}
               </li>
@@ -60,7 +60,7 @@ export function AccessibilitySection() {
           <div className="my-7 border-t border-dashed" />
 
           <h3 className="flex items-center gap-2 text-lg font-bold text-ink">
-            <CircleDashed aria-hidden="true" className="size-5 text-apricot-ink" />
+            <CircleDashed aria-hidden="true" className="size-5 text-sun-ink" />
             {t.plannedTitle}
           </h3>
           <ul className="mt-4 space-y-3">
@@ -68,7 +68,7 @@ export function AccessibilitySection() {
               <li key={item} className="flex gap-3 text-ink-soft">
                 <span
                   aria-hidden="true"
-                  className="mt-2 size-2 shrink-0 rounded-full border-2 border-apricot-ink"
+                  className="mt-2 size-2 shrink-0 rounded-full border-2 border-sun-ink"
                 />
                 {item}
               </li>

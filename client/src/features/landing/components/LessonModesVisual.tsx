@@ -19,14 +19,14 @@ function ModeCard({ icon: Icon, label, comingSoon, className, children }: ModeCa
   return (
     <div className={cn('rounded-2xl border bg-card p-4 shadow-soft sm:p-5', className)}>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-petrol-deep">
-          <span className="flex size-7 items-center justify-center rounded-full bg-petrol-tint">
+        <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy-deep">
+          <span className="flex size-7 items-center justify-center rounded-full bg-navy-tint">
             <Icon className="size-4" />
           </span>
           {label}
         </span>
         {comingSoon && (
-          <span className="rounded-full bg-gold-tint px-2 py-0.5 text-xs font-semibold text-apricot-ink">
+          <span className="rounded-full bg-sun-tint px-2 py-0.5 text-xs font-semibold text-sun-ink">
             {text.landing.badges.comingSoon}
           </span>
         )}
@@ -47,8 +47,8 @@ export function LessonModesVisual() {
     <figure aria-labelledby="lesson-modes-caption" className="relative">
       {/* Decorative backdrop: soft shapes and a path that links the four modes. */}
       <div aria-hidden="true" className="pointer-events-none absolute -inset-6 -z-10 sm:-inset-10">
-        <div className="absolute top-0 right-0 size-64 rounded-full bg-petrol-tint/70 blur-2xl sm:size-80" />
-        <div className="absolute bottom-6 left-0 size-40 rounded-full bg-apricot-tint blur-2xl" />
+        <div className="absolute top-0 right-0 size-64 rounded-full bg-sky-tint blur-2xl sm:size-80" />
+        <div className="absolute bottom-6 left-0 size-40 rounded-full bg-coral-tint blur-2xl" />
         <svg
           viewBox="0 0 400 400"
           className="absolute inset-0 size-full"
@@ -57,7 +57,7 @@ export function LessonModesVisual() {
           <path
             d="M40 360C80 250 160 230 200 180S300 60 370 40"
             fill="none"
-            className="stroke-petrol/25"
+            className="stroke-navy/25"
             strokeWidth="2"
             strokeLinecap="round"
             strokeDasharray="1 9"
@@ -102,7 +102,7 @@ export function LessonModesVisual() {
           <ol className="space-y-2 text-sm text-ink">
             {t.summaryItems.map((item, index) => (
               <li key={item} className="flex gap-2">
-                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-apricot-tint text-xs font-bold text-apricot-ink">
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-sun-tint text-xs font-bold text-sun-ink">
                   {index + 1}
                 </span>
                 {item}
@@ -118,14 +118,14 @@ export function LessonModesVisual() {
           className="col-span-6 sm:col-span-2"
         >
           <div className="flex items-center gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-petrol text-white">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-navy text-white">
               <Play className="size-4 translate-x-px fill-current" />
             </span>
             <div className="flex h-8 flex-1 items-center gap-[3px]">
               {waveform.map((height, index) => (
                 <span
                   key={index}
-                  className={cn('w-1 rounded-full', index < 6 ? 'bg-petrol' : 'bg-petrol/30')}
+                  className={cn('w-1 rounded-full', index < 6 ? 'bg-navy' : 'bg-navy/30')}
                   style={{ height: `${height}px` }}
                 />
               ))}

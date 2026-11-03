@@ -25,7 +25,7 @@ function BenefitList({ items, className }: { items: readonly string[]; className
     <ul className={cn('space-y-3', className)}>
       {items.map((item) => (
         <li key={item} className="flex gap-3 text-ink">
-          <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-card text-petrol shadow-soft">
+          <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-card text-navy shadow-soft">
             <Check aria-hidden="true" className="size-4" strokeWidth={3} />
           </span>
           {item}
@@ -75,9 +75,7 @@ export function AudiencesSection() {
           className="reveal-on-scroll mt-16 grid overflow-hidden rounded-[2rem] border bg-card shadow-soft lg:grid-cols-[1.1fr_1fr]"
         >
           <div className="p-7 sm:p-10 lg:p-12">
-            <p className="text-sm font-bold tracking-wide text-petrol uppercase">
-              {t.teacher.label}
-            </p>
+            <p className="text-sm font-bold tracking-wide text-navy uppercase">{t.teacher.label}</p>
             <h3
               id="audience-teacher"
               className="mt-3 font-display text-2xl leading-snug font-semibold text-ink sm:text-3xl"
@@ -99,7 +97,7 @@ export function AudiencesSection() {
 
           <div
             aria-hidden="true"
-            className="relative flex items-center bg-petrol-tint p-7 sm:p-10 lg:p-12"
+            className="relative flex items-center bg-navy-tint p-7 sm:p-10 lg:p-12"
           >
             <div className="absolute -right-10 -bottom-10 size-48 rounded-full bg-card/50" />
             <ul className="relative w-full space-y-3">
@@ -123,14 +121,14 @@ export function AudiencesSection() {
           {/* Student: icons on top, as a playful cluster. */}
           <article
             aria-labelledby="audience-student"
-            className="reveal-on-scroll flex flex-col rounded-[2rem] bg-petrol-tint p-7 sm:p-10"
+            className="reveal-on-scroll flex flex-col rounded-[2rem] bg-sky-tint p-7 sm:p-10"
           >
             <div className="mb-8 flex gap-3">
-              <IconBubble icon={BookOpen} className="bg-card text-petrol" />
-              <IconBubble icon={Type} className="translate-y-3 bg-apricot text-petrol-deep" />
-              <IconBubble icon={Headphones} className="bg-card text-petrol" />
+              <IconBubble icon={BookOpen} className="bg-card text-sky-ink" />
+              <IconBubble icon={Type} className="translate-y-3 bg-sun text-navy-deep" />
+              <IconBubble icon={Headphones} className="bg-card text-violet-ink" />
             </div>
-            <p className="text-sm font-bold tracking-wide text-petrol-deep uppercase">
+            <p className="text-sm font-bold tracking-wide text-sky-ink uppercase">
               {t.student.label}
             </p>
             <h3
@@ -146,12 +144,12 @@ export function AudiencesSection() {
           {/* Parent: a warmer surface, with the icon beside the heading. */}
           <article
             aria-labelledby="audience-parent"
-            className="reveal-on-scroll flex flex-col rounded-[2rem] bg-apricot-tint p-7 sm:p-10 md:mt-12"
+            className="reveal-on-scroll flex flex-col rounded-[2rem] bg-coral-tint p-7 sm:p-10 md:mt-12"
           >
             <div className="flex items-start gap-4">
-              <IconBubble icon={HeartHandshake} className="bg-card text-apricot-ink" />
+              <IconBubble icon={HeartHandshake} className="bg-card text-coral-ink" />
               <div>
-                <p className="text-sm font-bold tracking-wide text-apricot-ink uppercase">
+                <p className="text-sm font-bold tracking-wide text-coral-ink uppercase">
                   {t.parent.label}
                 </p>
                 <h3
@@ -165,7 +163,7 @@ export function AudiencesSection() {
             <BenefitList items={t.parent.benefits} className="mt-6 flex-1" />
             <div className="mt-8 flex items-center justify-between gap-4">
               <AvailabilityBadge availability="comingSoon" />
-              <span aria-hidden="true" className="flex gap-2 text-apricot-ink/70">
+              <span aria-hidden="true" className="flex gap-2 text-coral-ink/70">
                 <House className="size-5" />
                 <MessageSquareText className="size-5" />
               </span>

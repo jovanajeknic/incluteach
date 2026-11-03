@@ -6,9 +6,9 @@ import { SectionHeading } from './SectionHeading';
 
 // Each step gets its own accent, so the three stages read as one path with distinct stops.
 const stepAccents = [
-  'bg-petrol text-white',
-  'bg-apricot text-petrol-deep',
-  'bg-petrol-tint text-petrol-deep ring-2 ring-petrol',
+  'bg-navy text-white',
+  'bg-sun text-navy-deep',
+  'bg-leaf-tint text-leaf-ink ring-2 ring-leaf',
 ];
 
 export function HowItWorksSection() {
@@ -24,8 +24,8 @@ export function HowItWorksSection() {
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="reveal-on-scroll flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <SectionHeading id={headingId} eyebrow={t.eyebrow} title={t.title} />
-          <p className="flex max-w-md items-start gap-3 rounded-2xl border border-gold/50 bg-gold-tint px-5 py-4 text-ink">
-            <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-apricot-ink" />
+          <p className="flex max-w-md items-start gap-3 rounded-2xl border border-sun/50 bg-sun-tint px-5 py-4 text-ink">
+            <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-sun-ink" />
             {t.plannedNote}
           </p>
         </div>
@@ -41,7 +41,7 @@ export function HowItWorksSection() {
             <path
               d="M0 20C160 -6 340 46 500 20S840 -6 1000 20"
               fill="none"
-              className="stroke-petrol/35"
+              className="stroke-navy/35"
               strokeWidth="3"
               strokeLinecap="round"
               strokeDasharray="2 12"
@@ -64,7 +64,7 @@ export function HowItWorksSection() {
                   {index + 1}
                 </span>
                 <div>
-                  <p className="text-sm font-bold tracking-wide text-petrol uppercase">
+                  <p className="text-sm font-bold tracking-wide text-navy uppercase">
                     {step.actor}
                   </p>
                   <h3 className="mt-2 font-display text-2xl leading-snug font-semibold text-ink">

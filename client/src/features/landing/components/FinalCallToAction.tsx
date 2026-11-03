@@ -11,10 +11,10 @@ export function FinalCallToAction() {
   return (
     <section aria-labelledby="final-cta-heading" className="py-20 sm:py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div className="surface-dark reveal-on-scroll relative overflow-hidden rounded-[2rem] bg-petrol-deep px-7 py-14 sm:px-14 sm:py-16">
+        <div className="surface-dark reveal-on-scroll relative overflow-hidden rounded-[2rem] bg-navy-deep px-7 py-14 sm:px-14 sm:py-16">
           <LogoMark
             tone="inverse"
-            className="pointer-events-none absolute -right-8 -bottom-10 size-64 text-paper opacity-[0.07] sm:size-80"
+            className="pointer-events-none absolute -right-10 -bottom-12 h-56 w-auto text-paper opacity-[0.08] [--logo-knockout:var(--brand-navy-deep)] sm:h-72"
           />
           <div className="relative max-w-2xl">
             <h2
@@ -23,7 +23,7 @@ export function FinalCallToAction() {
             >
               {t.title}
             </h2>
-            <p className="mt-4 text-lg text-petrol-tint">{t.description}</p>
+            <p className="mt-4 text-lg text-navy-tint">{t.description}</p>
             <Button asChild variant="accent" size="lg" className="mt-8 h-12 px-7 text-base">
               <Link to={teacherHomePath}>
                 {t.action}

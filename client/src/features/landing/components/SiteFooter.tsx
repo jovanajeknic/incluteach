@@ -5,7 +5,7 @@ import { text } from '@/text/sr-Latn';
 import { sectionLinks } from '../sections';
 
 const footerLinkClassName =
-  'rounded-sm text-ink underline-offset-4 transition-colors duration-150 hover:text-petrol hover:underline';
+  'rounded-sm text-ink underline-offset-4 transition-colors duration-150 hover:text-navy hover:underline';
 
 export function SiteFooter() {
   const t = text.landing.footer;

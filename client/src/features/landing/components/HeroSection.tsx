@@ -14,8 +14,8 @@ export function HeroSection() {
     <section aria-labelledby="hero-title" className="relative isolate overflow-hidden">
       <div className="mx-auto grid max-w-6xl items-center gap-14 px-4 pt-12 pb-20 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:px-8 lg:pt-20 lg:pb-28">
         <div>
-          <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-petrol/15 bg-card px-4 py-1.5 text-sm font-semibold text-petrol-deep shadow-soft">
-            <span aria-hidden="true" className="size-2 rounded-full bg-apricot" />
+          <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-navy/15 bg-card px-4 py-1.5 text-sm font-semibold text-navy-deep shadow-soft">
+            <span aria-hidden="true" className="size-2 rounded-full bg-sun" />
             {t.eyebrow}
           </p>
           <h1
@@ -23,14 +23,14 @@ export function HeroSection() {
             className="font-display text-[2.5rem] leading-[1.06] font-semibold tracking-tight text-balance text-ink sm:text-5xl lg:text-[4rem]"
           >
             {firstSentence}{' '}
-            <span className="relative inline-block text-petrol">
+            <span className="relative inline-block text-navy">
               {secondSentence}
               {/* A hand-drawn underline in the accent colour. */}
               <svg
                 aria-hidden="true"
                 viewBox="0 0 300 16"
                 preserveAspectRatio="none"
-                className="absolute -bottom-2 left-0 h-3 w-full text-apricot"
+                className="absolute -bottom-2 left-0 h-3 w-full text-coral"
               >
                 <path
                   d="M3 11c60-7 140-9 294-4"

@@ -5,8 +5,8 @@ import { text } from '@/text/sr-Latn';
 type Availability = 'inDemo' | 'comingSoon';
 
 const appearance: Record<Availability, { icon: LucideIcon; className: string }> = {
-  inDemo: { icon: CheckCircle2, className: 'border-petrol/20 bg-petrol-tint text-petrol-deep' },
-  comingSoon: { icon: Hourglass, className: 'border-gold/50 bg-gold-tint text-apricot-ink' },
+  inDemo: { icon: CheckCircle2, className: 'border-navy/20 bg-navy-tint text-navy-deep' },
+  comingSoon: { icon: Hourglass, className: 'border-sun/50 bg-sun-tint text-sun-ink' },
 };
 
 interface AvailabilityBadgeProps {

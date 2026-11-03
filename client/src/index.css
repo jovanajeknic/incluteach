@@ -10,20 +10,35 @@
  * All text pairings were checked for WCAG AA (normal text >= 4.5:1, UI parts >= 3:1).
  */
 :root {
-  /* Brand palette */
-  --brand-paper: #fbf7f0;
-  --brand-paper-deep: #f4ecdf;
-  --brand-card: #fffdf9;
-  --brand-ink: #1a2b2f;
-  --brand-ink-soft: #4b5b60;
-  --brand-petrol: #0f5257;
-  --brand-petrol-deep: #0a3a3e;
-  --brand-petrol-tint: #ddebe8;
-  --brand-apricot: #f0a066;
-  --brand-apricot-tint: #fce9d9;
-  --brand-apricot-ink: #8a4417;
-  --brand-gold: #e5b54a;
-  --brand-gold-tint: #fbf1d3;
+  /* Brand palette, taken from the logo: cream paper, a navy and blue book, five learners. */
+  --brand-paper: #fff6e5;
+  --brand-paper-deep: #faebd3;
+  --brand-card: #fffcf7;
+  --brand-ink: #16263d;
+  --brand-ink-soft: #4a5468;
+
+  --brand-navy: #1e3a5f;
+  --brand-navy-deep: #142a47;
+  --brand-navy-tint: #e2eaf4;
+  --brand-blue: #2c5484;
+
+  /* The five learner colours. Full colours are for shapes and illustration only;
+     use the -ink variants for text and the -tint variants for surfaces. */
+  --brand-sky: #3e8ede;
+  --brand-sky-tint: #e0edfb;
+  --brand-sky-ink: #1f5b9e;
+  --brand-leaf: #3fb58f;
+  --brand-leaf-tint: #dcf2e9;
+  --brand-leaf-ink: #1c6a50;
+  --brand-coral: #f26b5b;
+  --brand-coral-tint: #fde4df;
+  --brand-coral-ink: #a2301f;
+  --brand-sun: #f7b538;
+  --brand-sun-tint: #fdf0d0;
+  --brand-sun-ink: #7a4c00;
+  --brand-violet: #8b6fd6;
+  --brand-violet-tint: #ebe5fa;
+  --brand-violet-ink: #5a3fa6;
 
   /* Roles (shadcn/ui names) */
   --radius: 0.875rem;
@@ -36,28 +51,28 @@
   --popover: var(--brand-card);
   --popover-foreground: var(--brand-ink);
 
-  --primary: var(--brand-petrol);
+  --primary: var(--brand-navy);
   --primary-foreground: #ffffff;
   /* Darker on hover: lightening the button would lower the contrast of its text. */
-  --primary-hover: var(--brand-petrol-deep);
-  --secondary: var(--brand-petrol-tint);
-  --secondary-foreground: var(--brand-petrol-deep);
+  --primary-hover: var(--brand-navy-deep);
+  --secondary: var(--brand-navy-tint);
+  --secondary-foreground: var(--brand-navy-deep);
 
   --muted: var(--brand-paper-deep);
   --muted-foreground: var(--brand-ink-soft);
-  --accent: var(--brand-petrol-tint);
-  --accent-foreground: var(--brand-petrol-deep);
+  --accent: var(--brand-navy-tint);
+  --accent-foreground: var(--brand-navy-deep);
 
   --destructive: #b42318;
   --destructive-foreground: #ffffff;
 
-  --border: #e7decf;
-  --input: #868b85;
-  --ring: var(--brand-petrol);
+  --border: #ecdcc2;
+  --input: #7f8796;
+  --ring: var(--brand-navy);
 
   /* Elevation: warm, low-contrast shadows tinted with the ink colour. */
-  --shadow-soft: 0 1px 2px rgb(26 43 47 / 0.06), 0 4px 14px rgb(26 43 47 / 0.06);
-  --shadow-lifted: 0 2px 4px rgb(26 43 47 / 0.06), 0 12px 32px rgb(26 43 47 / 0.1);
+  --shadow-soft: 0 1px 2px rgb(22 38 61 / 0.06), 0 4px 14px rgb(22 38 61 / 0.06);
+  --shadow-lifted: 0 2px 4px rgb(22 38 61 / 0.06), 0 12px 32px rgb(22 38 61 / 0.1);
 
   /* Motion */
   --duration-fast: 150ms;
@@ -104,14 +119,25 @@
   --color-paper-deep: var(--brand-paper-deep);
   --color-ink: var(--brand-ink);
   --color-ink-soft: var(--brand-ink-soft);
-  --color-petrol: var(--brand-petrol);
-  --color-petrol-deep: var(--brand-petrol-deep);
-  --color-petrol-tint: var(--brand-petrol-tint);
-  --color-apricot: var(--brand-apricot);
-  --color-apricot-tint: var(--brand-apricot-tint);
-  --color-apricot-ink: var(--brand-apricot-ink);
-  --color-gold: var(--brand-gold);
-  --color-gold-tint: var(--brand-gold-tint);
+  --color-navy: var(--brand-navy);
+  --color-navy-deep: var(--brand-navy-deep);
+  --color-navy-tint: var(--brand-navy-tint);
+  --color-blue: var(--brand-blue);
+  --color-sky: var(--brand-sky);
+  --color-sky-tint: var(--brand-sky-tint);
+  --color-sky-ink: var(--brand-sky-ink);
+  --color-leaf: var(--brand-leaf);
+  --color-leaf-tint: var(--brand-leaf-tint);
+  --color-leaf-ink: var(--brand-leaf-ink);
+  --color-coral: var(--brand-coral);
+  --color-coral-tint: var(--brand-coral-tint);
+  --color-coral-ink: var(--brand-coral-ink);
+  --color-sun: var(--brand-sun);
+  --color-sun-tint: var(--brand-sun-tint);
+  --color-sun-ink: var(--brand-sun-ink);
+  --color-violet: var(--brand-violet);
+  --color-violet-tint: var(--brand-violet-tint);
+  --color-violet-ink: var(--brand-violet-ink);
 
   --ease-out-soft: var(--ease-out-soft);
 }
@@ -142,9 +168,9 @@
     outline-offset: 2px;
   }
 
-  /* On dark surfaces the petrol ring would disappear, so it switches to apricot. */
+  /* On dark surfaces the navy ring would disappear, so it switches to sun yellow. */
   .surface-dark :focus-visible {
-    outline-color: var(--brand-apricot);
+    outline-color: var(--brand-sun);
   }
 }
 
