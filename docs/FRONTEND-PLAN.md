@@ -34,6 +34,7 @@ Each task states which API it works against:
 | FE-09                    | Partly done. The shared `LessonContent` renderer and a read-only lesson view. No editing.                                                                                                                                                                                                                                                                                    |
 | Landing page             | Done (not in the original task list). Public page at `/` built from the owner's mockup: header with section links, hero with illustration, "Za koga je", "Kako funkcioniše" and "Naša priča". Student and parent are marked as coming soon. "Prijavi se" and "Registruj se" lead to `/login` and `/register`, which say accounts are coming soon and offer the teacher demo. |
 | Sign-in and registration | Demo. Forms with React Hook Form + Zod validation and a separate demo auth service that sends and stores nothing. Real authentication waits for the backend (FE-05, FE-17).                                                                                                                                                                                                  |
+| FE-11 to FE-14 (student) | Demo done at `/student`: subjects, lessons per subject, the teacher-approved lesson version that fits the student's support profile, reading settings, step-by-step mode, glossary, read aloud with sentence highlighting, and a practice quiz. Mock data only; real data and progress need the backend.                                                                     |
 
 Differences from this plan, all intentional for this step:
 
@@ -42,6 +43,10 @@ Differences from this plan, all intentional for this step:
 - **React Router 7, not 8.** Version 8 requires Node.js 22.22 or newer; the installed version is 22.18.0.
 - **Approved visual identity**: see [DESIGN.md](DESIGN.md). Details will be refined after the owner reviews the screens.
 - **`/` is a public landing page**, not a redirect. Signed-in users will reach their role's home page through sign-in (FE-05).
+- **Student area decisions (owner)**: the school adds students (no self-registration); AI-adapted versions reach students only after teacher approval; the quiz is practice only, with feedback after every answer and no score; a star for effort when a practice is finished.
+- **Support profile**: the frontend receives only needs (shorter text, step by step, easier-reading preset), never diagnoses. Mapping from what the school or parents record to these needs belongs to the backend.
+- **Reading settings** start from the profile preset (for example the dyslexia-friendly font), can always be changed by the student and are remembered on the device (`localStorage`).
+- **Audio** in the demo uses the browser's built-in voice (Serbian, or Croatian/Bosnian as a fallback). If a device has none, the lesson says so. A server-side voice remains an open question.
 
 ## 1. Goal and scope of v1
 
@@ -469,10 +474,10 @@ Every task also follows the verification rules in [AGENTS.md](../AGENTS.md#4-ver
 ### For the project owner
 
 1. **Design details**: the visual identity is approved as a starting point (see [DESIGN.md](DESIGN.md)); refinements are expected after review.
-2. **Reading preferences storage**: only on the device, or saved to the student's profile so they follow the student across devices?
+2. **Reading preferences storage**: stored on the device for now. Should they also follow the student across devices (saved on the backend)?
 3. **Demo mode**: only during development, or also in a public demo build?
 4. **Teacher view of support needs**: may the teacher UI show any information about a student's needs, and in what wording? (Students and peers never see diagnoses.)
-5. **Quiz rules**: question types, whether retries are allowed, and how results are described to students and parents.
+5. **Quiz rules**: decided: practice only, no score. Still open: what parents and teachers see about practice activity.
 6. **Registration**: decided by the owner: teachers and parents register themselves through the public form; students do not (the school adds them). Still to agree with the backend developer: the password policy (the frontend uses a temporary 12-character minimum), email verification and how a parent is linked to a child.
 
 ### For the backend developer
