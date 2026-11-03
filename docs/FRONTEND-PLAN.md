@@ -35,6 +35,7 @@ Each task states which API it works against:
 | Landing page             | Done (not in the original task list). Public page at `/` built from the owner's mockup: header with section links, hero with illustration, "Za koga je", "Kako funkcioniše" and "Naša priča". Student and parent are marked as coming soon. "Prijavi se" and "Registruj se" lead to `/login` and `/register`, which say accounts are coming soon and offer the teacher demo. |
 | Sign-in and registration | Demo. Forms with React Hook Form + Zod validation and a separate demo auth service that sends and stores nothing. Real authentication waits for the backend (FE-05, FE-17).                                                                                                                                                                                                  |
 | FE-11 to FE-14 (student) | Demo done at `/student`: subjects, lessons per subject, the teacher-approved lesson version that fits the student's support profile, reading settings, step-by-step mode, glossary, read aloud with sentence highlighting, and a practice quiz. Mock data only; real data and progress need the backend.                                                                     |
+| FE-15 (parent)           | Demo done at `/parent`: linked children only, lessons by subject, the lesson version the child sees, practice summary with questions missed on the first try, home guidance, and free-text suggestions for the teacher. Mock data only.                                                                                                                                      |
 
 Differences from this plan, all intentional for this step:
 
@@ -47,6 +48,7 @@ Differences from this plan, all intentional for this step:
 - **Support profile**: the frontend receives only needs (shorter text, step by step, easier-reading preset), never diagnoses. Mapping from what the school or parents record to these needs belongs to the backend.
 - **Reading settings** start from the profile preset (for example the dyslexia-friendly font), can always be changed by the student and are remembered on the device (`localStorage`).
 - **Audio** in the demo uses the browser's built-in voice (Serbian, or Croatian/Bosnian as a fallback). If a device has none, the lesson says so. A server-side voice remains an open question.
+- **Parent area decisions (owner)**: parents see their linked children's lessons, practice dates and questions missed on the first try (no score), and short home guidance. They write free-text suggestions that go to the teacher; the teacher decides how the AI uses them, and the teacher still approves every adapted version. Suggestions are never shown to the child.
 
 ## 1. Goal and scope of v1
 
@@ -502,3 +504,7 @@ Every task also follows the verification rules in [AGENTS.md](../AGENTS.md#4-ver
 | `docs/API-CONTRACT.md` (or an OpenAPI file) | With the backend developer, before FE-04 schemas stop being provisional and before FE-17 |
 | `docs/ARCHITECTURE.md`                      | When backend technologies and authentication are decided                                 |
 | Accessibility checklist                     | During FE-02/FE-03, as a short reusable checklist for UI tasks                           |
+
+## Next steps noted
+
+- **Teacher view of parent suggestions** is not built yet: suggestions are only stored in the parent demo. The teacher area needs a list of suggestions per student, with "use for the next adaptation" and approval.
