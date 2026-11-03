@@ -95,7 +95,7 @@ export function LogoIntro({ targetRef, onFinish }: LogoIntroProps) {
       className="fixed inset-0 z-[60] cursor-pointer"
       onClick={() => finishRef.current()}
     >
-      <div ref={backdropRef} className="absolute inset-0 bg-paper" />
+      <div ref={backdropRef} className="absolute inset-0 bg-mint" />
       <div className="absolute inset-0 flex items-center justify-center p-8">
         <LogoMark
           ref={logoRef}

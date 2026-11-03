@@ -11,12 +11,14 @@ import { LogoIntro } from './components/LogoIntro';
 import { SiteFooter } from './components/SiteFooter';
 import { SiteHeader } from './components/SiteHeader';
 import { shouldPlayLogoIntro } from './logoIntro';
+import { useScrollReveal } from './useScrollReveal';
 
 export function LandingPage() {
   const headerLogoRef = useRef<SVGSVGElement>(null);
   // Decided once per visit, before the first paint, so the page never flashes before the intro.
   const [introActive, setIntroActive] = useState(shouldPlayLogoIntro);
   const handleIntroFinish = useCallback(() => setIntroActive(false), []);
+  useScrollReveal();
 
   return (
     <div className="min-h-screen overflow-x-clip bg-paper">

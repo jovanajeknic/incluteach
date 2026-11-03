@@ -5,35 +5,40 @@ import { Button } from '@/shared/ui/button';
 import { text } from '@/text/sr-Latn';
 import { sectionIds } from '../sections';
 import { LessonModesVisual } from './LessonModesVisual';
+import { Wave } from './Wave';
 
 export function HeroSection() {
   const t = text.landing.hero;
   const [firstSentence, secondSentence] = splitTitle(t.title);
 
   return (
-    <section aria-labelledby="hero-title" className="relative isolate overflow-hidden">
-      <div className="mx-auto grid max-w-6xl items-center gap-14 px-4 pt-12 pb-20 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:px-8 lg:pt-20 lg:pb-28">
-        <div>
-          <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-navy/15 bg-card px-4 py-1.5 text-sm font-semibold text-navy-deep shadow-soft">
-            <span aria-hidden="true" className="size-2 rounded-full bg-sun" />
+    <section aria-labelledby="hero-title" className="relative isolate bg-mint">
+      <div className="mx-auto grid max-w-6xl items-center gap-14 px-4 pt-12 pb-12 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:px-8 lg:pt-20 lg:pb-16">
+        <div data-reveal="left">
+          <p className="mb-6 inline-flex items-center gap-2 rounded-full bg-card px-4 py-1.5 font-display text-sm font-extrabold text-teal shadow-soft">
+            <span aria-hidden="true" className="flex gap-1">
+              <span className="size-2 rounded-full bg-blush-deep" />
+              <span className="size-2 rounded-full bg-butter-deep" />
+              <span className="size-2 rounded-full bg-lilac-deep" />
+            </span>
             {t.eyebrow}
           </p>
           <h1
             id="hero-title"
-            className="font-display text-[2.5rem] leading-[1.06] font-semibold tracking-tight text-balance text-ink sm:text-5xl lg:text-[4rem]"
+            className="font-display text-[2.6rem] leading-[1.08] font-black tracking-tight text-balance text-ink sm:text-5xl lg:text-[4rem]"
           >
             {firstSentence}{' '}
-            <span className="relative inline-block text-navy">
+            <span className="relative inline-block text-teal">
               {secondSentence}
-              {/* A hand-drawn underline in the accent colour. */}
+              {/* A playful hand-drawn squiggle under the promise. */}
               <svg
                 aria-hidden="true"
-                viewBox="0 0 300 16"
+                viewBox="0 0 300 18"
                 preserveAspectRatio="none"
-                className="absolute -bottom-2 left-0 h-3 w-full text-coral"
+                className="absolute -bottom-2.5 left-0 h-3.5 w-full text-blush-deep"
               >
                 <path
-                  d="M3 11c60-7 140-9 294-4"
+                  d="M3 12c25-10 45 6 70-2s45-10 70 0 45 8 70-1 45-8 84-3"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="5"
@@ -42,31 +47,34 @@ export function HeroSection() {
               </svg>
             </span>
           </h1>
-          <p className="mt-8 max-w-xl text-lg leading-relaxed text-ink-soft sm:text-xl">
+          <p className="mt-8 max-w-xl text-lg leading-relaxed text-ink sm:text-xl">
             {t.description}
           </p>
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <Button asChild size="lg" className="h-12 px-7 text-base">
+          <div className="mt-9 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
+            <Button asChild size="lg" className="h-13 px-7 text-base">
               <Link to={teacherHomePath}>
                 {t.primaryAction}
                 <ArrowRight aria-hidden="true" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="h-12 bg-card px-7 text-base">
+            <Button asChild variant="outline" size="lg" className="h-13 px-7 text-base">
               <a href={`#${sectionIds.howItWorks}`}>
                 {t.secondaryAction}
                 <ArrowDown aria-hidden="true" />
               </a>
             </Button>
           </div>
-          <p className="mt-5 flex items-center gap-2 text-sm text-ink-soft">
+          <p className="mt-6 flex items-center gap-2 text-sm text-ink-soft">
             <Info aria-hidden="true" className="size-4 shrink-0" />
             {t.demoNote}
           </p>
         </div>
 
-        <LessonModesVisual />
+        <div data-reveal="right">
+          <LessonModesVisual />
+        </div>
       </div>
+      <Wave className="text-blush" />
     </section>
   );
 }

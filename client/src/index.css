@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 /* Self-hosted fonts: no third-party requests, and the latin-ext subset covers č ć đ š ž. */
-@import '@fontsource-variable/fraunces';
+@import '@fontsource-variable/nunito';
 @import '@fontsource-variable/atkinson-hyperlegible-next';
 
 /*
@@ -10,38 +10,46 @@
  * All text pairings were checked for WCAG AA (normal text >= 4.5:1, UI parts >= 3:1).
  */
 :root {
-  /* Brand palette, taken from the logo: cream paper, a navy and blue book, five learners. */
-  --brand-paper: #fff6e5;
-  --brand-paper-deep: #faebd3;
-  --brand-card: #fffcf7;
-  --brand-ink: #16263d;
-  --brand-ink-soft: #4a5468;
+  /* Base */
+  --brand-paper: #fffaf5;
+  --brand-card: #ffffff;
+  --brand-ink: #22313a;
+  --brand-ink-soft: #4f5b63;
+  --brand-teal: #2d6b64;
+  --brand-teal-deep: #1f4f4a;
 
-  --brand-navy: #1e3a5f;
-  --brand-navy-deep: #142a47;
-  --brand-navy-tint: #e2eaf4;
-  --brand-blue: #2c5484;
+  /*
+   * Six pastels. The owner chose mint and blush as the base; the other four widen the
+   * palette for a child-friendly, varied look. Each has three forms:
+   *   pastel  - surfaces (sections, cards)
+   *   -deep   - shapes and illustration (never text)
+   *   -ink    - text on light surfaces
+   */
+  --brand-mint: #d6e6e4;
+  --brand-mint-deep: #8fc4bc;
+  --brand-mint-ink: #1f5a52;
+  --brand-blush: #f8dbd5;
+  --brand-blush-deep: #f0a597;
+  --brand-blush-ink: #9a3b2c;
+  --brand-butter: #fbecc0;
+  --brand-butter-deep: #f3cd6a;
+  --brand-butter-ink: #6e5100;
+  --brand-lilac: #e4ddf4;
+  --brand-lilac-deep: #b5a5e3;
+  --brand-lilac-ink: #55409a;
+  --brand-sky: #d8e8f6;
+  --brand-sky-deep: #93bfe6;
+  --brand-sky-ink: #22578a;
+  --brand-pistachio: #e3efd2;
+  --brand-pistachio-deep: #b3d48e;
+  --brand-pistachio-ink: #3f5f1c;
 
-  /* The five learner colours. Full colours are for shapes and illustration only;
-     use the -ink variants for text and the -tint variants for surfaces. */
-  --brand-sky: #3e8ede;
-  --brand-sky-tint: #e0edfb;
-  --brand-sky-ink: #1f5b9e;
-  --brand-leaf: #3fb58f;
-  --brand-leaf-tint: #dcf2e9;
-  --brand-leaf-ink: #1c6a50;
-  --brand-coral: #f26b5b;
-  --brand-coral-tint: #fde4df;
-  --brand-coral-ink: #a2301f;
-  --brand-sun: #f7b538;
-  --brand-sun-tint: #fdf0d0;
-  --brand-sun-ink: #7a4c00;
-  --brand-violet: #8b6fd6;
-  --brand-violet-tint: #ebe5fa;
-  --brand-violet-ink: #5a3fa6;
+  /* Logo book pages: a soft teal pair that anchors the pastel figures. */
+  --logo-page-left: #4c8c84;
+  --logo-page-right: #6aa8a0;
 
   /* Roles (shadcn/ui names) */
-  --radius: 0.875rem;
+  --radius: 1.5rem;
 
   --background: var(--brand-paper);
   --foreground: var(--brand-ink);
@@ -51,45 +59,48 @@
   --popover: var(--brand-card);
   --popover-foreground: var(--brand-ink);
 
-  --primary: var(--brand-navy);
+  --primary: var(--brand-teal);
   --primary-foreground: #ffffff;
-  /* Darker on hover: lightening the button would lower the contrast of its text. */
-  --primary-hover: var(--brand-navy-deep);
-  --secondary: var(--brand-navy-tint);
-  --secondary-foreground: var(--brand-navy-deep);
+  /* Playful colour swap on hover; white text keeps 6.9:1 on blush ink. */
+  --primary-hover: var(--brand-blush-ink);
+  /* The "pressed" edge under chunky buttons. */
+  --primary-edge: var(--brand-teal-deep);
+  --secondary: var(--brand-mint);
+  --secondary-foreground: var(--brand-mint-ink);
 
-  --muted: var(--brand-paper-deep);
+  --muted: var(--brand-mint);
   --muted-foreground: var(--brand-ink-soft);
-  --accent: var(--brand-navy-tint);
-  --accent-foreground: var(--brand-navy-deep);
+  --accent: var(--brand-mint);
+  --accent-foreground: var(--brand-mint-ink);
 
   --destructive: #b42318;
   --destructive-foreground: #ffffff;
 
-  --border: #ecdcc2;
-  --input: #7f8796;
-  --ring: var(--brand-navy);
+  --border: #ece3da;
+  --input: #7d8a90;
+  --ring: var(--brand-teal);
 
-  /* Elevation: warm, low-contrast shadows tinted with the ink colour. */
-  --shadow-soft: 0 1px 2px rgb(22 38 61 / 0.06), 0 4px 14px rgb(22 38 61 / 0.06);
-  --shadow-lifted: 0 2px 4px rgb(22 38 61 / 0.06), 0 12px 32px rgb(22 38 61 / 0.1);
+  /* Elevation: soft, low-contrast shadows tinted with the ink colour. */
+  --shadow-soft: 0 1px 2px rgb(34 49 58 / 0.05), 0 6px 18px rgb(34 49 58 / 0.07);
+  --shadow-lifted: 0 2px 4px rgb(34 49 58 / 0.05), 0 16px 40px rgb(34 49 58 / 0.1);
 
   /* Motion */
-  --duration-fast: 150ms;
-  --duration-base: 200ms;
   --ease-out-soft: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @theme inline {
   --font-sans:
     'Atkinson Hyperlegible Next Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
-  --font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+  --font-display:
+    'Nunito Variable', 'Segoe UI Rounded', 'Arial Rounded MT Bold', system-ui, sans-serif;
 
-  --radius-sm: calc(var(--radius) - 6px);
-  --radius-md: calc(var(--radius) - 4px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 12px);
+  --radius-sm: calc(var(--radius) - 14px);
+  --radius-md: calc(var(--radius) - 10px);
+  --radius-lg: calc(var(--radius) - 6px);
+  --radius-xl: var(--radius);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 16px);
 
   --shadow-soft: var(--shadow-soft);
   --shadow-lifted: var(--shadow-lifted);
@@ -103,6 +114,7 @@
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-hover: var(--primary-hover);
+  --color-primary-edge: var(--primary-edge);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -116,30 +128,31 @@
   --color-ring: var(--ring);
 
   --color-paper: var(--brand-paper);
-  --color-paper-deep: var(--brand-paper-deep);
   --color-ink: var(--brand-ink);
   --color-ink-soft: var(--brand-ink-soft);
-  --color-navy: var(--brand-navy);
-  --color-navy-deep: var(--brand-navy-deep);
-  --color-navy-tint: var(--brand-navy-tint);
-  --color-blue: var(--brand-blue);
+  --color-teal: var(--brand-teal);
+  --color-teal-deep: var(--brand-teal-deep);
+  --color-mint: var(--brand-mint);
+  --color-mint-deep: var(--brand-mint-deep);
+  --color-mint-ink: var(--brand-mint-ink);
+  --color-blush: var(--brand-blush);
+  --color-blush-deep: var(--brand-blush-deep);
+  --color-blush-ink: var(--brand-blush-ink);
+  --color-butter: var(--brand-butter);
+  --color-butter-deep: var(--brand-butter-deep);
+  --color-butter-ink: var(--brand-butter-ink);
+  --color-lilac: var(--brand-lilac);
+  --color-lilac-deep: var(--brand-lilac-deep);
+  --color-lilac-ink: var(--brand-lilac-ink);
   --color-sky: var(--brand-sky);
-  --color-sky-tint: var(--brand-sky-tint);
+  --color-sky-deep: var(--brand-sky-deep);
   --color-sky-ink: var(--brand-sky-ink);
-  --color-leaf: var(--brand-leaf);
-  --color-leaf-tint: var(--brand-leaf-tint);
-  --color-leaf-ink: var(--brand-leaf-ink);
-  --color-coral: var(--brand-coral);
-  --color-coral-tint: var(--brand-coral-tint);
-  --color-coral-ink: var(--brand-coral-ink);
-  --color-sun: var(--brand-sun);
-  --color-sun-tint: var(--brand-sun-tint);
-  --color-sun-ink: var(--brand-sun-ink);
-  --color-violet: var(--brand-violet);
-  --color-violet-tint: var(--brand-violet-tint);
-  --color-violet-ink: var(--brand-violet-ink);
+  --color-pistachio: var(--brand-pistachio);
+  --color-pistachio-deep: var(--brand-pistachio-deep);
+  --color-pistachio-ink: var(--brand-pistachio-ink);
 
   --ease-out-soft: var(--ease-out-soft);
+  --ease-bounce: var(--ease-bounce);
 }
 
 @layer base {
@@ -165,36 +178,49 @@
   /* A strong, consistent focus indicator for everything, including plain links. */
   :focus-visible {
     outline: 3px solid var(--ring);
-    outline-offset: 2px;
-  }
-
-  /* On dark surfaces the navy ring would disappear, so it switches to sun yellow. */
-  .surface-dark :focus-visible {
-    outline-color: var(--brand-sun);
+    outline-offset: 3px;
   }
 }
 
 @layer components {
-  /* Gentle reveal on scroll. Progressive enhancement only: content is fully visible
-     without it, and it never runs for users who prefer reduced motion. */
-  @media (prefers-reduced-motion: no-preference) {
-    @supports (animation-timeline: view()) {
-      .reveal-on-scroll {
-        animation: reveal-up linear both;
-        animation-timeline: view();
-        animation-range: entry 0% entry 40%;
-      }
-    }
+  /*
+   * Reveal on scroll. The `js-reveal` class is added to <html> by useScrollReveal only when
+   * motion is allowed, so without JavaScript or with reduced motion everything is visible.
+   */
+  .js-reveal [data-reveal] {
+    opacity: 0;
+    transform: translateY(28px);
+    transition:
+      opacity 700ms var(--ease-out-soft),
+      transform 700ms var(--ease-out-soft);
+    transition-delay: calc(var(--reveal-order, 0) * 90ms);
   }
 
-  @keyframes reveal-up {
-    from {
-      opacity: 0;
-      transform: translateY(16px);
+  .js-reveal [data-reveal='left'] {
+    transform: translateX(-36px);
+  }
+
+  .js-reveal [data-reveal='right'] {
+    transform: translateX(36px);
+  }
+
+  .js-reveal [data-reveal='pop'] {
+    transform: scale(0.9);
+  }
+
+  .js-reveal [data-reveal].is-revealed {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* A small, friendly hop on hover for illustrations and cards. */
+  @media (prefers-reduced-motion: no-preference) {
+    .hover-hop {
+      transition: transform 250ms var(--ease-bounce);
     }
-    to {
-      opacity: 1;
-      transform: none;
+
+    .hover-hop:hover {
+      transform: translateY(-6px) rotate(-1deg);
     }
   }
 }

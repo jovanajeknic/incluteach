@@ -4,9 +4,10 @@ import { text } from '@/text/sr-Latn';
 
 type Availability = 'inDemo' | 'comingSoon';
 
+// White pills read clearly on any pastel surface; the icon and text carry the meaning.
 const appearance: Record<Availability, { icon: LucideIcon; className: string }> = {
-  inDemo: { icon: CheckCircle2, className: 'border-navy/20 bg-navy-tint text-navy-deep' },
-  comingSoon: { icon: Hourglass, className: 'border-sun/50 bg-sun-tint text-sun-ink' },
+  inDemo: { icon: CheckCircle2, className: 'border-mint-deep text-mint-ink' },
+  comingSoon: { icon: Hourglass, className: 'border-blush-deep text-blush-ink' },
 };
 
 interface AvailabilityBadgeProps {
@@ -21,7 +22,7 @@ export function AvailabilityBadge({ availability, className }: AvailabilityBadge
   return (
     <span
       className={cn(
-        'inline-flex w-fit items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold',
+        'inline-flex w-fit items-center gap-1.5 rounded-full border-2 bg-card px-3 py-1 font-display text-sm font-extrabold',
         tone,
         className,
       )}

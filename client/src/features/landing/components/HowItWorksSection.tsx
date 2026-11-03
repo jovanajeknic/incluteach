@@ -1,14 +1,16 @@
-import { Info } from 'lucide-react';
+import { BookOpenText, Info, Sparkles, Users, type LucideIcon } from 'lucide-react';
+import type { CSSProperties } from 'react';
 import { cn } from '@/shared/lib/utils';
 import { text } from '@/text/sr-Latn';
 import { sectionIds } from '../sections';
 import { SectionHeading } from './SectionHeading';
+import { Wave } from './Wave';
 
-// Each step gets its own accent, so the three stages read as one path with distinct stops.
-const stepAccents = [
-  'bg-navy text-white',
-  'bg-sun text-navy-deep',
-  'bg-leaf-tint text-leaf-ink ring-2 ring-leaf',
+// Each step gets its own pastel, so the three stages read as one path with distinct stops.
+const stepStyles: { icon: LucideIcon; bubble: string; tag: string }[] = [
+  { icon: BookOpenText, bubble: 'bg-mint-deep', tag: 'bg-mint text-mint-ink' },
+  { icon: Sparkles, bubble: 'bg-butter-deep', tag: 'bg-butter text-butter-ink' },
+  { icon: Users, bubble: 'bg-lilac-deep', tag: 'bg-lilac text-lilac-ink' },
 ];
 
 export function HowItWorksSection() {
@@ -16,67 +18,59 @@ export function HowItWorksSection() {
   const headingId = `${sectionIds.howItWorks}-heading`;
 
   return (
-    <section
-      id={sectionIds.howItWorks}
-      aria-labelledby={headingId}
-      className="bg-paper-deep py-20 sm:py-28"
-    >
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div className="reveal-on-scroll flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+    <section id={sectionIds.howItWorks} aria-labelledby={headingId} className="bg-blush">
+      <div className="mx-auto max-w-6xl px-4 pt-10 pb-16 sm:px-6 sm:pb-20 lg:px-8">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <SectionHeading id={headingId} eyebrow={t.eyebrow} title={t.title} />
-          <p className="flex max-w-md items-start gap-3 rounded-2xl border border-sun/50 bg-sun-tint px-5 py-4 text-ink">
-            <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-sun-ink" />
+          <p
+            data-reveal="right"
+            className="flex max-w-md items-start gap-3 rounded-3xl bg-card px-5 py-4 text-ink shadow-soft"
+          >
+            <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-blush-ink" />
             {t.plannedNote}
           </p>
         </div>
 
-        <div className="relative mt-16">
-          {/* Decorative path that joins the three steps on wide screens. */}
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 1000 40"
-            preserveAspectRatio="none"
-            className="absolute top-2 right-[16%] left-[16%] hidden h-10 lg:block"
-          >
-            <path
-              d="M0 20C160 -6 340 46 500 20S840 -6 1000 20"
-              fill="none"
-              className="stroke-navy/35"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeDasharray="2 12"
-            />
-          </svg>
-
-          <ol className="relative grid gap-10 lg:grid-cols-3 lg:gap-8">
-            {t.steps.map((step, index) => (
+        <ol className="mt-14 grid gap-6 lg:grid-cols-3">
+          {t.steps.map((step, index) => {
+            const { icon: Icon, bubble, tag } = stepStyles[index] ?? stepStyles[0]!;
+            return (
               <li
                 key={step.title}
-                className="reveal-on-scroll flex gap-5 lg:flex-col lg:items-center lg:text-center"
+                data-reveal="pop"
+                style={{ '--reveal-order': index } as CSSProperties}
+                className="relative flex flex-col rounded-[2rem] bg-card p-7 shadow-soft"
               >
-                <span
-                  aria-hidden="true"
+                <div className="flex items-center justify-between">
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      'flex size-16 items-center justify-center rounded-full font-display text-3xl font-black text-ink',
+                      bubble,
+                    )}
+                  >
+                    {index + 1}
+                  </span>
+                  <Icon aria-hidden="true" className="size-8 text-ink-soft" />
+                </div>
+                <p
                   className={cn(
-                    'flex size-14 shrink-0 items-center justify-center rounded-full font-display text-2xl font-semibold shadow-soft',
-                    stepAccents[index],
+                    'mt-6 w-fit rounded-full px-3 py-1 font-display text-sm font-extrabold',
+                    tag,
                   )}
                 >
-                  {index + 1}
-                </span>
-                <div>
-                  <p className="text-sm font-bold tracking-wide text-navy uppercase">
-                    {step.actor}
-                  </p>
-                  <h3 className="mt-2 font-display text-2xl leading-snug font-semibold text-ink">
-                    {step.title}
-                  </h3>
-                  <p className="mt-3 max-w-sm text-ink-soft lg:mx-auto">{step.description}</p>
-                </div>
+                  {step.actor}
+                </p>
+                <h3 className="mt-3 font-display text-2xl leading-snug font-extrabold text-ink">
+                  {step.title}
+                </h3>
+                <p className="mt-3 text-ink-soft">{step.description}</p>
               </li>
-            ))}
-          </ol>
-        </div>
+            );
+          })}
+        </ol>
       </div>
+      <Wave className="text-paper" />
     </section>
   );
 }

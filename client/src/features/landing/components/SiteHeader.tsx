@@ -11,7 +11,7 @@ import { sectionLinks } from '../sections';
 const MENU_ID = 'site-mobile-menu';
 
 const navLinkClassName =
-  'rounded-full px-3 py-2 font-medium text-ink transition-colors duration-150 hover:bg-navy-tint hover:text-navy-deep';
+  'rounded-full px-4 py-2 font-display font-extrabold text-ink transition-colors duration-150 hover:bg-card hover:text-teal';
 
 interface SiteHeaderProps {
   /** Lets the logo intro measure where the header logo sits. */
@@ -41,7 +41,7 @@ export function SiteHeader({ logoRef, hideLogoMark = false }: SiteHeaderProps) {
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/70 bg-paper/90 backdrop-blur supports-[backdrop-filter]:bg-paper/80">
+    <header className="sticky top-0 z-40 bg-mint/90 backdrop-blur supports-[backdrop-filter]:bg-mint/80">
       <div className="mx-auto flex h-18 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link to="/" aria-label={text.app.homeLinkLabel} className="rounded-md">
           <Logo markRef={logoRef} markClassName={cn(hideLogoMark && 'opacity-0')} />
@@ -80,7 +80,7 @@ export function SiteHeader({ logoRef, hideLogoMark = false }: SiteHeaderProps) {
       </div>
 
       {menuOpen && (
-        <div id={MENU_ID} className="border-t border-border/70 bg-paper md:hidden">
+        <div id={MENU_ID} className="border-t-2 border-card/70 bg-mint md:hidden">
           <nav aria-label={t.label} className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
             <ul className="flex flex-col gap-1">
               {sectionLinks.map((link) => (
@@ -88,7 +88,7 @@ export function SiteHeader({ logoRef, hideLogoMark = false }: SiteHeaderProps) {
                   <a
                     href={`#${link.id}`}
                     onClick={closeMenu}
-                    className="block rounded-xl px-3 py-3 text-lg font-medium text-ink hover:bg-navy-tint"
+                    className="block rounded-2xl px-4 py-3 font-display text-lg font-extrabold text-ink hover:bg-card"
                   >
                     {link.label}
                   </a>

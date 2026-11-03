@@ -4,13 +4,13 @@ import { cn } from '@/shared/lib/utils';
 type LogoTone = 'color' | 'mono' | 'inverse';
 
 // Five learners of different colours behind one open book. Geometry follows the owner's
-// approved logo; colours are the brand palette (see docs/DESIGN.md).
+// logo; colours are the pastel brand palette (see docs/DESIGN.md).
 const figures = [
-  { color: 'var(--brand-sky)', head: [88.5, 101, 28.5], body: [53, 140, 71, 120] },
-  { color: 'var(--brand-leaf)', head: [168, 75, 28], body: [133, 114, 71, 146] },
-  { color: 'var(--brand-coral)', head: [247.5, 54, 28], body: [212, 93.5, 72, 144.5] },
-  { color: 'var(--brand-sun)', head: [327, 75, 28], body: [292, 114, 71, 146] },
-  { color: 'var(--brand-violet)', head: [407, 101, 28.5], body: [372, 140, 71, 120] },
+  { color: 'var(--brand-sky-deep)', head: [88.5, 101, 28.5], body: [53, 140, 71, 120] },
+  { color: 'var(--brand-mint-deep)', head: [168, 75, 28], body: [133, 114, 71, 146] },
+  { color: 'var(--brand-blush-deep)', head: [247.5, 54, 28], body: [212, 93.5, 72, 144.5] },
+  { color: 'var(--brand-butter-deep)', head: [327, 75, 28], body: [292, 114, 71, 146] },
+  { color: 'var(--brand-lilac-deep)', head: [407, 101, 28.5], body: [372, 140, 71, 120] },
 ] as const;
 
 const leftPage = 'M43 212C75 194 160 190 237 240V349C200 318 120 300 43 320Z';
@@ -51,8 +51,8 @@ export function LogoMark({ className, tone = 'color', style, ref }: LogoMarkProp
         strokeWidth={single ? 12 : 0}
         paintOrder="stroke"
       >
-        <path d={leftPage} fill={single ? 'currentColor' : 'var(--brand-navy)'} />
-        <path d={rightPage} fill={single ? 'currentColor' : 'var(--brand-blue)'} />
+        <path d={leftPage} fill={single ? 'currentColor' : 'var(--logo-page-left)'} />
+        <path d={rightPage} fill={single ? 'currentColor' : 'var(--logo-page-right)'} />
       </g>
     </svg>
   );
@@ -77,9 +77,9 @@ export function Logo({ className, tone = 'color', markClassName, markRef, markSt
       )}
     >
       <LogoMark tone={tone} className={markClassName} ref={markRef} style={markStyle} />
-      <span className="font-display text-[1.375rem] leading-none font-semibold tracking-tight">
+      <span className="font-display text-[1.5rem] leading-none font-extrabold tracking-tight">
         Inclu
-        <span className={cn(tone === 'color' && 'text-blue')}>Teach</span>
+        <span className={cn(tone === 'color' && 'text-teal')}>Teach</span>
       </span>
     </span>
   );
