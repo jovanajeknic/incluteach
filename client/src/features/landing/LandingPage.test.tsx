@@ -47,15 +47,16 @@ describe('LandingPage', () => {
   });
 
   it.each([
-    ['Prijavi se', '/login', 'Prijava je u pripremi'],
-    ['Registruj se', '/register', 'Registracija je u pripremi'],
-  ])('header "%s" opens %s, which says it is coming soon', async (name, path, heading) => {
+    ['Prijavi se', '/login', 'Dobro došli nazad'],
+    ['Registruj se', '/register', 'Dobro došli u IncluTeach'],
+  ])('header "%s" opens the %s page', async (name, path, heading) => {
     const { user, router } = renderApp({ path: '/' });
 
     await user.click(within(screen.getByRole('banner')).getByRole('link', { name }));
 
+    // Auth pages are lazy routes: navigation finishes once the page has loaded.
+    expect(await screen.findByRole('heading', { level: 1, name: heading })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe(path);
-    expect(screen.getByRole('heading', { level: 1, name: heading })).toBeInTheDocument();
   });
 
   it('opens the teacher demo from "Istraži IncluTeach"', async () => {

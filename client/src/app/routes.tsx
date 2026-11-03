@@ -1,5 +1,4 @@
 import { type RouteObject } from 'react-router';
-import { AuthComingSoonPage } from '@/features/auth/pages/AuthComingSoonPage';
 import { loginPath, registerPath } from '@/features/auth/paths';
 import { LandingPage } from '@/features/landing/LandingPage';
 import { LessonDetailPage } from '@/features/lessons/pages/LessonDetailPage';
@@ -16,6 +15,20 @@ export const routes: RouteObject[] = [
     errorElement: <RouteErrorPage />,
     children: [
       { path: '/', element: <LandingPage /> },
+      // Auth pages bring their own layout and are loaded on demand, so the form libraries
+      // (React Hook Form, Zod) are not downloaded by visitors who never open them.
+      {
+        path: loginPath,
+        lazy: async () => ({
+          Component: (await import('@/features/auth/pages/LoginPage')).LoginPage,
+        }),
+      },
+      {
+        path: registerPath,
+        lazy: async () => ({
+          Component: (await import('@/features/auth/pages/RegisterPage')).RegisterPage,
+        }),
+      },
       {
         path: teacherHomePath,
         element: <TeacherLayout />,
@@ -28,11 +41,7 @@ export const routes: RouteObject[] = [
       },
       {
         element: <PublicLayout />,
-        children: [
-          { path: loginPath, element: <AuthComingSoonPage kind="login" /> },
-          { path: registerPath, element: <AuthComingSoonPage kind="register" /> },
-          { path: '*', element: <NotFoundPage homePath="/" /> },
-        ],
+        children: [{ path: '*', element: <NotFoundPage homePath="/" /> }],
       },
     ],
   },

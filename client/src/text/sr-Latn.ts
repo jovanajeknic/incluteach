@@ -65,18 +65,62 @@ export const text = {
   },
 
   auth: {
+    demoNotice: 'Demo prikaz — prijava i kreiranje naloga još nijesu povezani sa serverom.',
+    welcomePanel: {
+      title: 'Učimo različito. Rastemo zajedno.',
+      text: 'IncluTeach povezuje nastavnike, učenike i roditelje u podršci svakom djetetu.',
+    },
+    fields: {
+      email: 'Email adresa',
+      password: 'Lozinka',
+      confirmPassword: 'Potvrdite lozinku',
+      firstName: 'Ime',
+      lastName: 'Prezime',
+      role: 'Uloga',
+      passwordHint: (minLength: number) =>
+        `Najmanje ${minLength} znakova. Razmaci su dozvoljeni, a lozinku možete zalijepiti iz menadžera lozinki.`,
+    },
+    roles: {
+      teacher: 'Nastavnik',
+      parent: 'Roditelj',
+      studentNote: 'Učenike u aplikaciju dodaje škola, pa se ne registruju sami.',
+    },
+    showPassword: 'Prikaži lozinku',
+    hidePassword: 'Sakrij lozinku',
+    errors: {
+      emailRequired: 'Unesite email adresu.',
+      emailInvalid: 'Unesite ispravnu email adresu, na primjer ime@primjer.me.',
+      passwordRequired: 'Unesite lozinku.',
+      passwordTooShort: (minLength: number) => `Lozinka mora imati najmanje ${minLength} znakova.`,
+      confirmPasswordRequired: 'Ponovo unesite lozinku.',
+      passwordsDoNotMatch: 'Lozinke se ne podudaraju.',
+      firstNameRequired: 'Unesite ime.',
+      lastNameRequired: 'Unesite prezime.',
+      roleRequired: 'Izaberite ulogu.',
+      submitFailed: 'Slanje nije uspjelo. Pokušajte ponovo.',
+    },
     login: {
       pageTitle: 'Prijava',
-      heading: 'Prijava je u pripremi',
+      heading: 'Dobro došli nazad',
+      description: 'Nastavite svoje putovanje kroz učenje.',
+      submit: 'Prijavi se',
+      submitting: 'Prijavljivanje…',
+      demoSuccess:
+        'Forma je uspješno provjerena. Ovo je demo prikaz: prijava nije stvarno izvršena.',
+      switchPrompt: 'Nemate nalog?',
+      switchLink: 'Registrujte se.',
     },
     register: {
       pageTitle: 'Registracija',
-      heading: 'Registracija je u pripremi',
+      heading: 'Dobro došli u IncluTeach',
+      description: 'Izaberite svoju ulogu i napravite nalog.',
+      submit: 'Napravi nalog',
+      submitting: 'Pravljenje naloga…',
+      demoSuccess:
+        'Forma je uspješno provjerena. Ovo je demo prikaz: nalog nije stvarno napravljen.',
+      switchPrompt: 'Već imate nalog?',
+      switchLink: 'Prijavite se.',
     },
-    description:
-      'Nalozi će biti dostupni kada aplikaciju povežemo sa serverom. Do tada možete bez naloga isprobati nastavnički demo.',
-    tryDemo: 'Isprobaj nastavnički demo',
-    backHome: 'Nazad na početnu',
   },
 
   demo: {
