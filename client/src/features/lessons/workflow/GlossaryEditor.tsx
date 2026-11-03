@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useState } from 'react';
 import { useSchool } from '@/features/school/schoolContext';
 import type { SchoolLesson } from '@/features/school/types';
@@ -6,11 +6,9 @@ import type { GlossaryEntry } from '@/features/student/types';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { text } from '@/text/sr-Latn';
-import { SectionCard, StatusMessage } from './SectionCard';
+import { blankInputClassName, SectionCard, StatusMessage } from './SectionCard';
 
-const fieldClassName = 'h-11 bg-card text-base md:text-base';
-
-/** Harder words and their explanations. Local edits are saved together, then need approval. */
+/** Harder words and their explanations, written like a small two-column glossary. */
 export function GlossaryEditor({ lesson }: { lesson: SchoolLesson }) {
   const t = text.lessonDetail.glossary;
   const { updateLesson } = useSchool();
@@ -40,57 +38,56 @@ export function GlossaryEditor({ lesson }: { lesson: SchoolLesson }) {
   return (
     <SectionCard id="glossary-heading" title={t.heading} intro={t.intro}>
       {entries.length === 0 ? (
-        <p className="text-ink-soft">{t.empty}</p>
+        <p className="hand-note text-ink-soft">{t.empty}</p>
       ) : (
-        <ul className="grid gap-4">
+        <ul className="grid gap-3">
           {entries.map((entry, index) => (
             <li
               key={index}
-              className="grid gap-2 rounded-2xl bg-paper p-3 sm:grid-cols-[1fr_2fr_auto] sm:items-end"
+              className="grid items-end gap-x-4 gap-y-1 sm:grid-cols-[12rem_1fr_auto]"
             >
-              <label className="flex flex-col gap-1 text-sm font-medium text-ink">
-                {t.term(index + 1)}
+              <label className="flex flex-col text-sm text-ink-soft">
+                <span className="sr-only">{t.term(index + 1)}</span>
                 <Input
+                  aria-label={t.term(index + 1)}
                   value={entry.term}
                   onChange={(event) => change(index, 'term', event.target.value)}
-                  className={fieldClassName}
+                  className={`${blankInputClassName} font-display font-medium`}
                 />
               </label>
-              <label className="flex flex-col gap-1 text-sm font-medium text-ink">
-                {t.definition(index + 1)}
+              <label className="flex flex-col text-sm text-ink-soft">
+                <span className="sr-only">{t.definition(index + 1)}</span>
                 <Input
+                  aria-label={t.definition(index + 1)}
                   value={entry.definition}
                   onChange={(event) => change(index, 'definition', event.target.value)}
-                  className={fieldClassName}
+                  className={blankInputClassName}
                 />
               </label>
-              <Button
+              <button
                 type="button"
-                variant="outline"
                 aria-label={t.remove(index + 1)}
                 onClick={() => {
                   setEntries((current) => current.filter((_, i) => i !== index));
                   setMessage(undefined);
                 }}
-                className="h-11 px-3"
+                className="mb-1 justify-self-start rounded-full p-1.5 text-ink-soft hover:bg-blush hover:text-blush-ink"
               >
-                <Trash2 aria-hidden="true" />
-              </Button>
+                <X aria-hidden="true" className="size-4" />
+              </button>
             </li>
           ))}
         </ul>
       )}
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Button
+      <div className="mt-5 flex flex-wrap items-center gap-4">
+        <button
           type="button"
-          variant="outline"
           onClick={() => setEntries((current) => [...current, { term: '', definition: '' }])}
-          className="h-10 px-4"
+          className="rounded-sm font-medium text-forest underline underline-offset-4 hover:text-forest-deep"
         >
-          <Plus aria-hidden="true" />
           {t.add}
-        </Button>
-        <Button type="button" onClick={save} className="h-10 px-4">
+        </button>
+        <Button type="button" variant="outline" onClick={save} className="h-9 px-4">
           {text.lessonDetail.saveSection}
         </Button>
       </div>

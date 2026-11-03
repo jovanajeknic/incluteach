@@ -10,12 +10,12 @@ describe('LessonDetailPage', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: 'Test lekcija jedan' }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('article', { name: 'Vaš tekst' })).toHaveTextContent('Prvi pasus.');
-    expect(screen.getByRole('article', { name: 'Kraća i jednostavnija' })).toHaveTextContent(
-      'AI prijedlog — čeka odobrenje',
+    expect(screen.getByRole('article', { name: 'Original' })).toHaveTextContent('Prvi pasus.');
+    expect(screen.getByRole('article', { name: 'Kraća' })).toHaveTextContent(
+      'AI prijedlog — nije odobren',
     );
     // The "saved" message belongs only to a freshly created draft.
-    expect(screen.queryByText(/Nacrt je sačuvan/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Sljedeći korak je prilagođavanje/)).not.toBeInTheDocument();
   });
 
   it('explains when the lesson does not exist', async () => {
@@ -28,7 +28,7 @@ describe('LessonDetailPage', () => {
       screen.getByRole('heading', { level: 1, name: 'Lekcija nije pronađena' }),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole('link', { name: 'Nazad na lekcije' }));
+    await user.click(screen.getByRole('link', { name: 'Sve lekcije' }));
     expect(router.state.location.pathname).toBe('/teacher');
   });
 });

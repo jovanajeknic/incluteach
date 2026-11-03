@@ -66,6 +66,7 @@ interface ReadingPreferencesPanelProps {
   preferences: ReadingPreferences;
   onChange: <K extends keyof ReadingPreferences>(field: K, value: ReadingPreferences[K]) => void;
   onReset: () => void;
+  className?: string;
 }
 
 // Background chips keep their own colour when selected; the forest border marks the choice.
@@ -88,6 +89,7 @@ export function ReadingPreferencesPanel({
   preferences,
   onChange,
   onReset,
+  className,
 }: ReadingPreferencesPanelProps) {
   const t = text.student.reading;
 
@@ -95,7 +97,7 @@ export function ReadingPreferencesPanel({
     <section
       id={id}
       aria-label={t.title}
-      className="rounded-3xl border border-border bg-card p-5 shadow-soft sm:p-6"
+      className={cn('rounded-3xl border border-border bg-card p-5 shadow-soft sm:p-6', className)}
     >
       <div className="grid gap-5 md:grid-cols-2">
         <ChoiceGroup

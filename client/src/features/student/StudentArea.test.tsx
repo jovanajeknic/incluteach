@@ -54,7 +54,7 @@ describe('Student subjects and lessons', () => {
       screen.getByRole('heading', { level: 1, name: 'Kruženje vode u prirodi' }),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole('link', { name: 'Nazad na: Priroda i društvo' }));
+    await user.click(screen.getByRole('link', { name: 'Priroda i društvo' }));
     expect(screen.getByRole('link', { name: /Kruženje vode u prirodi/ })).toHaveTextContent(
       'Započeta',
     );
@@ -77,14 +77,14 @@ describe('Adapted lesson versions', () => {
   it('shows the approved shorter version when the profile asks for it', () => {
     renderApp({ path: '/student/lessons/kruzenje-vode' });
 
-    expect(screen.getByText('Kraća verzija')).toBeInTheDocument();
+    expect(screen.getByText('kraća verzija')).toBeInTheDocument();
     expect(screen.getByText('Sunce grije vodu.')).toBeInTheDocument();
   });
 
   it('shows the standard version to a student without that need', () => {
     renderApp({ path: '/student/lessons/kruzenje-vode', studentNeeds: standardReader });
 
-    expect(screen.queryByText('Kraća verzija')).not.toBeInTheDocument();
+    expect(screen.queryByText('kraća verzija')).not.toBeInTheDocument();
     expect(screen.getByText(/Voda u prirodi stalno putuje\./)).toBeInTheDocument();
   });
 
@@ -92,7 +92,7 @@ describe('Adapted lesson versions', () => {
     renderApp({ path: '/student/lessons/biljke' });
 
     expect(screen.queryByText(/čeka pregled nastavnika/)).not.toBeInTheDocument();
-    expect(screen.queryByText('Kraća verzija')).not.toBeInTheDocument();
+    expect(screen.queryByText('kraća verzija')).not.toBeInTheDocument();
     expect(findSentence(/Većina biljaka ima korijen/)).toBeDefined();
   });
 
@@ -113,8 +113,8 @@ describe('Reading settings', () => {
 
     expect(lessonText()).toHaveClass('font-dyslexic', 'text-xl');
 
-    await user.click(screen.getByRole('button', { name: 'Podešavanja čitanja' }));
-    const panel = screen.getByRole('region', { name: 'Podešavanja čitanja' });
+    await user.click(screen.getByRole('button', { name: 'Slova i boje' }));
+    const panel = screen.getByRole('region', { name: 'Slova i boje' });
     await user.click(within(panel).getByRole('radio', { name: 'Obična' }));
     await user.click(within(panel).getByRole('radio', { name: 'Najveća' }));
 
@@ -124,14 +124,14 @@ describe('Reading settings', () => {
 
   it('remembers the choice on this device and can reset it', async () => {
     const first = renderApp({ path: '/student/lessons/kruzenje-vode' });
-    await first.user.click(screen.getByRole('button', { name: 'Podešavanja čitanja' }));
+    await first.user.click(screen.getByRole('button', { name: 'Slova i boje' }));
     await first.user.click(screen.getByRole('radio', { name: 'Zaobljena' }));
     first.unmount();
 
     const second = renderApp({ path: '/student/lessons/kruzenje-vode' });
     expect(screen.getByText('Sunce grije vodu.').closest('div')).toHaveClass('font-display');
 
-    await second.user.click(screen.getByRole('button', { name: 'Podešavanja čitanja' }));
+    await second.user.click(screen.getByRole('button', { name: 'Slova i boje' }));
     await second.user.click(screen.getByRole('button', { name: 'Vrati početna podešavanja' }));
     expect(screen.getByText('Sunce grije vodu.').closest('div')).toHaveClass('font-dyslexic');
   });

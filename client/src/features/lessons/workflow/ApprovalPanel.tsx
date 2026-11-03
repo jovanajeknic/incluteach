@@ -1,4 +1,3 @@
-import { CheckCircle2, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import { needsReview, useSchool } from '@/features/school/schoolContext';
 import type { SchoolLesson } from '@/features/school/types';
@@ -16,16 +15,13 @@ export function ApprovalPanel({ lesson }: { lesson: SchoolLesson }) {
   const pending = lesson.status === 'draft' || needsReview(lesson);
 
   return (
-    <SectionCard id="approval-heading" title={t.heading} intro={t.intro}>
+    <SectionCard id="approval-heading" title={t.heading} intro={t.intro} variant="side">
       {processing ? (
         <p className="text-ink-soft">{t.waitForAi}</p>
       ) : !pending ? (
-        <p className="flex items-center gap-2 font-medium text-mint-ink">
-          <CheckCircle2 aria-hidden="true" className="size-5" />
-          {t.nothingToApprove}
-        </p>
+        <p className="hand-note text-mint-ink">✓ {t.nothingToApprove}</p>
       ) : confirming ? (
-        <div className="rounded-2xl bg-butter p-4">
+        <div>
           <p className="font-medium text-ink">{t.confirmText}</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Button
@@ -35,7 +31,7 @@ export function ApprovalPanel({ lesson }: { lesson: SchoolLesson }) {
                 setConfirming(false);
                 setJustApproved(true);
               }}
-              className="h-10 px-4"
+              className="h-9 px-4"
             >
               {t.confirm}
             </Button>
@@ -43,7 +39,7 @@ export function ApprovalPanel({ lesson }: { lesson: SchoolLesson }) {
               type="button"
               variant="outline"
               onClick={() => setConfirming(false)}
-              className="h-10 px-4"
+              className="h-9 px-4"
             >
               {t.cancel}
             </Button>
@@ -56,9 +52,8 @@ export function ApprovalPanel({ lesson }: { lesson: SchoolLesson }) {
             setConfirming(true);
             setJustApproved(false);
           }}
-          className="h-11 px-5"
+          className="h-10 w-full px-4"
         >
-          <ShieldCheck aria-hidden="true" />
           {t.approve}
         </Button>
       )}

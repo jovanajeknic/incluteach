@@ -1,11 +1,10 @@
-import { Check } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { text } from '@/text/sr-Latn';
 import type { LessonStatus } from '../types';
 
 const STEPS = ['draft', 'adapt', 'review', 'assign'] as const;
 
-/** Index of the step the teacher is working on; past steps are done. */
+/** Index of the step the teacher is working on; earlier steps are done. */
 function currentStepIndex(status: LessonStatus): number {
   switch (status) {
     case 'draft':
@@ -20,13 +19,17 @@ function currentStepIndex(status: LessonStatus): number {
   }
 }
 
+/** A to-do list in the margin: finished steps are ticked and crossed out. */
 export function WorkflowSteps({ status }: { status: LessonStatus }) {
   const t = text.lessonDetail.steps;
   const current = currentStepIndex(status);
 
   return (
     <nav aria-label={t.label}>
-      <ol className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <p aria-hidden="true" className="hand-note text-2xl text-ink-soft">
+        {t.heading}
+      </p>
+      <ol className="mt-2 grid gap-2">
         {STEPS.map((step, index) => {
           const done = index < current;
           const active = index === current;
@@ -34,27 +37,28 @@ export function WorkflowSteps({ status }: { status: LessonStatus }) {
             <li
               key={step}
               aria-current={active ? 'step' : undefined}
-              className={cn(
-                'flex items-center gap-2 rounded-2xl border px-3 py-2 font-display text-sm',
-                done && 'border-mint-deep bg-mint text-mint-ink',
-                active && 'border-forest bg-card font-medium text-ink',
-                !done && !active && 'bg-paper text-ink-soft',
-              )}
+              className="flex items-baseline gap-2"
             >
               <span
                 aria-hidden="true"
                 className={cn(
-                  'flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold',
-                  done ? 'bg-card text-mint-ink' : 'bg-card text-ink',
+                  'inline-flex w-5 justify-center font-hand text-xl',
+                  done ? 'text-mint-ink' : 'text-ink-soft',
                 )}
               >
-                {done ? <Check className="size-4" /> : index + 1}
+                {done ? '✓' : `${index + 1}.`}
               </span>
-              <span>
+              <span
+                className={cn(
+                  done && 'text-ink-soft line-through decoration-mint-deep decoration-2',
+                  active && 'font-display font-bold text-ink',
+                  !done && !active && 'text-ink-soft',
+                )}
+              >
                 {t[step]}
                 {done && <span className="sr-only"> ({t.done})</span>}
-                {active && <span className="sr-only"> ({t.current})</span>}
               </span>
+              {active && <span className="hand-note text-lg text-blush-ink">← {t.current}</span>}
             </li>
           );
         })}

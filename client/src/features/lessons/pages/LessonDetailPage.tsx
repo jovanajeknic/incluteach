@@ -1,4 +1,4 @@
-import { ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router';
 import { useSchool } from '@/features/school/schoolContext';
 import { MessagePage } from '@/shared/components/MessagePage';
@@ -21,7 +21,7 @@ function BackToLessonsLink() {
   return (
     <Link
       to={teacherHomePath}
-      className="inline-flex items-center gap-2 rounded-full font-display font-medium text-forest hover:underline"
+      className="inline-flex items-center gap-1.5 rounded-full text-ink-soft hover:text-forest"
     >
       <ArrowLeft aria-hidden="true" className="size-4" />
       {text.lessonDetail.backToLessons}
@@ -68,68 +68,56 @@ export function LessonDetailPage() {
   return (
     <>
       <title>{text.app.pageTitle(lesson.title)}</title>
-      <div className="mb-6">
-        <BackToLessonsLink />
-      </div>
+      <BackToLessonsLink />
 
       {justCreated && (
-        <p
-          role="status"
-          className="mb-6 flex items-center gap-2 rounded-2xl bg-mint px-4 py-3 font-medium text-mint-ink"
-        >
-          <CheckCircle2 aria-hidden="true" className="size-5 shrink-0" />
-          {t.savedMessage}
+        <p role="status" className="hand-note mt-4 text-xl text-mint-ink">
+          ✓ {t.savedMessage}
         </p>
       )}
 
-      <header className="mb-6">
-        <h1 className="font-display text-3xl font-bold tracking-tight break-words text-ink">
+      <header className="mt-4 mb-10">
+        <h1 className="font-display text-3xl font-bold tracking-tight break-words text-ink sm:text-4xl">
           {lesson.title}
         </h1>
-        <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-3">
-          <div>
-            <dt className="text-sm text-ink-soft">{text.lesson.subject}</dt>
-            <dd className="font-medium">{subject?.name}</dd>
-          </div>
-          <div>
-            <dt className="text-sm text-ink-soft">{text.lesson.grade}</dt>
-            <dd className="font-medium">{text.lesson.gradeLabel(lesson.grade)}</dd>
-          </div>
-          <div>
-            <dt className="text-sm text-ink-soft">{text.lesson.status}</dt>
-            <dd className="mt-1">
-              <LessonStatusBadge status={lesson.status} />
-            </dd>
-          </div>
-        </dl>
+        <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-ink-soft">
+          <span>{subject?.name}</span>
+          <span aria-hidden="true">·</span>
+          <span>{text.lesson.gradeLabel(lesson.grade)}</span>
+          <span aria-hidden="true">·</span>
+          <LessonStatusBadge status={lesson.status} />
+        </p>
       </header>
 
-      <div className="mb-8">
-        <WorkflowSteps status={lesson.status} />
-      </div>
+      {/* A worksheet on the left, the to-do list and final steps in the margin on the right. */}
+      <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-14">
+        <div className="grid gap-12">
+          <AdaptationPanel lesson={lesson} />
 
-      <div className="grid gap-6">
-        <AdaptationPanel lesson={lesson} />
+          <SectionCard id="versions-heading" title={t.versions.heading}>
+            <div className="grid gap-8 xl:grid-cols-2">
+              {versions.map((version) => (
+                // Keyed by content so the sheet resets when the AI replaces this version.
+                <VersionCard
+                  key={`${version.kind}-${version.content.length}`}
+                  lesson={lesson}
+                  version={version}
+                />
+              ))}
+            </div>
+          </SectionCard>
 
-        <SectionCard id="versions-heading" title={t.versions.heading}>
-          <div className="grid gap-4 lg:grid-cols-2">
-            {versions.map((version) => (
-              // Keyed by content so the card resets when the AI replaces this version.
-              <VersionCard
-                key={`${version.kind}-${version.content.length}`}
-                lesson={lesson}
-                version={version}
-              />
-            ))}
-          </div>
-        </SectionCard>
+          {/* Editors keep local drafts and reload them only when a new AI result arrives. */}
+          <GlossaryEditor key={`glossary-${aiRun}`} lesson={lesson} />
+          <QuizEditor key={`quiz-${aiRun}`} lesson={lesson} />
+          <HomeGuidanceEditor key={`home-${aiRun}`} lesson={lesson} />
+        </div>
 
-        {/* Editors keep local drafts and reload them only when a new AI result arrives. */}
-        <GlossaryEditor key={`glossary-${aiRun}`} lesson={lesson} />
-        <QuizEditor key={`quiz-${aiRun}`} lesson={lesson} />
-        <HomeGuidanceEditor key={`home-${aiRun}`} lesson={lesson} />
-        <ApprovalPanel lesson={lesson} />
-        <AssignPanel lesson={lesson} />
+        <aside className="grid content-start gap-8 lg:sticky lg:top-6 lg:self-start">
+          <WorkflowSteps status={lesson.status} />
+          <ApprovalPanel lesson={lesson} />
+          <AssignPanel lesson={lesson} />
+        </aside>
       </div>
     </>
   );

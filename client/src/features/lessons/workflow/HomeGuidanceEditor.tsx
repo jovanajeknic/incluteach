@@ -26,9 +26,10 @@ export function HomeGuidanceEditor({ lesson }: { lesson: SchoolLesson }) {
 
   return (
     <SectionCard id="home-guidance-heading" title={t.heading} intro={t.intro}>
-      <label htmlFor={fieldId} className="text-sm font-medium text-ink">
+      <label htmlFor={fieldId} className="sr-only">
         {t.label}
       </label>
+      {/* Faint lines behind the text, like a page meant to be written on. */}
       <Textarea
         id={fieldId}
         rows={4}
@@ -37,9 +38,9 @@ export function HomeGuidanceEditor({ lesson }: { lesson: SchoolLesson }) {
           setValue(event.target.value);
           setSaved(false);
         }}
-        className="mt-1 min-h-28 bg-card text-base md:text-base"
+        className="min-h-32 rounded-md border-input bg-[repeating-linear-gradient(to_bottom,transparent_0,transparent_1.9rem,rgb(147_191_230/0.45)_1.9rem,rgb(147_191_230/0.45)_calc(1.9rem+1px))] text-base leading-[1.9rem] md:text-base"
       />
-      <Button type="button" onClick={save} className="mt-3 h-10 px-4">
+      <Button type="button" variant="outline" onClick={save} className="mt-3 h-9 px-4">
         {text.lessonDetail.saveSection}
       </Button>
       <StatusMessage message={saved ? text.lessonDetail.sectionSaved : undefined} />

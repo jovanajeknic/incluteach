@@ -4,6 +4,9 @@
 @import '@fontsource-variable/atkinson-hyperlegible-next';
 /* Optional dyslexia-friendly reading font; the browser downloads it only when a lesson uses it. */
 @import '@fontsource/opendyslexic/400.css';
+/* Handwriting for small margin notes only, never for lesson text. */
+@import '@fontsource/caveat/500.css';
+@import '@fontsource/caveat/600.css';
 
 /*
  * Design tokens. See docs/DESIGN.md for the reasoning and usage rules.
@@ -104,6 +107,7 @@
   --font-sans:
     'Atkinson Hyperlegible Next Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
   --font-display: 'Lexend Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+  --font-hand: 'Caveat', 'Segoe Print', 'Comic Sans MS', cursive;
   --font-dyslexic: 'OpenDyslexic', 'Atkinson Hyperlegible Next Variable', system-ui, sans-serif;
 
   --radius-sm: calc(var(--radius) - 14px);
@@ -245,6 +249,75 @@
     opacity: 0.45;
     filter: saturate(0.65) sepia(0.18) brightness(1.04) contrast(0.92);
     mask-image: radial-gradient(ellipse 70% 65% at 50% 50%, #000 40%, transparent 100%);
+  }
+
+  /*
+   * Notebook look for lessons. A sheet of paper with a red margin line, sitting on two
+   * slightly crooked sheets underneath, the way a real exercise book lies on a desk.
+   */
+  .paper-stack {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .paper-stack::before,
+  .paper-stack::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: var(--brand-card);
+  }
+
+  .paper-stack::before {
+    transform: translate(6px, 7px) rotate(0.7deg);
+  }
+
+  .paper-stack::after {
+    transform: translate(-4px, 11px) rotate(-0.6deg);
+    opacity: 0.7;
+  }
+
+  .paper-sheet {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    box-shadow:
+      0 1px 2px rgb(34 49 58 / 0.06),
+      0 10px 24px -12px rgb(34 49 58 / 0.18);
+    /* The margin line; content is padded to sit to its right. */
+    background-image: linear-gradient(
+      to right,
+      transparent 1.6rem,
+      rgb(240 165 151 / 0.75) 1.6rem,
+      rgb(240 165 151 / 0.75) calc(1.6rem + 2px),
+      transparent calc(1.6rem + 2px)
+    );
+    padding-left: 2.75rem;
+  }
+
+  @media (min-width: 640px) {
+    .paper-sheet {
+      background-image: linear-gradient(
+        to right,
+        transparent 3rem,
+        rgb(240 165 151 / 0.75) 3rem,
+        rgb(240 165 151 / 0.75) calc(3rem + 2px),
+        transparent calc(3rem + 2px)
+      );
+      padding-left: 4.5rem;
+    }
+  }
+
+  /* A handwritten note: slightly tilted, like it was jotted down later. */
+  .hand-note {
+    font-family: var(--font-hand);
+    font-size: 1.35rem;
+    line-height: 1.15;
+    display: inline-block;
+    transform: rotate(-1.5deg);
   }
 
   /* A small, friendly hop on hover for illustrations and cards. */

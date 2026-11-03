@@ -1,4 +1,3 @@
-import { Send } from 'lucide-react';
 import { useState } from 'react';
 import { useSchool } from '@/features/school/schoolContext';
 import type { SchoolLesson } from '@/features/school/types';
@@ -43,19 +42,20 @@ export function AssignPanel({ lesson }: { lesson: SchoolLesson }) {
   ];
 
   return (
-    <SectionCard id="assign-heading" title={t.heading} intro={canAssign ? t.intro : undefined}>
+    <SectionCard id="assign-heading" title={t.heading} variant="side">
       {!canAssign ? (
         <p className="text-ink-soft">{t.notApproved}</p>
       ) : (
         <>
           {lesson.status === 'assigned' && assignedNames.length > 0 && (
-            <p className="mb-4 rounded-2xl bg-mint px-4 py-2 text-mint-ink">
-              <span className="font-medium">{t.currentTarget}</span> {assignedNames.join(', ')}
+            <p className="mb-4 text-ink">
+              <span className="hand-note text-lg text-mint-ink">{t.currentTarget}</span>{' '}
+              {assignedNames.join(', ')}
             </p>
           )}
           <div className="grid gap-4">
             {classes.map((group) => (
-              <div key={group.id} className="rounded-2xl bg-paper p-4">
+              <div key={group.id}>
                 <label className="flex items-center gap-3 font-display font-medium text-ink">
                   <input
                     type="checkbox"
@@ -70,7 +70,7 @@ export function AssignPanel({ lesson }: { lesson: SchoolLesson }) {
                 </label>
                 <fieldset className="mt-3" disabled={classIds.includes(group.id)}>
                   <legend className="text-sm text-ink-soft">{t.students}</legend>
-                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  <div className="mt-2 grid gap-1.5">
                     {group.studentIds.map((id) => {
                       const student = school.getStudent(id);
                       if (!student) return null;
@@ -97,8 +97,7 @@ export function AssignPanel({ lesson }: { lesson: SchoolLesson }) {
               </div>
             ))}
           </div>
-          <Button type="button" onClick={assign} className="mt-4 h-11 px-5">
-            <Send aria-hidden="true" />
+          <Button type="button" onClick={assign} className="mt-4 h-10 w-full px-4">
             {t.assign}
           </Button>
         </>

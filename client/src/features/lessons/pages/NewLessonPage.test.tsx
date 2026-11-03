@@ -31,7 +31,7 @@ describe('Creating a lesson draft', () => {
     await user.click(screen.getByRole('button', { name: 'Sačuvaj nacrt' }));
 
     expect(router.state.location.pathname).toMatch(/^\/teacher\/lessons\/lesson-/);
-    expect(screen.getByText(/Nacrt je sačuvan\./)).toBeInTheDocument();
+    expect(screen.getByText(/Sljedeći korak je prilagođavanje/)).toBeInTheDocument();
     expect(
       screen.getByRole('heading', { level: 1, name: 'Planete Sunčevog sistema' }),
     ).toBeInTheDocument();
@@ -45,7 +45,7 @@ describe('Creating a lesson draft', () => {
     expect(secondParagraph).not.toBeNull();
     expect(firstParagraph).not.toBe(secondParagraph);
 
-    await user.click(screen.getByRole('link', { name: 'Nazad na lekcije' }));
+    await user.click(screen.getByRole('link', { name: 'Sve lekcije' }));
     expect(totalLessonsCount()).toBe('4');
     expect(screen.getByRole('link', { name: 'Planete Sunčevog sistema' })).toBeInTheDocument();
   });

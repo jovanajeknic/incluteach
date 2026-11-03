@@ -1,4 +1,3 @@
-import { Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useSchool } from '@/features/school/schoolContext';
 import type { SchoolLesson } from '@/features/school/types';
@@ -6,9 +5,9 @@ import type { QuizQuestion } from '@/features/student/types';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { text } from '@/text/sr-Latn';
-import { SectionCard, StatusMessage } from './SectionCard';
+import { blankInputClassName, SectionCard, StatusMessage } from './SectionCard';
 
-const fieldClassName = 'h-11 bg-card text-base md:text-base';
+const OPTION_LETTERS = ['a', 'b', 'c', 'd', 'e'];
 
 let questionCounter = 0;
 function newQuestion(): QuizQuestion {
@@ -32,7 +31,7 @@ function isComplete(question: QuizQuestion): boolean {
   );
 }
 
-/** Practice questions with one correct answer and an explanation (practice has no score). */
+/** Practice questions written like a test sheet: numbered, with a), b), c) answers. */
 export function QuizEditor({ lesson }: { lesson: SchoolLesson }) {
   const t = text.lessonDetail.quiz;
   const { updateLesson } = useSchool();
@@ -63,89 +62,93 @@ export function QuizEditor({ lesson }: { lesson: SchoolLesson }) {
   return (
     <SectionCard id="quiz-heading" title={t.heading} intro={t.intro}>
       {questions.length === 0 ? (
-        <p className="text-ink-soft">{t.empty}</p>
+        <p className="hand-note text-ink-soft">{t.empty}</p>
       ) : (
-        <ol className="grid gap-5">
+        <ol className="grid gap-8">
           {questions.map((question, index) => {
             const number = index + 1;
             return (
-              <li key={question.id} className="rounded-2xl bg-paper p-4">
-                <label className="flex flex-col gap-1 text-sm font-medium text-ink">
-                  {t.question(number)}
+              <li key={question.id} className="grid grid-cols-[1.75rem_1fr] gap-x-2">
+                <span
+                  aria-hidden="true"
+                  className="pt-2 font-display text-lg font-bold text-ink-soft"
+                >
+                  {number}.
+                </span>
+                <div>
                   <Input
+                    aria-label={t.question(number)}
                     value={question.question}
                     onChange={(event) => change(index, { question: event.target.value })}
-                    className={fieldClassName}
+                    className={`${blankInputClassName} font-display font-medium`}
                   />
-                </label>
 
-                <fieldset className="mt-3">
-                  <legend className="text-sm font-medium text-ink">{t.correct(number)}</legend>
-                  <div className="mt-2 grid gap-2">
-                    {question.options.map((option, optionIndex) => (
-                      <div key={optionIndex} className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name={`correct-${question.id}`}
-                          checked={question.correctIndex === optionIndex}
-                          onChange={() => change(index, { correctIndex: optionIndex })}
-                          aria-label={t.correctOption(optionIndex + 1)}
-                          className="size-4 shrink-0 accent-forest"
-                        />
-                        <Input
-                          aria-label={t.option(number, optionIndex + 1)}
-                          value={option}
-                          onChange={(event) =>
-                            change(index, {
-                              options: question.options.map((value, i) =>
-                                i === optionIndex ? event.target.value : value,
-                              ),
-                            })
-                          }
-                          className={fieldClassName}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </fieldset>
+                  <fieldset className="mt-3">
+                    <legend className="sr-only">{t.correct(number)}</legend>
+                    <div className="grid gap-2">
+                      {question.options.map((option, optionIndex) => (
+                        <div key={optionIndex} className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name={`correct-${question.id}`}
+                            checked={question.correctIndex === optionIndex}
+                            onChange={() => change(index, { correctIndex: optionIndex })}
+                            aria-label={t.correctOption(optionIndex + 1)}
+                            className="size-4 shrink-0 accent-forest"
+                          />
+                          <span aria-hidden="true" className="w-4 text-ink-soft">
+                            {OPTION_LETTERS[optionIndex]})
+                          </span>
+                          <Input
+                            aria-label={t.option(number, optionIndex + 1)}
+                            value={option}
+                            onChange={(event) =>
+                              change(index, {
+                                options: question.options.map((value, i) =>
+                                  i === optionIndex ? event.target.value : value,
+                                ),
+                              })
+                            }
+                            className={blankInputClassName}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </fieldset>
 
-                <label className="mt-3 flex flex-col gap-1 text-sm font-medium text-ink">
-                  {t.explanation(number)}
                   <Input
+                    aria-label={t.explanation(number)}
+                    placeholder={t.explanation(number)}
                     value={question.explanation}
                     onChange={(event) => change(index, { explanation: event.target.value })}
-                    className={fieldClassName}
+                    className={`${blankInputClassName} mt-3 italic`}
                   />
-                </label>
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setQuestions((current) => current.filter((_, i) => i !== index));
-                    setMessage(undefined);
-                  }}
-                  className="mt-3 h-10 px-4"
-                >
-                  <Trash2 aria-hidden="true" />
-                  {t.removeQuestion(number)}
-                </Button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQuestions((current) => current.filter((_, i) => i !== index));
+                      setMessage(undefined);
+                    }}
+                    className="mt-2 rounded-sm text-sm text-blush-ink underline underline-offset-4 hover:text-ink"
+                  >
+                    {t.removeQuestion(number)}
+                  </button>
+                </div>
               </li>
             );
           })}
         </ol>
       )}
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Button
+      <div className="mt-6 flex flex-wrap items-center gap-4">
+        <button
           type="button"
-          variant="outline"
           onClick={() => setQuestions((current) => [...current, newQuestion()])}
-          className="h-10 px-4"
+          className="rounded-sm font-medium text-forest underline underline-offset-4 hover:text-forest-deep"
         >
-          <Plus aria-hidden="true" />
           {t.addQuestion}
-        </Button>
-        <Button type="button" onClick={save} className="h-10 px-4">
+        </button>
+        <Button type="button" variant="outline" onClick={save} className="h-9 px-4">
           {text.lessonDetail.saveSection}
         </Button>
       </div>

@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Footprints, PencilLine, Type } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Footprints, Type } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { LessonContent } from '@/features/lesson-content/LessonContent';
@@ -50,6 +50,10 @@ export function StudentLessonPage() {
   return <LessonView key={lesson.id} lesson={lesson} subject={subject} profile={profile} />;
 }
 
+/** A tab clipped to the top edge of the page, like an index tab in an exercise book. */
+const tabClassName =
+  'relative -mb-px inline-flex items-center gap-2 rounded-t-xl border border-b-0 px-4 py-2 font-display text-sm font-medium text-ink transition-colors';
+
 interface LessonViewProps {
   lesson: StudentLesson;
   subject: Subject;
@@ -82,49 +86,23 @@ function LessonView({ lesson, subject, profile }: LessonViewProps) {
       <title>{text.app.pageTitle(lesson.title)}</title>
       <Link
         to={subjectPath(subject.id)}
-        className="inline-flex items-center gap-2 rounded-full font-display font-medium text-forest hover:underline"
+        className="inline-flex items-center gap-1.5 rounded-full text-ink-soft hover:text-forest"
       >
-        <ArrowLeft aria-hidden="true" className="size-5" />
+        <ArrowLeft aria-hidden="true" className="size-4" />
         {t.backToSubject(subject.name)}
       </Link>
 
-      <header className="mt-6">
+      <header className="mt-4 mb-8 flex flex-wrap items-end gap-x-5 gap-y-1">
         <h1 className="font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
           {lesson.title}
         </h1>
         {/* Says what the student is reading, never why: no reason or diagnosis is shown. */}
         {version.kind === 'simplified' && (
-          <p className="mt-3 inline-flex rounded-full bg-sky px-3 py-1 font-display text-sm font-medium text-sky-ink">
-            {t.shorterVersion}
-          </p>
+          <span className="hand-note pb-1 text-sky-ink">{t.shorterVersion}</span>
         )}
       </header>
 
-      <div className="mt-6 flex flex-wrap items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          aria-expanded={settingsOpen}
-          aria-controls={SETTINGS_PANEL_ID}
-          onClick={() => setSettingsOpen((open) => !open)}
-          className="h-11 px-4"
-        >
-          <Type aria-hidden="true" />
-          {t.readingSettings}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          aria-pressed={stepByStep}
-          onClick={() => {
-            setStepByStep((current) => !current);
-            setStep(0);
-          }}
-          className="h-11 px-4 aria-pressed:border-forest aria-pressed:bg-mint aria-pressed:text-mint-ink"
-        >
-          <Footprints aria-hidden="true" />
-          {t.stepByStep}
-        </Button>
+      <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
         <ListenControls
           availability={speech.availability}
           status={speech.status}
@@ -137,70 +115,109 @@ function LessonView({ lesson, subject, profile }: LessonViewProps) {
         />
       </div>
 
-      {settingsOpen && (
-        <div className="mt-4">
-          <ReadingPreferencesPanel
-            id={SETTINGS_PANEL_ID}
-            preferences={preferences}
-            onChange={update}
-            onReset={reset}
-          />
-        </div>
-      )}
+      <div className="flex flex-wrap gap-1.5 pl-6 sm:pl-12">
+        <button
+          type="button"
+          aria-expanded={settingsOpen}
+          aria-controls={SETTINGS_PANEL_ID}
+          onClick={() => setSettingsOpen((open) => !open)}
+          className={cn(
+            tabClassName,
+            'bg-butter hover:bg-butter-deep/50',
+            settingsOpen && 'z-10 bg-card',
+          )}
+        >
+          <Type aria-hidden="true" className="size-4" />
+          {t.readingSettings}
+        </button>
+        <button
+          type="button"
+          aria-pressed={stepByStep}
+          onClick={() => {
+            setStepByStep((current) => !current);
+            setStep(0);
+          }}
+          className={cn(
+            tabClassName,
+            'bg-mint hover:bg-mint-deep/50',
+            stepByStep && 'z-10 bg-card',
+          )}
+        >
+          <Footprints aria-hidden="true" className="size-4" />
+          {t.stepByStep}
+        </button>
+      </div>
 
-      <article
-        aria-label={lesson.title}
-        className={cn(
-          'mt-6 rounded-3xl border border-border p-6 shadow-soft sm:p-10',
-          backgroundClass[preferences.background],
-        )}
-      >
-        {stepByStep && (
-          <p className="mb-4 font-display text-sm font-medium text-ink-soft" aria-live="polite">
-            {t.stepProgress(step + 1, paragraphs.length)}
-          </p>
-        )}
-        <LessonContent
-          content={shownContent}
-          glossary={lesson.glossary}
-          activeSentence={speech.activeSentence}
-          className={cn('text-ink', readingTextClassName(preferences))}
-        />
-        {lesson.glossary.length > 0 && (
-          <p className="mt-6 border-t border-ink/10 pt-4 text-sm text-ink-soft">{t.glossaryHint}</p>
-        )}
-        {stepByStep && (
-          <div className="mt-6 flex flex-wrap justify-between gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={step === 0}
-              onClick={() => setStep((current) => current - 1)}
-              className="h-11 px-4"
-            >
-              <ArrowLeft aria-hidden="true" />
-              {t.previousStep}
-            </Button>
-            <Button
-              type="button"
-              disabled={step >= paragraphs.length - 1}
-              onClick={() => setStep((current) => current + 1)}
-              className="h-11 px-4"
-            >
-              {t.nextStep}
-              <ArrowRight aria-hidden="true" />
-            </Button>
-          </div>
-        )}
-      </article>
+      <div className="paper-stack">
+        <article
+          aria-label={lesson.title}
+          className={cn(
+            'paper-sheet py-8 pr-5 sm:py-12 sm:pr-12',
+            backgroundClass[preferences.background],
+          )}
+        >
+          {settingsOpen && (
+            <div className="mb-8 -rotate-[0.4deg]">
+              <ReadingPreferencesPanel
+                id={SETTINGS_PANEL_ID}
+                preferences={preferences}
+                onChange={update}
+                onReset={reset}
+                className="rounded-md border-butter-deep/60 bg-butter/70 shadow-none"
+              />
+            </div>
+          )}
+
+          {stepByStep && (
+            <p className="hand-note mb-3 text-mint-ink" aria-live="polite">
+              {t.stepProgress(step + 1, paragraphs.length)}
+            </p>
+          )}
+
+          <LessonContent
+            content={shownContent}
+            glossary={lesson.glossary}
+            activeSentence={speech.activeSentence}
+            className={cn('text-ink', readingTextClassName(preferences))}
+          />
+
+          {stepByStep && (
+            <div className="mt-8 flex flex-wrap justify-between gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={step === 0}
+                onClick={() => setStep((current) => current - 1)}
+                className="h-11 px-4"
+              >
+                <ArrowLeft aria-hidden="true" />
+                {t.previousStep}
+              </Button>
+              <Button
+                type="button"
+                disabled={step >= paragraphs.length - 1}
+                onClick={() => setStep((current) => current + 1)}
+                className="h-11 px-4"
+              >
+                {t.nextStep}
+                <ArrowRight aria-hidden="true" />
+              </Button>
+            </div>
+          )}
+
+          {lesson.glossary.length > 0 && (
+            <p className="hand-note mt-8 text-blush-ink">↑ {t.glossaryHint}</p>
+          )}
+        </article>
+      </div>
 
       {lesson.quiz.length > 0 && (
-        <div className="mt-8 flex justify-center">
+        <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
+          <span aria-hidden="true" className="hand-note text-ink-soft">
+            {t.quizNote} →
+          </span>
           <Button asChild size="lg" className="h-13 px-8 text-base">
-            <Link to={studentQuizPath(lesson.id)}>
-              <PencilLine aria-hidden="true" />
-              {t.startQuiz}
-            </Link>
+            <Link to={studentQuizPath(lesson.id)}>{t.startQuiz}</Link>
           </Button>
         </div>
       )}

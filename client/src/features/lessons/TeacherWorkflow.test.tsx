@@ -7,55 +7,53 @@ const DRAFT = '/teacher/lessons/saobracaj';
 describe('Lesson workflow', () => {
   it('lists the versions the class needs, by count only', () => {
     renderApp({ path: DRAFT });
-    const panel = screen.getByRole('region', { name: 'AI prilagođavanje' });
+    const panel = screen.getByRole('region', { name: 'Prilagođavanje' });
 
     // Demo class: two students need shorter text, one needs more examples.
-    expect(panel).toHaveTextContent('Kraća i jednostavnija verzija — za 2 učenika');
-    expect(panel).toHaveTextContent('Verzija sa više primjera — za 1 učenika');
-    expect(panel).toHaveTextContent(/AI je simuliran/);
+    expect(panel).toHaveTextContent('kraća verzija — 2 učenika');
+    expect(panel).toHaveTextContent('verzija sa više primjera — 1 učenik');
+    expect(panel).toHaveTextContent(/AI simuliran/);
   });
 
   it('adapts, reviews, approves and assigns a lesson that then reaches the student', async () => {
     const { user, router } = renderApp({ path: DRAFT, aiDelayMs: 300 });
 
-    await user.click(screen.getByRole('button', { name: 'Prilagodi pomoću AI' }));
-    expect(await screen.findByText('AI priprema prilagođene verzije…')).toBeInTheDocument();
-    expect(await screen.findByText('AI prijedlozi su spremni za pregled.')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Pripremi verzije' }));
+    expect(await screen.findByText('AI radi na verzijama…')).toBeInTheDocument();
+    expect(await screen.findByText(/Gotovo\. Prijedlozi su ispod/)).toBeInTheDocument();
 
-    const simplified = screen.getByRole('article', { name: 'Kraća i jednostavnija' });
-    expect(simplified).toHaveTextContent('AI prijedlog — čeka odobrenje');
-    expect(screen.getByRole('article', { name: 'Sa više primjera' })).toBeInTheDocument();
+    const simplified = screen.getByRole('article', { name: 'Kraća' });
+    expect(simplified).toHaveTextContent('AI prijedlog — nije odobren');
+    expect(screen.getByRole('article', { name: 'Sa primjerima' })).toBeInTheDocument();
 
     // Edit the AI suggestion before approving it.
     await user.click(within(simplified).getByRole('button', { name: /Uredi/ }));
-    const editor = within(simplified).getByLabelText('Tekst verzije: Kraća i jednostavnija');
+    const editor = within(simplified).getByLabelText('Tekst: Kraća');
     await user.clear(editor);
     await user.type(editor, 'Prelazi ulicu na zebri.');
     await user.click(within(simplified).getByRole('button', { name: 'Sačuvaj' }));
-    expect(screen.getByRole('article', { name: 'Kraća i jednostavnija' })).toHaveTextContent(
+    expect(screen.getByRole('article', { name: 'Kraća' })).toHaveTextContent(
       'Prelazi ulicu na zebri.',
     );
 
     // Assigning is not possible before approval.
-    expect(screen.getByText('Lekciju možete dodijeliti tek kad je odobrite.')).toBeInTheDocument();
+    expect(screen.getByText('Prvo odobrite lekciju.')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Odobri lekciju' }));
     await user.click(screen.getByRole('button', { name: 'Da, odobri' }));
-    expect(screen.getByText('Lekcija je odobrena.')).toBeInTheDocument();
-    expect(screen.getByRole('article', { name: 'Kraća i jednostavnija' })).toHaveTextContent(
-      'Odobreno',
-    );
+    expect(screen.getByText('Odobreno.')).toBeInTheDocument();
+    expect(screen.getByRole('article', { name: 'Kraća' })).toHaveTextContent('odobreno');
 
     await user.click(screen.getByRole('checkbox', { name: 'Cijeli razred 4-2' }));
     await user.click(screen.getByRole('button', { name: 'Dodijeli' }));
-    expect(screen.getByText(/Lekcija je dodijeljena/)).toBeInTheDocument();
+    expect(screen.getByText(/Dodijeljeno\. Djeca je već vide/)).toBeInTheDocument();
 
     // The demo student needs shorter text, so they get the edited, approved version.
     await act(() => router.navigate('/student/lessons/saobracaj'));
     expect(
       screen.getByRole('heading', { level: 1, name: 'Bezbjednost u saobraćaju' }),
     ).toBeInTheDocument();
-    expect(screen.getByText('Kraća verzija')).toBeInTheDocument();
+    expect(screen.getByText('kraća verzija')).toBeInTheDocument();
     expect(screen.getByText('Prelazi ulicu na zebri.')).toBeInTheDocument();
   });
 
@@ -74,31 +72,27 @@ describe('Lesson workflow', () => {
 
     await user.click(screen.getByRole('checkbox', { name: 'Mia Petrović' }));
     await user.click(screen.getByRole('button', { name: 'Dodijeli' }));
-    expect(screen.getByText(/Trenutno dodijeljeno:/).parentElement).toHaveTextContent(
-      'Mia Petrović',
-    );
+    expect(screen.getByText(/Sada je kod:/).parentElement).toHaveTextContent('Mia Petrović');
   });
 
   it('edits glossary and practice questions, rejecting incomplete rows', async () => {
     const { user } = renderApp({ path: DRAFT });
-    const glossary = screen.getByRole('region', { name: 'Objašnjenja težih riječi' });
+    const glossary = screen.getByRole('region', { name: 'Teže riječi' });
 
-    await user.click(within(glossary).getByRole('button', { name: 'Dodaj riječ' }));
-    await user.click(within(glossary).getByRole('button', { name: 'Sačuvaj izmjene' }));
-    expect(glossary).toHaveTextContent('Popunite sva polja ili uklonite prazne redove.');
+    await user.click(within(glossary).getByRole('button', { name: '+ riječ' }));
+    await user.click(within(glossary).getByRole('button', { name: 'Sačuvaj' }));
+    expect(glossary).toHaveTextContent('Neki redovi su prazni — popunite ih ili uklonite.');
 
     await user.type(within(glossary).getByLabelText('Riječ 1'), 'semafor');
     await user.type(
       within(glossary).getByLabelText('Objašnjenje 1'),
       'Svjetla koja kažu kada se ide.',
     );
-    await user.click(within(glossary).getByRole('button', { name: 'Sačuvaj izmjene' }));
-    expect(screen.getByRole('region', { name: 'Objašnjenja težih riječi' })).toHaveTextContent(
-      'Izmjene su sačuvane.',
-    );
+    await user.click(within(glossary).getByRole('button', { name: 'Sačuvaj' }));
+    expect(screen.getByRole('region', { name: 'Teže riječi' })).toHaveTextContent('Sačuvano.');
 
     const quiz = screen.getByRole('region', { name: 'Pitanja za vježbu' });
-    await user.click(within(quiz).getByRole('button', { name: 'Dodaj pitanje' }));
+    await user.click(within(quiz).getByRole('button', { name: '+ pitanje' }));
     await user.type(within(quiz).getByLabelText('Pitanje 1'), 'Gdje prelazimo ulicu?');
     await user.type(within(quiz).getByLabelText('Pitanje 1, odgovor 1'), 'Na zebri');
     await user.type(within(quiz).getByLabelText('Pitanje 1, odgovor 2'), 'Bilo gdje');
@@ -107,9 +101,9 @@ describe('Lesson workflow', () => {
       within(quiz).getByLabelText('Objašnjenje za pitanje 1'),
       'Na pješačkom prelazu.',
     );
-    await user.click(within(quiz).getByRole('button', { name: 'Sačuvaj izmjene' }));
+    await user.click(within(quiz).getByRole('button', { name: 'Sačuvaj' }));
     expect(screen.getByRole('region', { name: 'Pitanja za vježbu' })).toHaveTextContent(
-      'Izmjene su sačuvane.',
+      'Sačuvano.',
     );
   });
 });
@@ -158,8 +152,8 @@ describe('Class, students and parent suggestions', () => {
     expect(screen.getByText('Nastavnik ga koristi pri prilagođavanju')).toBeInTheDocument();
 
     await act(() => router.navigate('/teacher/lessons/saobracaj'));
-    expect(screen.getByRole('region', { name: 'AI prilagođavanje' })).toHaveTextContent(
-      /Luka: Luka lakše prati lekciju/,
+    expect(screen.getByRole('region', { name: 'Prilagođavanje' })).toHaveTextContent(
+      /Luka: „Luka lakše prati lekciju/,
     );
 
     await act(() => router.navigate('/parent/children/demo-student-luka'));
