@@ -2,125 +2,111 @@
 
 The IncluTeach visual identity. Every value here is defined as a token in [`client/src/index.css`](../client/src/index.css), so all screens inherit it from one place. When this document and the code disagree, fix one of them; do not add one-off values.
 
-Status: **approved direction from the owner**. Details are refined after the owner reviews screens.
+Status: **based on the owner's landing page mockup**. Details are refined after the owner reviews screens.
 
-## Direction: "Simple, soft and playful"
+## Direction: "Warm, calm and inviting"
 
-IncluTeach is used first of all by children, so the interface must be **simple to understand and pleasant to look at**. It uses many soft pastel colours, large rounded "windows", chunky buttons that look pressable and small, friendly motion. It must still stay calm: clear hierarchy, plenty of space and readable text come before decoration.
-
-The owner chose **mint** and **blush** as the base colours. The motion style (sections that slide in, wave dividers, pill buttons with a colour swap) takes inspiration from playful learning apps for children; nothing is copied from other sites.
+IncluTeach is used first of all by children, teachers and parents together. The look is warm and calm: a cream, paper-like background, deep forest green for text and actions, soft sage and ochre accents, and a painted illustration of children learning together. Pages stay simple, with plenty of space and very little text, so the purpose is clear at a glance.
 
 ## Logo
 
-Five learners of different colours stand behind one open book: different children, one shared place of learning. The figures use the pastel "deep" colours and the book uses two soft teals.
+Five learners of different colours stand behind one open forest-green book: different children, one shared place of learning.
 
 | Asset                                                       | Use                                                                                                              |
 | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `Logo` and `LogoMark` in `client/src/shared/brand/Logo.tsx` | In the app. Tone `color` (default), `mono` or `inverse`                                                          |
 | `client/public/favicon.svg`                                 | Browser tab: simplified symbol with three learners                                                               |
 | `client/public/brand/incluteach-mark.svg`                   | Symbol in colour                                                                                                 |
-| `client/public/brand/incluteach-mark-mono.svg`              | Symbol in one colour (ink), with a white outline that separates the pages from the figures                       |
-| `client/public/brand/incluteach-logo.svg`                   | Symbol and wordmark; the wordmark is live text in Nunito, so convert it to outlines before print or external use |
+| `client/public/brand/incluteach-mark-mono.svg`              | Symbol in one colour (ink), with a white outline between pages and figures                                       |
+| `client/public/brand/incluteach-logo.svg`                   | Symbol and wordmark; the wordmark is live text in Lexend, so convert it to outlines before print or external use |
 
 Rules:
 
-- Figure colours from left to right: sky, mint, blush, butter, lilac (all `-deep`). Book pages: `--logo-page-left` `#4c8c84` and `--logo-page-right` `#6aa8a0`.
-- Wordmark: "Inclu" in ink, "Teach" in teal, Nunito ExtraBold.
+- Figure colours from left to right (`--logo-figure-1` to `-5`): `#6fa8dc`, `#5d9a82`, `#f78c61`, `#f6c25b`, `#a58bd6`. Book pages: `#1b5244` and `#2a6b59`.
+- Wordmark: "IncluTeach" in ink, Lexend Bold.
+- On phones narrower than 400 px, the header shows only the symbol.
 - Below 32 px, use the simplified three-learner favicon.
-- In one colour, keep the knockout outline around the pages (`--logo-knockout`).
 - Do not rotate, stretch, recolour single figures or add effects.
 
 ## Colour
 
-All text pairings meet WCAG AA (normal text at least 4.5:1, UI parts and focus rings at least 3:1). They were checked by calculation; pastels are always paired with dark text.
+All text pairings meet WCAG AA (normal text at least 4.5:1, UI parts and focus rings at least 3:1). They were checked by calculation.
 
-### Base
+### Main palette
 
-| Token               | Value     | Role                                            |
-| ------------------- | --------- | ----------------------------------------------- |
-| `--brand-paper`     | `#fffaf5` | Page background between coloured sections       |
-| `--brand-card`      | `#ffffff` | Cards ("windows") and form fields               |
-| `--brand-ink`       | `#22313a` | Main text (at least 10:1 on every pastel)       |
-| `--brand-ink-soft`  | `#4f5b63` | Secondary text (at least 5.3:1 on every pastel) |
-| `--brand-teal`      | `#2d6b64` | Primary buttons, links, focus ring              |
-| `--brand-teal-deep` | `#1f4f4a` | The "pressed" edge under primary buttons        |
+| Token                 | Value     | Role                                                                      |
+| --------------------- | --------- | ------------------------------------------------------------------------- |
+| `--brand-paper`       | `#fdf6ec` | Page background (cream)                                                   |
+| `--brand-card`        | `#ffffff` | Cards and form fields                                                     |
+| `--brand-ink`         | `#112b28` | Headings and main text (14:1 on cream)                                    |
+| `--brand-ink-soft`    | `#4a5654` | Body and secondary text (7.1:1 on cream)                                  |
+| `--brand-forest`      | `#1b5244` | Primary buttons, links, highlighted headline, focus ring (8.4:1 on cream) |
+| `--brand-forest-deep` | `#123a30` | Button hover                                                              |
+| `--brand-sage`        | `#869e75` | Icons and small accents (not body text)                                   |
+| `--brand-ochre`       | `#fdc76b` | Icons, step numbers (ink text on it: 9.7:1)                               |
+| `--brand-line`        | `#b5bda6` | Thin dividers between sections (decorative)                               |
 
-### Pastels
+### Pastels (secondary)
 
-Each pastel has three forms: the **pastel** for surfaces, a **deep** shade for shapes and illustration (never text) and an **ink** shade for text.
-
-| Name         | Pastel    | Deep      | Ink (text) |
-| ------------ | --------- | --------- | ---------- |
-| Mint (base)  | `#d6e6e4` | `#8fc4bc` | `#1f5a52`  |
-| Blush (base) | `#f8dbd5` | `#f0a597` | `#9a3b2c`  |
-| Butter       | `#fbecc0` | `#f3cd6a` | `#6e5100`  |
-| Lilac        | `#e4ddf4` | `#b5a5e3` | `#55409a`  |
-| Sky          | `#d8e8f6` | `#93bfe6` | `#22578a`  |
-| Pistachio    | `#e3efd2` | `#b3d48e` | `#3f5f1c`  |
+Six pastels (mint, blush, butter, lilac, sky, pistachio) remain available, each with a `-deep` shade for shapes and an `-ink` shade for text. They are used for soft surfaces in the app, such as the selected item in the teacher navigation. The landing page uses the main palette only.
 
 Rules:
 
-- Use pastels for whole sections and for cards. Alternate them so neighbouring areas differ (for example mint hero, blush "how it works", lilac accessibility).
-- Text on a pastel is ink, ink-soft or that pastel's own ink shade. Never put text in a deep shade.
-- Give each idea or audience its own pastel (teacher mint, student sky, parent butter), but keep teal for primary actions everywhere.
+- Text is ink, ink-soft or forest. Sage, ochre and the line colour are never used for body text.
 - Colour never carries meaning alone; statuses always have text and usually an icon.
 - The teacher lesson status badges keep their own tints for now.
 
-Components use role tokens with shadcn/ui names (`--primary`, `--muted`, `--border` and so on), mapped onto this palette. Use role tokens first and pastel tokens (`bg-sky`, `text-lilac-ink`...) for identity details.
+Components use role tokens with shadcn/ui names (`--primary`, `--muted`, `--border` and so on), mapped onto this palette.
 
 ## Typography
 
-| Use                                 | Typeface                                  | Notes                                                                              |
-| ----------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------- |
-| Headings, buttons, labels, wordmark | **Nunito** (variable)                     | Rounded and friendly. ExtraBold (800) and Black (900)                              |
-| Body text and lessons               | **Atkinson Hyperlegible Next** (variable) | Designed by the Braille Institute for legibility, including for low-vision readers |
+| Use                                     | Typeface                                  | Notes                                                                              |
+| --------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------- |
+| Headings, navigation, buttons, wordmark | **Lexend** (variable)                     | Designed to improve reading ease. Bold (700) for headings                          |
+| Body text and lessons                   | **Atkinson Hyperlegible Next** (variable) | Designed by the Braille Institute for legibility, including for low-vision readers |
 
 - Both are self-hosted through `@fontsource-variable` packages, with no third-party requests. The latin-ext subset covers č, ć, đ, š and ž.
-- Body text is at least 16 px with line height 1.6. Lesson text is 18 px.
-- Landing page scale: hero 42–64 px, section headings 30–44 px, card headings 20–28 px.
-- Keep reading text near 65 characters per line (`max-w-prose`).
+- Eyebrow labels: small Lexend, uppercase, wide letter spacing (0.2em), forest.
+- Landing page scale: hero 42–58 px, section headings 30–36 px, item headings 20 px.
+- Body text is at least 16 px (landing 18 px) with line height 1.6.
 
-## Shape and elevation
+## Layout and shape
 
-- **Rounded windows**: `--radius` is 24 px. Large blocks use 32–40 px (`rounded-[2rem]`, `rounded-[2.5rem]`). Buttons, badges and small labels are pills.
-- **Wave dividers** (`Wave` component) join sections of different colours instead of straight lines.
-- **Shadows**: `shadow-soft` for resting cards and `shadow-lifted` for featured ones. Both are soft and low in contrast.
-- **Decoration**: simple pastel circles behind content. Keep them few and static.
+- Content width: up to 1152 px (`max-w-6xl`) with 16–32 px side padding.
+- Sections are separated by a thin `--brand-line` rule and generous vertical space, not by coloured blocks.
+- **Radius**: cards 24–32 px; buttons and small labels are pills.
+- **Shadows**: `shadow-soft` only where a surface needs to lift (cards on the auth pages).
 
 ## Buttons and links
 
-- **Primary**: teal pill, white Nunito ExtraBold text, with a 4 px darker "edge" underneath so it looks pressable. On hover it lifts slightly and swaps to blush ink; when pressed it moves down onto its edge.
-- **Outline**: white pill with a soft border and edge. Turns mint on hover.
-- **Accent**: butter pill with ink text, for a highlighted action on a coloured surface.
-- Calls to action are 48–52 px high. Touch targets are never below 24 px.
-- Focus: a 3 px teal outline that is always visible.
-- Links are teal and underlined on hover.
+- **Primary**: forest pill, white Lexend text. Darkens on hover and lifts by 1 px.
+- **Outline**: forest outline with transparent fill, for secondary actions such as "Meni".
+- **Text link with arrow** ("Naša priča →"): ink text, turns forest on hover, the arrow slides 4 px.
+- Header: "Prijavi se" as a text link, "Registruj se" as the primary pill.
+- Focus: a 3 px forest outline that is always visible.
 
 ## Icons
 
-[Lucide](https://lucide.dev) line icons with rounded ends. Put feature icons in a rounded pastel "bubble" (40–56 px). Icons next to text are hidden from screen readers (`aria-hidden`).
+- Audience icons are small flat illustrations (`RoleIcons.tsx`) in sage and ochre: a graduation cap, an open book and a family.
+- Interface icons are [Lucide](https://lucide.dev) line icons. Icons next to text are hidden from screen readers (`aria-hidden`).
 
 ## Illustration
 
-- Flat, soft shapes in the pastel deep shades; simple scenes (like the water cycle) made with inline SVG.
-- Product illustrations are built from real interface elements, each in its own pastel window.
-- Illustrations of features that do not exist yet are labelled "Ilustrativni prikaz" and marked "U pripremi".
-- Decorative illustrations are hidden from screen readers. Meaningful ones have a caption.
+- The hero uses a painted, paper-cut style illustration of a teacher and children, including a child in a wheelchair, reading together under a tree. It has a descriptive `alt` text.
+- **Temporary asset**: `client/public/images/hero-illustration.png` is cut from the mockup screenshot (723 × 378 px) and is too small for sharp display on high-density screens. Replace it with the original file, ideally at least 1600 px wide, exported as WebP or optimised PNG.
+- Illustrations of features that do not exist yet are labelled as illustrative and marked "U pripremi".
 
 ## Motion
 
-Motion should make the page feel alive, never distract a child from reading.
-
-| Effect           | Details                                                                                                                                                     |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Reveal on scroll | Blocks marked `data-reveal` (`''`, `left`, `right`, `pop`) slide or pop in once as they enter the screen, 700 ms, with a 90 ms stagger via `--reveal-order` |
-| Hover hop        | `.hover-hop`: cards and illustrations lift 6 px and tilt 1° with a small bounce                                                                             |
-| Buttons          | Lift on hover, press down on click, colour swap; 200 ms                                                                                                     |
+| Effect            | Details                                                                                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Reveal on scroll  | Blocks marked `data-reveal` (`''`, `left`, `right`, `pop`) fade and slide in once as they enter the screen, 700 ms, with a 90 ms stagger via `--reveal-order` |
+| Buttons and links | Colour change and a small lift or arrow slide on hover; 200 ms                                                                                                |
 
 Rules:
 
 - Everything runs in plain CSS and the IntersectionObserver browser API. There is no animation library.
-- No intro or splash animation: the page appears at once and the first blocks gently reveal themselves (the owner found a logo intro unnatural).
-- With `prefers-reduced-motion: reduce`, there is no reveal and no hop; content is simply there.
+- No intro or splash animation: the page appears at once (the owner found a logo intro unnatural).
+- With `prefers-reduced-motion: reduce`, there is no reveal; content is simply there.
 - Content never depends on motion: without JavaScript, every block is visible.
 - Not allowed: carousels that move on their own, flashing, strong parallax, autoplaying sound and decorations that move constantly.
