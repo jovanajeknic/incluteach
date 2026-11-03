@@ -29,8 +29,6 @@ export const text = {
       description: 'Prostor za znanje, podršku i prilike za svako dijete.',
       explore: 'Istraži IncluTeach',
       ourStory: 'Naša priča',
-      imageAlt:
-        'Ilustracija: nastavnica i djeca, među kojima je i dječak u invalidskim kolicima, zajedno čitaju knjigu za stolom ispod drveta.',
     },
     audiences: {
       title: 'Zajedno stvaramo prostor za svakoga.',

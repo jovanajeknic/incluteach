@@ -92,8 +92,13 @@ Components use role tokens with shadcn/ui names (`--primary`, `--muted`, `--bord
 
 ## Illustration
 
-- The hero uses a painted, paper-cut style illustration of a teacher and children, including a child in a wheelchair, reading together under a tree. It has a descriptive `alt` text.
-- **Temporary asset**: `client/public/images/hero-illustration.png` is cut from the mockup screenshot (723 × 378 px) and is too small for sharp display on high-density screens. Replace it with the original file, ideally at least 1600 px wide, exported as WebP or optimised PNG.
+- **Hero background photo** (`client/public/images/hero-classroom.jpg`, 1400 × 797, about 170 KB): a teacher and children working together, including a child in a wheelchair, a child with noise-cancelling headphones and a child with a hearing aid. It is cropped to the people.
+- The photo must stay in the background, never the focus:
+  - on desktop it fills the right part of the hero behind the text and dissolves into the cream page on the left, top and bottom (`.hero-photo`: CSS masks);
+  - on phones it sits below the text, faded on every side (`.hero-photo-mobile`);
+  - colours are softened towards the palette with `opacity: 0.5`, lower saturation and a light sepia tint, done in CSS so they are easy to tune.
+- It is decorative: `alt=""` inside an `aria-hidden` wrapper, because the headline already says what the page is about.
+- Keep source photos out of the repository; commit only the web-ready file (JPEG or WebP, under about 250 KB).
 - Illustrations of features that do not exist yet are labelled as illustrative and marked "U pripremi".
 
 ## Motion

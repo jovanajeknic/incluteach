@@ -24,9 +24,14 @@ describe('LandingPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('describes the illustration for screen readers', () => {
+  it('keeps the background photo decorative and hidden from screen readers', () => {
     renderApp({ path: '/' });
-    expect(screen.getByRole('img', { name: /invalidskim kolicima/ })).toBeInTheDocument();
+    const photos = document.querySelectorAll('img[src="/images/hero-classroom.jpg"]');
+    expect(photos.length).toBeGreaterThan(0);
+    for (const photo of photos) {
+      expect(photo).toHaveAttribute('alt', '');
+      expect(photo.closest('[aria-hidden="true"]')).not.toBeNull();
+    }
   });
 
   it('links header navigation to sections that exist on the page', () => {
