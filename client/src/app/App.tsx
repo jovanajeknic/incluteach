@@ -1,9 +1,14 @@
-import { text } from '@/text/sr-Latn';
+import { createBrowserRouter, RouterProvider } from 'react-router';
+import { DemoLessonsProvider } from '@/features/lessons/data/DemoLessonsProvider';
+import { routes } from './routes';
+
+const router = createBrowserRouter(routes);
 
 export function App() {
   return (
-    <main className="p-6">
-      <h1 className="text-2xl font-semibold">{text.app.name}</h1>
-    </main>
+    // The provider sits above the router so lesson data survives navigation.
+    <DemoLessonsProvider>
+      <RouterProvider router={router} />
+    </DemoLessonsProvider>
   );
 }
