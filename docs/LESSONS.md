@@ -22,7 +22,23 @@ A teacher uploads a Word or PDF document, or pastes text. The server turns it in
 
 ## Not in the first version
 
-Illustrations, a glossary of difficult words (AI explanations), the easier version of the whole text, a version profile per student, a server-side voice, scanned documents (OCR). Not discussed yet, so not planned for the backend: parents' suggestions to the teacher, the stars for effort and the class-teacher rules that appear in the demo of the frontend.
+Illustrations, a glossary of difficult words (AI explanations), the easier version of the whole text, a version profile per student, a server-side voice, scanned documents (OCR).
+
+## Wanted next, after the core (agreed to add, details still to settle)
+
+These come from the owner on 2026-11-04. They build on lessons and quizzes, so they are planned right after them as one separate step.
+
+- **Comments from a parent** on a lesson or on a quiz, for the teacher.
+- **Stars for effort**: the teacher can give a student a star for effort.
+- **Progress of a student per subject**: how many lessons were finished and how many quizzes were done, for the student, the parent and the teacher.
+
+To settle when we get there (each with a recommendation):
+
+1. *Stars*: only the teacher gives them, or also automatically (the demo gave one for finishing a lesson and one for finishing its quiz)? Recommendation: both, with the teacher's star clearly different from the automatic ones.
+2. *Parent comments*: seen by the teacher only (recommendation), or also by the child? Can the teacher answer? Is a comment tied to one lesson, or to a quiz question?
+3. *Progress*: what counts as "a lesson finished"? Recommendation: the student marks it ("Označi kao pređeno") and it is the same mark that gives the progress; a quiz counts as done when all questions are answered once.
+4. *Who sees what*: a subject teacher sees progress only in their own subjects; the class teacher (razredni starešina) sees all subjects of their odeljenje. The class teacher is not recorded in the database yet and would need a field on the class. Do we want this rule?
+5. The demo of the frontend already shows stars, progress and a suggestion inbox; the real versions should replace those.
 
 ## Proposed defaults (please confirm or change)
 
@@ -40,5 +56,6 @@ Illustrations, a glossary of difficult words (AI explanations), the easier versi
 2. Lessons from **pasted text**: create, list, edit and delete for the teacher; publish; students read. No file and no AI yet.
 3. **File upload**: Word and PDF to text, the message for scanned PDFs, the limits.
 4. The **AI interface with the fake AI**: make the summary and the quiz, show progress, the teacher edits and approves.
-5. **Quiz for students**: answer, feedback, attempts; what parents and teachers see.
-6. A real AI provider, when one is chosen.
+5. **Quiz for students**: answer, feedback, attempts; the mark "lesson finished"; what parents and teachers see.
+6. **Effort, comments and progress**: stars, parent comments, progress per subject (see "Wanted next").
+7. A real AI provider, when one is chosen.
