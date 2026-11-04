@@ -13,7 +13,7 @@ Changing an `agreed` endpoint needs both developers' approval. Mocks in the fron
 - **Authentication**: a cookie named `session`, set by `POST /auth/login` or `POST /auth/activate`. It is `httpOnly`, `SameSite=Lax`, `Secure` in production, and lasts 7 days. The browser keeps it; the frontend never reads it. Every request must be sent with credentials. Proposed by the backend developer; to be confirmed.
 - **Roles**: one per user: `admin`, `teacher`, `student`, `parent`. Every user belongs to exactly one school, and every endpoint works only on the data of the caller's school. Something that belongs to another school looks exactly like something that does not exist (404).
 - **Error format**: every error is `{ "error": { "code": "...", "message": "..." } }`. `message` is English and for developers; screens choose their own Serbian text from `code`.
-- **Common errors** (not repeated below): `401 unauthenticated` (not signed in or session ended), `403 forbidden` (signed in, but the role may not do this), `400 invalid_request` (the body or query is not valid), `400 bad_request` (the JSON cannot be read), `413 bad_request` (body above 100 kB), `404 not_found` (unknown path), `429 too_many_attempts` (sign-in and activation only), `500 internal_error`.
+- **Common errors** (not repeated below): `401 unauthenticated` (not signed in or session ended), `403 forbidden` (signed in, but the role may not do this), `400 invalid_request` (the body or query is not valid, or contains the NUL character, which cannot be stored), `400 bad_request` (the JSON cannot be read), `413 bad_request` (body above 256 kB), `404 not_found` (unknown path), `429 too_many_attempts` (sign-in and activation only), `500 internal_error`.
 - **Ids** are UUIDs (text). A malformed id in a path gives 404. **Dates** are ISO 8601 text in UTC.
 - **Paging**: lists accept `limit` (1 to 200, default 50) and `offset` (default 0) and answer with `total`.
 - **Letter case**: usernames, emails, class names and subject names are compared ignoring letter case.
@@ -351,6 +351,83 @@ Where a student or a parent looks for subjects to join. Only the subjects of the
 - **Notes**: after a rejection the student may send a new request for the same subject.
 - **Used by (frontend)**: parent "Odbij", teacher "Odbij".
 
+## Lessons
+
+A lesson belongs to a subject and holds the text of the teacher, as written. See `docs/LESSONS.md` for the whole idea. At this stage a lesson is made from **pasted text**; files, the AI summary and the quiz come in later steps and will add fields (the summary and the quiz will appear in the lesson, approved ones only for students).
+
+**LessonListItem**: `{ id, title, status, subject: { id, name, className, schoolYear }, publishedAt, createdAt, updatedAt }`. `status` is `draft`, `processing`, `in_review` or `published`.
+
+**Lesson** (the whole lesson): a LessonListItem plus `body` (the text, line breaks kept), `source` (`pasted`, later `docx` or `pdf`), `bodyRevision` (goes up by one whenever the text really changes) and `subject.teacher: { id, fullName }`.
+
+**Who sees what**: the teacher of a subject sees all its lessons in every state. A student sees the **published** lessons of the subjects they joined (an approved enrollment). A parent sees the published lessons of the subjects any of their children joined. The school admin sees no lessons. Anything a person may not see looks like it does not exist (404). If the admin gives the subject a new teacher, the lessons go to the new teacher.
+
+### GET /lessons
+
+- **Status**: implemented
+- **Purpose**: the lessons the caller may see.
+- **Who may call it**: `teacher`, `student`, `parent`.
+- **Request**: query `subjectId`, `status` (`draft`, `processing`, `in_review`, `published`), `studentId` (a parent narrows to one of their own children; 403 otherwise), `limit`, `offset`.
+- **Success response**: `200 { lessons: LessonListItem[], total }`, the newest published or changed first. The text is not included.
+- **Errors**: `400 invalid_request`, `403 forbidden`.
+- **Used by (frontend)**: teacher "Moje lekcije", student and parent lesson lists.
+
+### POST /lessons
+
+- **Status**: implemented
+- **Purpose**: a teacher starts a lesson for a subject they teach, from pasted text.
+- **Who may call it**: `teacher`.
+- **Request**: body `{ subjectId: uuid, title: string, body?: string }`. `title` has 1 to 200 characters. `body` is at most 40,000 characters (about 15 pages) and may be left out and added later; line breaks are kept and `\r\n` becomes `\n`.
+- **Success response**: `201 { lesson: Lesson }`, a `draft`.
+- **Errors**: `400 invalid_subject` (not one of the caller's subjects, another school, unknown), `400 invalid_title`, `400 invalid_body`.
+- **Used by (frontend)**: teacher "Nova lekcija".
+
+### GET /lessons/{id}
+
+- **Status**: implemented
+- **Purpose**: one whole lesson, for editing or for reading.
+- **Who may call it**: `teacher`, `student`, `parent`, as described above.
+- **Success response**: `200 { lesson: Lesson }`.
+- **Errors**: `404 not_found` (unknown, or the caller may not see it).
+- **Used by (frontend)**: teacher editor, student reading view (the text is shaped by the display buttons, the Latin/Cyrillic switch and read-aloud in the browser).
+
+### PATCH /lessons/{id}
+
+- **Status**: implemented
+- **Purpose**: change the title, the text, or both.
+- **Who may call it**: `teacher` of the subject.
+- **Request**: body `{ title?: string, body?: string }`, at least one, same rules as when creating.
+- **Success response**: `200 { lesson: Lesson }`.
+- **Errors**: `400 invalid_request` (neither sent), `400 invalid_title`, `400 invalid_body`, `404 not_found`, `409 lesson_published` (take it back first), `409 lesson_busy` (the AI is working on it).
+- **Notes**: `bodyRevision` goes up only if the text is really different. A summary or a quiz made from an older revision becomes outdated and must be made or approved again before publishing.
+
+### DELETE /lessons/{id}
+
+- **Status**: implemented
+- **Purpose**: delete a lesson, with everything that belongs to it.
+- **Who may call it**: `teacher` of the subject.
+- **Success response**: `204`.
+- **Errors**: `404 not_found`, `409 lesson_published`, `409 lesson_busy`.
+
+### POST /lessons/{id}/publish
+
+- **Status**: implemented
+- **Purpose**: make the lesson visible to the students who joined the subject.
+- **Who may call it**: `teacher` of the subject.
+- **Request**: none.
+- **Success response**: `200 { lesson: Lesson }` with `status: "published"` and `publishedAt`.
+- **Errors**: `404 not_found`, `409 lesson_has_no_text` (empty or only blank lines), `409 lesson_busy`, `409 wrong_state` (already published), `409 needs_approval` (a summary or a quiz exists and a teacher has not approved it), `409 content_outdated` (the text changed after the summary or the quiz was made).
+- **Notes**: nothing the AI made reaches students without the teacher's approval. A lesson with no summary and no quiz can be published as plain text.
+- **Used by (frontend)**: teacher button "Objavi".
+
+### POST /lessons/{id}/unpublish
+
+- **Status**: implemented
+- **Purpose**: take a published lesson back to a draft, so students no longer see it and the teacher can change it.
+- **Who may call it**: `teacher` of the subject.
+- **Success response**: `200 { lesson: Lesson }` with `status: "draft"`.
+- **Errors**: `404 not_found`, `409 wrong_state` (not published).
+- **Used by (frontend)**: teacher button "Vrati u nacrt".
+
 ## Not defined yet
 
-Lessons and AI adaptation (upload, versions, processing status, quiz, audio), removing a student from a subject at the end of the year, copying classes and subjects to a new school year, changing one's own password, the school request form of the landing page.
+File upload, the AI summary and quiz, the quiz for students, comments, stars, progress, removing a student from a subject at the end of the year, copying classes and subjects to a new school year, changing one's own password, the school request form of the landing page.

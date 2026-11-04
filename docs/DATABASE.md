@@ -8,12 +8,12 @@ Summary of the backend database work and the agreements behind it. Working rules
 | ----------------------------------------------------------------------------------------- | ----------- |
 | PostgreSQL connection, migrations, `db:check`                                             | Done        |
 | Database: schools, users with one role, classes, subjects, parent links, enrollments, sign-in tables | Done |
-| Database for lessons, summaries and quiz questions (the API for them is next; see `docs/LESSONS.md`) | Done |
+| Lessons from pasted text: database, writing, editing, publishing and reading by students and parents (see `docs/LESSONS.md`) | Done |
 | Sign-in: login, logout, activation links, passwords, sessions, role checks, first admin script | Done   |
 | Admin API: users (create, list, rename, deactivate, delete), classes, subjects, parent links | Done     |
 | Enrollment API: subject catalog, requests, parent and teacher decisions                   | Done        |
 | Running it: `build` and `start`, hourly cleanup of ended sessions and old links, a request log, database backups with `npm run db:backup` | Done |
-| Lessons and AI adaptation (upload, versions, quiz, audio), reading and progress           | Not started |
+| File upload, the AI summary and quiz, the quiz for students, comments, stars, progress    | Not started |
 | Not built yet, smaller: removing students from subjects at the end of a school year, copying classes and subjects to a new school year, changing one's own password, verifying emails and sending messages, the school request form of the landing page, hosting (the server runs on the owner's computer for now; HTTPS, a proxy address and moving it elsewhere are not needed yet) | Open |
 
 The backend covers accounts, sign-in, the school structure and enrollments, all with tests. The frontend still uses demo data and is connected to this API step by step (see `docs/FRONTEND-PLAN.md`, "Backend API and frontend work").

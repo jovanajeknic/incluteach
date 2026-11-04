@@ -4,11 +4,13 @@ import { authenticate } from './auth/currentUser.ts';
 import type { ScryptCost } from './auth/password.ts';
 import type { Queryable } from './db/pool.ts';
 import { errorHandler, notFoundHandler } from './http/errors.ts';
+import { rejectNul } from './http/rejectNul.ts';
 import { requestLog } from './http/requestLog.ts';
 import { authRouter } from './routes/auth.ts';
 import { classesRouter } from './routes/classes.ts';
 import { catalogRouter, enrollmentsRouter } from './routes/enrollments.ts';
 import { healthRouter } from './routes/health.ts';
+import { lessonsRouter } from './routes/lessons.ts';
 import { parentLinksRouter } from './routes/parentLinks.ts';
 import { subjectsRouter } from './routes/subjects.ts';
 import { usersRouter } from './routes/users.ts';
@@ -39,7 +41,9 @@ export function createApp({
   if (logRequests) {
     app.use(requestLog());
   }
-  app.use(express.json({ limit: '100kb' }));
+  // Large enough for a lesson of about 40,000 characters (Serbian letters take two bytes).
+  app.use(express.json({ limit: '256kb' }));
+  app.use(rejectNul);
   app.use(authenticate(pool));
 
   app.use(healthRouter(pool));
@@ -50,6 +54,7 @@ export function createApp({
   app.use('/parent-students', parentLinksRouter(pool));
   app.use('/catalog', catalogRouter(pool));
   app.use('/enrollments', enrollmentsRouter(pool));
+  app.use('/lessons', lessonsRouter(pool));
 
   app.use(notFoundHandler);
   app.use(errorHandler);

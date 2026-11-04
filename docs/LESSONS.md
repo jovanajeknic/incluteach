@@ -59,8 +59,8 @@ Still to settle when we get there:
 
 ## Build order (each step small, with tests, and the contract and frontend plan updated)
 
-1. Database for lessons, summaries, quiz questions and the child's quiz answers.
-2. Lessons from **pasted text**: create, list, edit and delete for the teacher; publish; students read. No file and no AI yet.
+1. Database for lessons, summaries and quiz questions (done). The child's quiz answers come with the quiz for students.
+2. Lessons from **pasted text** (done): create, list, edit and delete for the teacher; publish and take back; students and parents read. No file and no AI yet.
 3. **File upload**: Word and PDF to text, the message for scanned PDFs, the limits.
 4. The **AI interface with the fake AI**: make the summary and the quiz, show progress, the teacher edits and approves.
 5. **Quiz for students**: answer, feedback, attempts; a lesson is finished when all answers are correct; what parents and teachers see.
