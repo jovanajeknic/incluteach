@@ -121,6 +121,9 @@ describe.skipIf(!process.env.DATABASE_URL)('lessons', () => {
           source: 'pasted',
           sourceFileName: null,
           bodyRevision: 1,
+          processingError: null,
+          summary: null,
+          quiz: null,
           subject: {
             id: w.mathId,
             name: 'Matematika',

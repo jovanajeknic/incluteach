@@ -353,11 +353,17 @@ Where a student or a parent looks for subjects to join. Only the subjects of the
 
 ## Lessons
 
-A lesson belongs to a subject and holds the text of the teacher, as written. See `docs/LESSONS.md` for the whole idea. A lesson is made from **pasted text** or from a **Word or PDF file**; the AI summary and the quiz come in a later step and will add fields (the summary and the quiz will appear in the lesson, approved ones only for students).
+A lesson belongs to a subject and holds the text of the teacher, as written. See `docs/LESSONS.md` for the whole idea. A lesson is made from **pasted text** or from a **Word or PDF file**, and the AI can make a **summary** and a **quiz** from its text, which a teacher edits and approves before students see them.
 
 **LessonListItem**: `{ id, title, status, subject: { id, name, className, schoolYear }, publishedAt, createdAt, updatedAt }`. `status` is `draft`, `processing`, `in_review` or `published`.
 
-**Lesson** (the whole lesson): a LessonListItem plus `body` (the text, line breaks kept), `source` (`pasted`, `docx` or `pdf`: how the text came about), `sourceFileName` (the name of the file, or null), `bodyRevision` (goes up by one whenever the text really changes) and `subject.teacher: { id, fullName }`.
+**Lesson** (the whole lesson, with `summary`, `quiz` and `processingError`; see below): a LessonListItem plus `body` (the text, line breaks kept), `source` (`pasted`, `docx` or `pdf`: how the text came about), `sourceFileName` (the name of the file, or null), `bodyRevision` (goes up by one whenever the text really changes) and `subject.teacher: { id, fullName }`.
+
+**Summary** (`lesson.summary`, or null): `{ points: string[], origin: "ai" | "teacher", status: "draft" | "approved", outdated: boolean, approvedAt, updatedAt }`. Each point is one short sentence. `outdated` is true when the text of the lesson changed after the summary was made or approved.
+
+**Quiz** (`lesson.quiz`, or null): `{ origin, status, outdated, approvedAt, updatedAt, questions }`. A question is `{ id, position, kind: "choice" | "true_false", prompt, explanation, options }` and an option is `{ id, position, text, isCorrect }`. A choice question has 3 or 4 options, a true/false question has "Tačno" and "Netačno"; exactly one option is right. The quiz is practice only, without a score.
+
+**What each person gets of the summary and the quiz**: the teacher gets everything, in every state, with `isCorrect` and `explanation`. A student or a parent gets them only when a teacher approved them and they still fit the text, and **without** `isCorrect` and `explanation` (a student finds out by answering, which comes in a later step). `processingError` is only for the teacher.
 
 **Who sees what**: the teacher of a subject sees all its lessons in every state. A student sees the **published** lessons of the subjects they joined (an approved enrollment). A parent sees the published lessons of the subjects any of their children joined. The school admin sees no lessons. Anything a person may not see looks like it does not exist (404). If the admin gives the subject a new teacher, the lessons go to the new teacher.
 
@@ -419,6 +425,17 @@ A lesson belongs to a subject and holds the text of the teacher, as written. See
 - **Notes**: the text is tidied (spaces, empty lines) and in a PDF the lines of one paragraph are joined again; headings and list items stay on their own lines. Word list items get a bullet `•` and table cells are separated by ` | `. Pictures, headers and footers are not read. The original file is not kept, only the text. Pictures of pages (scans) are not read (no OCR); the message says to send a Word file or paste the text.
 - **Used by (frontend)**: teacher "Nova lekcija" (choose a file or paste text), and "Zamijeni tekst iz fajla" in the editor. After the answer, show the text for correction. Send the file with `fetch(url, { method: 'POST', body: file, headers: { 'X-File-Name': encodeURIComponent(file.name) } })`.
 
+### POST /lessons/{id}/generate
+
+- **Status**: implemented
+- **Purpose**: ask the AI to make a summary and/or a quiz from the text of the lesson.
+- **Who may call it**: `teacher` of the subject.
+- **Request**: body `{ summary?: boolean, quiz?: boolean }`, both on when left out; at least one must be on.
+- **Success response**: `202 { lesson: Lesson }` with `status: "processing"`. The work goes on in the background. **Ask for the lesson (`GET /lessons/{id}`) every 2 to 3 seconds** until the status changes: `in_review` means the summary and the quiz are ready for the teacher to read, edit and approve; `draft` with a `processingError` means the AI failed (the message says what to do, for example "The text is too short to make a quiz.").
+- **Errors**: `400 invalid_request`, `404 not_found`, `409 lesson_has_no_text`, `409 lesson_busy` (already being processed), `409 lesson_published` (take it back first).
+- **Notes**: what the AI makes starts as a **draft** and nothing reaches students until a teacher approves it. Asking again replaces the summary and/or quiz that were made before, and cancels their approval (the frontend should ask the teacher to confirm, because their manual edits are replaced). While the lesson is `processing` it cannot be changed, deleted or published. A lesson that stays in `processing` after the server stopped is put back to a draft when the server starts again. Until a real AI service is chosen, a **fake** one makes invented but complete results, so the screens can be built; the text `[[ai-fail]]` or `[[ai-bad-output]]` inside a lesson makes it fail on purpose, to test the error screen.
+- **Used by (frontend)**: teacher button "Napravi sažetak i kviz" in the lesson editor, a waiting state while `processing`, then the review of what was made.
+
 ### POST /lessons/{id}/publish
 
 - **Status**: implemented
@@ -426,7 +443,7 @@ A lesson belongs to a subject and holds the text of the teacher, as written. See
 - **Who may call it**: `teacher` of the subject.
 - **Request**: none.
 - **Success response**: `200 { lesson: Lesson }` with `status: "published"` and `publishedAt`.
-- **Errors**: `404 not_found`, `409 lesson_has_no_text` (empty or only blank lines), `409 lesson_busy`, `409 wrong_state` (already published), `409 needs_approval` (a summary or a quiz exists and a teacher has not approved it), `409 content_outdated` (the text changed after the summary or the quiz was made).
+- **Errors**: `404 not_found`, `409 lesson_has_no_text` (empty or only blank lines), `409 lesson_busy`, `409 wrong_state` (already published), `409 needs_approval` (a summary or a quiz exists and a teacher has not approved it; this is the case right after the AI made them), `409 content_outdated` (the text changed after the summary or the quiz was made).
 - **Notes**: nothing the AI made reaches students without the teacher's approval. A lesson with no summary and no quiz can be published as plain text.
 - **Used by (frontend)**: teacher button "Objavi".
 
@@ -441,4 +458,4 @@ A lesson belongs to a subject and holds the text of the teacher, as written. See
 
 ## Not defined yet
 
-The AI summary and quiz, the quiz for students, comments, stars, progress, removing a student from a subject at the end of the year, copying classes and subjects to a new school year, changing one's own password, the school request form of the landing page.
+Editing and approving the summary and the quiz by the teacher, the quiz for students, comments, stars, progress, removing a student from a subject at the end of the year, copying classes and subjects to a new school year, changing one's own password, the school request form of the landing page.

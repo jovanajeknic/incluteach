@@ -5,6 +5,7 @@ import type { Queryable } from '../db/pool.ts';
 import { HttpError } from '../http/errors.ts';
 import { cleanText, isUuid, readWholeNumber } from '../http/validation.ts';
 import { extractLessonText } from '../lessons/extract/index.ts';
+import { startGeneration, type GenerationOptions } from '../lessons/generate.ts';
 import { MAX_BODY_LENGTH, MAX_FILE_BYTES } from '../lessons/limits.ts';
 import {
   createLesson,
@@ -105,7 +106,7 @@ function readFileName(header: unknown): string | null {
 
 // Lessons. A teacher makes and manages the lessons of the subjects they teach; students and
 // parents read the published lessons of the subjects the student joined.
-export function lessonsRouter(pool: Queryable): Router {
+export function lessonsRouter(pool: Queryable, generation: GenerationOptions): Router {
   const router = Router();
 
   // Query: subjectId, status (teachers), studentId (a parent narrows to one child), limit and
@@ -194,6 +195,27 @@ export function lessonsRouter(pool: Queryable): Router {
       fileName: readFileName(req.get('x-file-name')),
     });
     res.json({ lesson });
+  });
+
+  // Asks the AI to make a summary and/or a quiz from the text of the lesson. Answers 202 at
+  // once with the lesson in the state "processing"; the work goes on in the background. Ask
+  // for the lesson (GET /lessons/{id}) every few seconds until the state changes: "in_review"
+  // means the results are ready for the teacher, "draft" with a `processingError` that the AI
+  // failed. Body: { summary?: boolean, quiz?: boolean }, both on when left out.
+  router.post('/:id/generate', requireRole('teacher'), async (req, res) => {
+    const lessonId = readLessonId(req.params.id);
+    const { summary = true, quiz = true } = (req.body ?? {}) as Record<string, unknown>;
+    if (typeof summary !== 'boolean' || typeof quiz !== 'boolean' || (!summary && !quiz)) {
+      throw new HttpError(400, 'invalid_request', 'Choose the summary, the quiz, or both.');
+    }
+
+    const lesson = await startGeneration(pool, generation, {
+      user: getUser(req),
+      lessonId,
+      summary,
+      quiz,
+    });
+    res.status(202).json({ lesson });
   });
 
   router.post('/:id/publish', requireRole('teacher'), async (req, res) => {

@@ -1,7 +1,9 @@
 import type pg from 'pg';
 import request from 'supertest';
 
+import type { AiProvider } from '../ai/types.ts';
 import { createApp } from '../app.ts';
+import { BackgroundJobs } from '../lessons/jobs.ts';
 import {
   FAST_HASH_COST,
   inRolledBackTransaction,
@@ -45,6 +47,8 @@ export interface Requests {
 
 export interface Api extends Requests {
   app: App;
+  // Work that goes on after an answer is sent, such as the AI making a summary.
+  jobs: BackgroundJobs;
   client: pg.PoolClient;
   f: Fixture;
   deactivate: (...ids: string[]) => Promise<request.Response>;
@@ -83,7 +87,11 @@ function requestsWith(app: App, cookie: string): Requests {
 // Runs a test as the admin of School A. Everything happens on one connection inside a
 // transaction that is rolled back, and the app is new for each test, so no data and no
 // rate limit counters carry over.
-export function inApi(pool: pg.Pool, run: (api: Api) => Promise<void>): Promise<void> {
+export function inApi(
+  pool: pg.Pool,
+  run: (api: Api) => Promise<void>,
+  options: { ai?: AiProvider; aiTimeoutMs?: number } = {},
+): Promise<void> {
   return inRolledBackTransaction(pool, async (client) => {
     const schoolId = await insertSchool(client, 'School A');
     const account = (
@@ -116,7 +124,8 @@ export function inApi(pool: pg.Pool, run: (api: Api) => Promise<void>): Promise<
       otherSchoolStudentId: await insertUser(client, otherSchoolId, 'student', 'tudji_ucenik'),
     };
 
-    const app = createApp({ pool: client, passwordCost: FAST_HASH_COST });
+    const jobs = new BackgroundJobs();
+    const app = createApp({ pool: client, passwordCost: FAST_HASH_COST, jobs, ...options });
     const signIn = (identifier: string) =>
       request(app).post('/auth/login').send({ identifier, password: PASSWORD });
     const admin = requestsWith(app, sessionCookie(await signIn('admin_a')));
@@ -124,6 +133,7 @@ export function inApi(pool: pg.Pool, run: (api: Api) => Promise<void>): Promise<
     const api: Api = {
       ...admin,
       app,
+      jobs,
       client,
       f,
       deactivate: (...ids) => admin.post('/users/deactivate', { ids }),

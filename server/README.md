@@ -62,6 +62,10 @@ npm start
 
 `build` compiles `src/` into `dist/` (both are ignored by Git). The server writes one line per request, for example `POST /auth/login 401 112ms`: the method, the path, the status and the time, and nothing else (no query string, body or cookies). Once an hour it removes ended sessions and activation links that expired more than 30 days ago.
 
+## The AI for summaries and quizzes
+
+The server makes summaries and quizzes through one replaceable part. `AI_PROVIDER` in `.env` chooses the service. Only `fake` exists for now: it makes invented but complete results from the text of the lesson and sends nothing anywhere, so everything can be built and tested for free. To plug in a real service, write an object like `server/src/ai/fake.ts` (two functions that take the lesson text), add its name to `server/src/ai/index.ts`, and set `AI_PROVIDER`. Whatever a service returns is checked before it is stored. In a lesson text, `[[ai-fail]]` makes the fake AI fail on purpose and `[[ai-bad-output]]` makes it answer in an unusable form, for testing the error screens.
+
 ## Connect the frontend on this computer
 
 The frontend (`http://localhost:5173`) and the server (`http://localhost:3000`) are two different addresses for the browser. The simplest way to make them one is a proxy in the Vite dev server (`client/vite.config.ts`):

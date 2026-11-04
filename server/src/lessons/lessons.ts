@@ -3,6 +3,7 @@ import type { Queryable } from '../db/pool.ts';
 import { inTransaction } from '../db/transaction.ts';
 import { resolveChild } from '../enrollments/enrollments.ts';
 import { HttpError } from '../http/errors.ts';
+import { loadContent, type QuizView, type SummaryView } from './content.ts';
 
 export type LessonStatus = 'draft' | 'processing' | 'in_review' | 'published';
 
@@ -30,7 +31,13 @@ export interface Lesson extends Omit<LessonListItem, 'subject'> {
   sourceFileName: string | null;
   // Goes up by one whenever the text changes.
   bodyRevision: number;
+  // Why the last attempt of the AI failed, shown to the teacher; null if it did not.
+  processingError: string | null;
   subject: LessonSubject & { teacher: { id: string; fullName: string } };
+  // What the AI or the teacher made. The teacher sees all of it; a student or a parent only
+  // what a teacher approved, and without the right answers.
+  summary: SummaryView | null;
+  quiz: QuizView | null;
 }
 
 interface LessonRow {
@@ -41,6 +48,7 @@ interface LessonRow {
   source?: 'pasted' | 'docx' | 'pdf';
   source_file_name?: string | null;
   body_revision?: number;
+  processing_error?: string | null;
   published_at: Date | null;
   created_at: Date;
   updated_at: Date;
@@ -78,10 +86,17 @@ function toListItem(row: LessonRow): LessonListItem {
   };
 }
 
-function toLesson(row: LessonRow): Lesson {
+function toLesson(
+  row: LessonRow,
+  content: { summary: SummaryView | null; quiz: QuizView | null },
+  forTeacher: boolean,
+): Lesson {
   const item = toListItem(row);
   return {
     ...item,
+    ...content,
+    // Only the teacher is told why the AI failed.
+    processingError: forTeacher ? (row.processing_error ?? null) : null,
     body: row.body as string,
     source: row.source as Lesson['source'],
     sourceFileName: row.source_file_name ?? null,
@@ -171,7 +186,7 @@ export async function listLessons(
   return { lessons: rows.map(toListItem), total: Number(counted[0].total) };
 }
 
-const DETAIL_COLUMNS = `${LIST_COLUMNS}, l.body, l.source, l.source_file_name, l.body_revision`;
+const DETAIL_COLUMNS = `${LIST_COLUMNS}, l.body, l.source, l.source_file_name, l.body_revision, l.processing_error`;
 
 // A lesson the person may see, or a 404 as if it did not exist.
 export async function getLesson(
@@ -188,10 +203,15 @@ export async function getLesson(
   if (!rows[0]) {
     throw lessonNotFound();
   }
-  return toLesson(rows[0]);
+  const content = await loadContent(pool, {
+    lessonId,
+    bodyRevision: rows[0].body_revision as number,
+    forTeacher: user.role === 'teacher',
+  });
+  return toLesson(rows[0], content, user.role === 'teacher');
 }
 
-async function requireOwnedLesson(
+export async function requireOwnedLesson(
   pool: Queryable,
   { user, lessonId }: { user: AuthUser; lessonId: string },
 ): Promise<Lesson> {
@@ -229,7 +249,7 @@ export async function createLesson(
 
 // While a lesson is published students read it, and while the AI works on it nobody should
 // change it under the AI's feet.
-function assertEditable(lesson: Lesson): void {
+export function assertEditable(lesson: Lesson): void {
   if (lesson.status === 'published') {
     throw new HttpError(
       409,
@@ -398,7 +418,8 @@ export async function publishLesson(
     }
 
     await db.query(
-      `UPDATE lessons SET status = 'published', published_at = now(), updated_at = now()
+      `UPDATE lessons SET status = 'published', published_at = now(), processing_error = NULL,
+         updated_at = now()
        WHERE id = $1`,
       [lessonId],
     );

@@ -1,3 +1,5 @@
+import { AI_PROVIDERS, type AiProviderName } from './ai/index.ts';
+
 export interface Config {
   databaseUrl: string;
   port: number;
@@ -5,6 +7,8 @@ export interface Config {
   secureCookies: boolean;
   // Address of the website, used to build the activation links that admins send out.
   publicUrl: string;
+  // Which AI service makes summaries and quizzes. "fake" makes invented but complete results.
+  aiProvider: AiProviderName;
 }
 
 const DEFAULT_PORT = 3000;
@@ -25,6 +29,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     port: parsePort(env.PORT),
     secureCookies: env.NODE_ENV === 'production',
     publicUrl: parsePublicUrl(env.PUBLIC_URL),
+    aiProvider: parseAiProvider(env.AI_PROVIDER),
   };
 }
 
@@ -58,4 +63,12 @@ function parsePublicUrl(value: string | undefined): string {
 
   // Without a trailing slash, so "/activate" can be appended safely.
   return url.origin + url.pathname.replace(/\/+$/, '');
+}
+
+function parseAiProvider(value: string | undefined): AiProviderName {
+  const name = value?.trim() || 'fake';
+  if (!(AI_PROVIDERS as readonly string[]).includes(name)) {
+    throw new Error(`AI_PROVIDER must be one of: ${AI_PROVIDERS.join(', ')}. Got "${name}".`);
+  }
+  return name as AiProviderName;
 }

@@ -62,4 +62,20 @@ describe('loadConfig', () => {
       },
     );
   });
+  describe('aiProvider', () => {
+    it('defaults to the fake AI', () => {
+      expect(loadConfig({ DATABASE_URL }).aiProvider).toBe('fake');
+      expect(loadConfig({ DATABASE_URL, AI_PROVIDER: '  ' }).aiProvider).toBe('fake');
+    });
+
+    it('uses AI_PROVIDER when it names a known service', () => {
+      expect(loadConfig({ DATABASE_URL, AI_PROVIDER: 'fake' }).aiProvider).toBe('fake');
+    });
+
+    it('refuses a service the server does not know, and names the ones it does', () => {
+      expect(() => loadConfig({ DATABASE_URL, AI_PROVIDER: 'skynet' })).toThrow(
+        /AI_PROVIDER must be one of: fake\. Got "skynet"/,
+      );
+    });
+  });
 });

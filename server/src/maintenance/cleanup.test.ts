@@ -2,8 +2,15 @@ import type pg from 'pg';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { createPool } from '../db/pool.ts';
-import { inRolledBackTransaction, insertSchool, insertUser } from '../db/testUtils.ts';
-import { deleteExpired, startCleanup } from './cleanup.ts';
+import {
+  inRolledBackTransaction,
+  insertClass,
+  insertLesson,
+  insertSchool,
+  insertSubject,
+  insertUser,
+} from '../db/testUtils.ts';
+import { deleteExpired, failInterruptedLessons, startCleanup } from './cleanup.ts';
 
 afterEach(() => {
   vi.useRealTimers();
@@ -98,6 +105,76 @@ describe.skipIf(!process.env.DATABASE_URL)('deleteExpired', () => {
   });
 });
 
+describe.skipIf(!process.env.DATABASE_URL)('failInterruptedLessons', () => {
+  let pool: pg.Pool;
+
+  beforeAll(() => {
+    pool = createPool();
+  });
+
+  afterAll(() => pool.end());
+
+  async function lessonsInState(client: pg.PoolClient) {
+    const schoolId = await insertSchool(client);
+    const teacherId = await insertUser(client, schoolId, 'teacher');
+    const classId = await insertClass(client, schoolId);
+    const subjectId = await insertSubject(client, schoolId, classId, teacherId);
+    const make = (status: 'draft' | 'processing') =>
+      insertLesson(client, { schoolId, subjectId, createdBy: teacherId, status });
+    return { make };
+  }
+
+  const stateOf = async (client: pg.PoolClient, id: string) =>
+    (
+      await client.query<{ status: string; processing_error: string | null }>(
+        'SELECT status, processing_error FROM lessons WHERE id = $1',
+        [id],
+      )
+    ).rows[0];
+
+  it('puts back to a draft a lesson that has been processing for too long, with a message', async () => {
+    await inRolledBackTransaction(pool, async (client) => {
+      const { make } = await lessonsInState(client);
+      const stuck = await make('processing');
+      await client.query(
+        "UPDATE lessons SET updated_at = now() - interval '11 minutes' WHERE id = $1",
+        [stuck],
+      );
+
+      expect(await failInterruptedLessons(client)).toBe(1);
+
+      expect(await stateOf(client, stuck)).toEqual({
+        status: 'draft',
+        processing_error: 'The work was interrupted. Try again.',
+      });
+    });
+  });
+
+  it('leaves alone a lesson that started processing a moment ago, and drafts', async () => {
+    await inRolledBackTransaction(pool, async (client) => {
+      const { make } = await lessonsInState(client);
+      const working = await make('processing');
+      const draft = await make('draft');
+
+      expect(await failInterruptedLessons(client)).toBe(0);
+
+      expect((await stateOf(client, working)).status).toBe('processing');
+      expect((await stateOf(client, draft)).status).toBe('draft');
+    });
+  });
+
+  it('ends every lesson that is processing when asked for those older than 0 minutes', async () => {
+    await inRolledBackTransaction(pool, async (client) => {
+      const { make } = await lessonsInState(client);
+      const working = await make('processing');
+
+      expect(await failInterruptedLessons(client, 0)).toBe(1);
+
+      expect((await stateOf(client, working)).status).toBe('draft');
+    });
+  });
+});
+
 describe('startCleanup', () => {
   const queryReturning = (rowCount: number) => vi.fn().mockResolvedValue({ rows: [], rowCount });
 
@@ -114,8 +191,8 @@ describe('startCleanup', () => {
     stop();
     await vi.advanceTimersByTimeAsync(5000);
 
-    expect(afterStart).toBe(2); // sessions and links
-    expect(afterTwoRounds).toBe(6); // two more rounds
+    expect(afterStart).toBe(3); // sessions, links and stuck lessons
+    expect(afterTwoRounds).toBe(9); // two more rounds
     expect(query.mock.calls.length).toBe(afterTwoRounds);
   });
 

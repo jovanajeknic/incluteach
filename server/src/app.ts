@@ -1,5 +1,8 @@
 import express from 'express';
 
+import { createFakeAi } from './ai/fake.ts';
+import type { AiProvider } from './ai/types.ts';
+
 import { authenticate } from './auth/currentUser.ts';
 import type { ScryptCost } from './auth/password.ts';
 import type { Queryable } from './db/pool.ts';
@@ -9,6 +12,7 @@ import { requestLog } from './http/requestLog.ts';
 import { authRouter } from './routes/auth.ts';
 import { classesRouter } from './routes/classes.ts';
 import { catalogRouter, enrollmentsRouter } from './routes/enrollments.ts';
+import { BackgroundJobs } from './lessons/jobs.ts';
 import { healthRouter } from './routes/health.ts';
 import { lessonsRouter } from './routes/lessons.ts';
 import { parentLinksRouter } from './routes/parentLinks.ts';
@@ -24,6 +28,12 @@ export interface AppDependencies {
   passwordCost?: ScryptCost;
   // Writes one line per request (method, path, status, time). Off by default; the server turns it on.
   logRequests?: boolean;
+  // The AI service for summaries and quizzes. The fake one is used when none is given.
+  ai?: AiProvider;
+  // Runs work that goes on after the answer is sent. Tests pass their own to wait for it.
+  jobs?: BackgroundJobs;
+  // How long to wait for the AI before giving up. Only tests change it.
+  aiTimeoutMs?: number;
 }
 
 // Builds the Express app without starting it, so tests can call it directly.
@@ -33,6 +43,9 @@ export function createApp({
   publicUrl = 'http://localhost:5173',
   passwordCost,
   logRequests = false,
+  ai = createFakeAi(),
+  jobs = new BackgroundJobs(),
+  aiTimeoutMs,
 }: AppDependencies): express.Express {
   const app = express();
 
@@ -54,7 +67,7 @@ export function createApp({
   app.use('/parent-students', parentLinksRouter(pool));
   app.use('/catalog', catalogRouter(pool));
   app.use('/enrollments', enrollmentsRouter(pool));
-  app.use('/lessons', lessonsRouter(pool));
+  app.use('/lessons', lessonsRouter(pool, { ai, jobs, timeoutMs: aiTimeoutMs }));
 
   app.use(notFoundHandler);
   app.use(errorHandler);
