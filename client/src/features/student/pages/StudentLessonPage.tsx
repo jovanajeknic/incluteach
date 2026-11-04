@@ -70,7 +70,7 @@ interface LessonViewProps {
 
 function LessonView({ lesson, subject, profile }: LessonViewProps) {
   const t = text.student.lesson;
-  const { markStarted, markLessonDone, starsFor } = useStudent();
+  const { markStarted, markLessonDone, unmarkLessonDone, starsFor } = useStudent();
   const earned = starsFor(lesson.id);
   const support = profile.supportProfile;
   // Only teacher-approved versions can be picked; the page is reached only if one exists.
@@ -259,7 +259,20 @@ function LessonView({ lesson, subject, profile }: LessonViewProps) {
           {t.finishHeading}
         </h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <FinishCard tone="bg-mint" done={earned.lesson} doneText={t.markedDone}>
+          <FinishCard
+            tone="bg-mint"
+            done={earned.lesson}
+            doneText={t.markedDone}
+            doneAction={
+              <button
+                type="button"
+                onClick={() => unmarkLessonDone(lesson.id)}
+                className="w-fit rounded-sm font-display font-medium text-mint-ink underline underline-offset-4"
+              >
+                {t.undoDone}
+              </button>
+            }
+          >
             <Button
               type="button"
               onClick={() => markLessonDone(lesson.id)}

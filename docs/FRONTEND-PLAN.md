@@ -56,6 +56,7 @@ Differences from this plan, all intentional for this step:
 - **Publishing rules (owner, 2026-11-04)**: students and parents see a published copy of a lesson, never the teacher's working copy. Everything the AI prepares needs approval before publishing: the five versions and also the quiz questions and word explanations. Changes to a published lesson (a redone version, an edit, a full AI rerun) reach students only after "Objavi izmjene"; until then they keep the published copy. When the teacher changes the original text, the AI versions are marked as outdated and must be approved again. If the AI fails, nothing is lost and the teacher can try again.
 - **Class teacher and subject teachers (owner)**: only the class teacher ("razredni starešina") changes which versions a student receives; other teachers see it read-only. A subject teacher sees a student's progress only in the subjects they teach; the class teacher sees all. A teacher can open only lessons of subjects they teach in that class.
 - **Parents and the version profile (owner)**: parents see which versions their child receives (never shown to the child) and can send a suggestion to change it.
+- **Second review (owner, 2026-11-04)**: everyone can sign out (a demo link to sign-in for now). Parent suggestions go to the teacher of the lesson's subject, or to the class teacher when general. The AI never gets a parent's text: the teacher writes a short instruction in their own words (`aiNote`), and only that is sent. Teachers can withdraw a published lesson or delete one that was never published. Students can undo "Označi kao pređeno". AI remarks are shown to the teacher beside the text, never inside it. Teachers do not reply to suggestions; parents see the status only.
 - **Audio in the teacher area**: the AI writes a narration script; the teacher can listen to it with the browser voice. Students with audio hear that script; others hear the text on screen.
 - **Illustrations in the demo** are prepared drawings; the real AI service on the backend will provide its own.
 
@@ -519,6 +520,6 @@ Every task also follows the verification rules in [AGENTS.md](../AGENTS.md#4-ver
 
 ## Next steps noted
 
-- **Bundle size**: the main JavaScript bundle is about 790 KB (240 KB gzipped) since the teacher area added Motion, Phosphor, Lenis and the Radix tabs. Loading the teacher, student and parent areas as lazy routes would keep the landing page light.
+- **Bundle size**: the teacher, student and parent areas are lazy routes (`client/src/app/areas/`), so the main bundle is about 480 KB (150 KB gzipped) instead of about 830 KB. Tests load the areas up front through the same `lazy` functions (`src/test/eagerRoutes.ts`).
 - **Sign-in pages**: they still use their own look; decide with the owner whether they should follow the rest of the site.
 - **Real backend**: AI adaptation, file upload (PDF/DOCX), authentication, access control and storage all wait for the agreed API contract (FE-17).

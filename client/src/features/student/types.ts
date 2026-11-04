@@ -42,6 +42,8 @@ export interface LessonVersion {
   source: 'teacher' | 'ai';
   /** Made from an older teacher text; it needs a new look before it is approved again. */
   stale?: boolean;
+  /** A remark from the AI for the teacher only, never part of what students read. */
+  aiComment?: string;
 }
 
 export interface GlossaryEntry {

@@ -24,6 +24,7 @@ export interface StudentStore {
   practiceOf: (lessonId: string) => PracticeRecord | undefined;
   /** The student says they have gone through the lesson. */
   markLessonDone: (lessonId: string) => void;
+  unmarkLessonDone: (lessonId: string) => void;
   recordPractice: (lessonId: string, difficultQuestionIds: readonly string[]) => void;
   /** Stars for effort: one for a lesson marked as done, one for its finished quiz. No score. */
   stars: number;

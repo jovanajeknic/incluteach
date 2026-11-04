@@ -102,9 +102,11 @@ export function ClassPage() {
                   ).length;
                   const stars = completed + quizzes;
                   const name = `${student.firstName} ${student.lastName}`;
-                  const newSuggestions = school.data.suggestions.filter(
-                    (item) => item.childId === student.id && item.status === 'pending-teacher',
-                  ).length;
+                  const newSuggestions = school
+                    .suggestionsForTeacher()
+                    .filter(
+                      (item) => item.childId === student.id && item.status === 'pending-teacher',
+                    ).length;
                   return (
                     <motion.tr
                       key={student.id}

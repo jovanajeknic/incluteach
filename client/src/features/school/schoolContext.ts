@@ -76,6 +76,10 @@ export interface SchoolStore {
    * approved changes. Each student gets their own version.
    */
   publishLesson: (lessonId: string) => void;
+  /** Takes a published lesson away from students; the teacher keeps working on it. */
+  unpublishLesson: (lessonId: string) => void;
+  /** Removes a lesson that was never published. */
+  deleteLesson: (lessonId: string) => void;
   updateLesson: (lessonId: string, edits: LessonEdits) => void;
   studentsOf: (classId: string) => StudentProfile[];
   /** How many of the lesson's students receive each version. Counts only, never names. */
@@ -84,6 +88,13 @@ export interface SchoolStore {
   suggestionsForAdaptation: (lesson: SchoolLesson) => Suggestion[];
   setStudentSupport: (studentId: string, profile: SupportProfile) => void;
   setSuggestionStatus: (suggestionId: string, status: SuggestionStatus) => void;
+  /** The teacher turns a parent suggestion into a short, anonymous instruction for the AI. */
+  useSuggestionForAi: (suggestionId: string, aiNote: string) => void;
+  /**
+   * Suggestions this teacher handles: about a lesson, for the teacher of that subject in
+   * that class; general ones, for the class teacher.
+   */
+  suggestionsForTeacher: () => Suggestion[];
 
   // Students and parents
   visibleLessonsFor: (studentId: string) => SchoolLesson[];
@@ -92,6 +103,8 @@ export interface SchoolStore {
   markStarted: (studentId: string, lessonId: string) => void;
   /** The student marks the lesson as read through. */
   markLessonDone: (studentId: string, lessonId: string) => void;
+  /** Undoes "Označi kao pređeno" after a mistaken tap. */
+  unmarkLessonDone: (studentId: string, lessonId: string) => void;
   /** The student finished the lesson quiz. */
   recordPractice: (
     studentId: string,
@@ -142,22 +155,52 @@ export function isFullyApproved(lesson: SchoolLesson): boolean {
 }
 
 /** The content as it would be published now. */
+/** Only what students read; remarks from the AI and review flags stay with the teacher. */
+function studentFacing(version: LessonVersion): LessonVersion {
+  return {
+    kind: version.kind,
+    content: version.content,
+    ...(version.illustrations ? { illustrations: version.illustrations } : {}),
+    approvedByTeacher: version.approvedByTeacher,
+    source: version.source,
+  };
+}
+
 export function publishableContent(lesson: SchoolLesson): PublishedContent {
   return {
-    versions: lesson.versions.filter(
-      (version) => version.kind === 'standard' || (version.approvedByTeacher && !version.stale),
-    ),
+    versions: lesson.versions
+      .filter(
+        (version) => version.kind === 'standard' || (version.approvedByTeacher && !version.stale),
+      )
+      .map(studentFacing),
     glossary: lesson.glossary,
     quiz: lesson.quiz,
     homeGuidance: lesson.homeGuidance,
   };
 }
 
-/** A published lesson whose working copy has changed since it was published. */
+/** A stable text form of the content, independent of version order and key order. */
+function contentKey(content: PublishedContent): string {
+  const versions = content.versions
+    .map(studentFacing)
+    .sort((a, b) => a.kind.localeCompare(b.kind))
+    .map((version) => [version.kind, version.content, version.illustrations ?? []]);
+  return JSON.stringify([
+    versions,
+    content.glossary.map((entry) => [entry.term, entry.definition]),
+    content.quiz.map((q) => [q.id, q.question, q.options, q.correctIndex, q.explanation]),
+    content.homeGuidance ?? [],
+  ]);
+}
+
+/**
+ * A published lesson that has something waiting: changes not yet published, or AI work
+ * not yet approved.
+ */
 export function hasUnpublishedChanges(lesson: SchoolLesson): boolean {
   if (!lesson.published) return false;
   return (
-    JSON.stringify(publishableContent(lesson)) !== JSON.stringify(lesson.published) ||
+    contentKey(publishableContent(lesson)) !== contentKey(lesson.published) ||
     lesson.versions.some((version) => !version.approvedByTeacher || version.stale) ||
     !lesson.extrasApproved
   );

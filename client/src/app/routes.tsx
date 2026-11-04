@@ -1,31 +1,25 @@
+import type { ComponentType } from 'react';
 import { type RouteObject } from 'react-router';
 import { activatePath, loginPath } from '@/features/auth/paths';
-import { ClassPage } from '@/features/class-overview/pages/ClassPage';
-import { SuggestionsInboxPage } from '@/features/class-overview/pages/SuggestionsInboxPage';
-import { TeacherStudentPage } from '@/features/class-overview/pages/TeacherStudentPage';
 import { LandingPage } from '@/features/landing/LandingPage';
-import { LessonDetailPage } from '@/features/lessons/pages/LessonDetailPage';
-import { NewLessonPage } from '@/features/lessons/pages/NewLessonPage';
-import { TeacherHomePage } from '@/features/lessons/pages/TeacherHomePage';
-import { CoursePage } from '@/features/lessons/pages/CoursePage';
 import { teacherHomePath } from '@/features/lessons/paths';
-import { StudentHomePage } from '@/features/student/pages/StudentHomePage';
-import { StudentLessonPage } from '@/features/student/pages/StudentLessonPage';
-import { StarsPage } from '@/features/student/pages/StarsPage';
-import { StudentQuizPage } from '@/features/student/pages/StudentQuizPage';
-import { SubjectPage } from '@/features/student/pages/SubjectPage';
-import { studentHomePath } from '@/features/student/paths';
-import { ChildLessonPage } from '@/features/parent/pages/ChildLessonPage';
-import { ChildPage } from '@/features/parent/pages/ChildPage';
-import { ParentHomePage } from '@/features/parent/pages/ParentHomePage';
-import { ParentSuggestionsPage } from '@/features/parent/pages/ParentSuggestionsPage';
 import { parentHomePath } from '@/features/parent/paths';
-import { ParentLayout } from './layout/ParentLayout';
+import { studentHomePath } from '@/features/student/paths';
 import { PublicLayout } from './layout/PublicLayout';
-import { StudentLayout } from './layout/StudentLayout';
-import { TeacherLayout } from './layout/TeacherLayout';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { RouteErrorPage } from './pages/RouteErrorPage';
+
+/**
+ * Each role area is one chunk, downloaded only when one of its pages opens, so visitors of
+ * the landing page do not load the teacher, student and parent screens and their libraries.
+ */
+function fromArea<Area>(load: () => Promise<Area>, pick: (area: Area) => ComponentType) {
+  return async () => ({ Component: pick(await load()) });
+}
+
+const teacherArea = () => import('./areas/teacherArea');
+const studentArea = () => import('./areas/studentArea');
+const parentArea = () => import('./areas/parentArea');
 
 export const routes: RouteObject[] = [
   {
@@ -48,38 +42,65 @@ export const routes: RouteObject[] = [
       },
       {
         path: teacherHomePath,
-        element: <TeacherLayout />,
+        lazy: fromArea(teacherArea, (area) => area.TeacherLayout),
         children: [
-          { index: true, element: <TeacherHomePage /> },
-          { path: 'subjects/:subjectId/classes/:classId', element: <CoursePage /> },
-          { path: 'lessons/new', element: <NewLessonPage /> },
-          { path: 'lessons/:lessonId', element: <LessonDetailPage /> },
-          { path: 'class', element: <ClassPage /> },
-          { path: 'students/:studentId', element: <TeacherStudentPage /> },
-          { path: 'suggestions', element: <SuggestionsInboxPage /> },
+          { index: true, lazy: fromArea(teacherArea, (area) => area.TeacherHomePage) },
+          {
+            path: 'subjects/:subjectId/classes/:classId',
+            lazy: fromArea(teacherArea, (area) => area.CoursePage),
+          },
+          { path: 'lessons/new', lazy: fromArea(teacherArea, (area) => area.NewLessonPage) },
+          {
+            path: 'lessons/:lessonId',
+            lazy: fromArea(teacherArea, (area) => area.LessonDetailPage),
+          },
+          { path: 'class', lazy: fromArea(teacherArea, (area) => area.ClassPage) },
+          {
+            path: 'students/:studentId',
+            lazy: fromArea(teacherArea, (area) => area.TeacherStudentPage),
+          },
+          {
+            path: 'suggestions',
+            lazy: fromArea(teacherArea, (area) => area.SuggestionsInboxPage),
+          },
           { path: '*', element: <NotFoundPage homePath={teacherHomePath} /> },
         ],
       },
       {
         path: studentHomePath,
-        element: <StudentLayout />,
+        lazy: fromArea(studentArea, (area) => area.StudentLayout),
         children: [
-          { index: true, element: <StudentHomePage /> },
-          { path: 'subjects/:subjectId', element: <SubjectPage /> },
-          { path: 'stars', element: <StarsPage /> },
-          { path: 'lessons/:lessonId', element: <StudentLessonPage /> },
-          { path: 'lessons/:lessonId/quiz', element: <StudentQuizPage /> },
+          { index: true, lazy: fromArea(studentArea, (area) => area.StudentHomePage) },
+          {
+            path: 'subjects/:subjectId',
+            lazy: fromArea(studentArea, (area) => area.SubjectPage),
+          },
+          { path: 'stars', lazy: fromArea(studentArea, (area) => area.StarsPage) },
+          {
+            path: 'lessons/:lessonId',
+            lazy: fromArea(studentArea, (area) => area.StudentLessonPage),
+          },
+          {
+            path: 'lessons/:lessonId/quiz',
+            lazy: fromArea(studentArea, (area) => area.StudentQuizPage),
+          },
           { path: '*', element: <NotFoundPage homePath={studentHomePath} /> },
         ],
       },
       {
         path: parentHomePath,
-        element: <ParentLayout />,
+        lazy: fromArea(parentArea, (area) => area.ParentLayout),
         children: [
-          { index: true, element: <ParentHomePage /> },
-          { path: 'children/:childId', element: <ChildPage /> },
-          { path: 'suggestions', element: <ParentSuggestionsPage /> },
-          { path: 'children/:childId/lessons/:lessonId', element: <ChildLessonPage /> },
+          { index: true, lazy: fromArea(parentArea, (area) => area.ParentHomePage) },
+          { path: 'children/:childId', lazy: fromArea(parentArea, (area) => area.ChildPage) },
+          {
+            path: 'suggestions',
+            lazy: fromArea(parentArea, (area) => area.ParentSuggestionsPage),
+          },
+          {
+            path: 'children/:childId/lessons/:lessonId',
+            lazy: fromArea(parentArea, (area) => area.ChildLessonPage),
+          },
           { path: '*', element: <NotFoundPage homePath={parentHomePath} /> },
         ],
       },

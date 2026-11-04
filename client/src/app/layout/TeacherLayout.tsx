@@ -11,9 +11,9 @@ import { text } from '@/text/sr-Latn';
 import { SidebarLayout } from './SidebarLayout';
 
 export function TeacherLayout() {
-  const { data } = useSchool();
+  const { data, suggestionsForTeacher } = useSchool();
   const teacher = data.teacher;
-  const newSuggestions = data.suggestions.filter(
+  const newSuggestions = suggestionsForTeacher().filter(
     (item) => item.status === 'pending-teacher',
   ).length;
 

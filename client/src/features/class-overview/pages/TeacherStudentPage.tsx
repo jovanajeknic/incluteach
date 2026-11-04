@@ -156,7 +156,7 @@ export function TeacherStudentPage() {
       (school.practiceOf(studentId, lesson.id) ? 1 : 0),
     0,
   );
-  const suggestions = school.data.suggestions.filter((item) => item.childId === studentId);
+  const suggestions = school.suggestionsForTeacher().filter((item) => item.childId === studentId);
 
   return (
     <>

@@ -36,6 +36,7 @@ export function DemoStudentProvider({
       practiceOf: (lessonId) => school.practiceOf(studentId, lessonId),
       markStarted: (lessonId) => school.markStarted(studentId, lessonId),
       markLessonDone: (lessonId) => school.markLessonDone(studentId, lessonId),
+      unmarkLessonDone: (lessonId) => school.unmarkLessonDone(studentId, lessonId),
       recordPractice: (lessonId, difficult) =>
         school.recordPractice(studentId, lessonId, difficult),
       stars: school.starsOf(studentId),

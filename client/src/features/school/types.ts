@@ -95,8 +95,8 @@ export interface ParentProfile {
 }
 
 /**
- * pending-teacher: not read yet. use-for-adaptation: the teacher passes it to the AI for the
- * next adaptation. read: the teacher has read it.
+ * pending-teacher: not read yet. use-for-adaptation: the teacher wrote an instruction for
+ * the AI because of it. read: the teacher has read it.
  */
 export type SuggestionStatus = 'pending-teacher' | 'use-for-adaptation' | 'read';
 
@@ -111,6 +111,11 @@ export interface Suggestion {
   text: string;
   createdAt: string;
   status: SuggestionStatus;
+  /**
+   * What the teacher tells the AI because of this suggestion, in their own words. The AI
+   * only ever gets this note: never the parent's text or the child's name.
+   */
+  aiNote?: string;
 }
 
 export interface SchoolData {

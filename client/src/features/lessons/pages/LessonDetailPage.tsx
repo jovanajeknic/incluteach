@@ -1,15 +1,17 @@
 import {
   ArrowClockwiseIcon,
   ArrowLeftIcon,
+  ArrowUUpLeftIcon,
   CheckCircleIcon,
   ListChecksIcon,
   SparkleIcon,
+  TrashIcon,
   WarningIcon,
 } from '@phosphor-icons/react';
 import { motion } from 'motion/react';
 import { Tabs } from 'radix-ui';
 import { useState } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 import { findVersion, isVersionApproved, useSchool } from '@/features/school/schoolContext';
 import { ADAPTED_KINDS, type AdaptedKind, type SchoolLesson } from '@/features/school/types';
 import { AiPulse } from '@/shared/visual/AiPulse';
@@ -102,6 +104,9 @@ export function LessonDetailPage() {
             <span>{courseLabel}</span>
             <LessonStatusBadge status={lesson.status} />
           </p>
+        </div>
+        <div className="ml-auto">
+          <LessonManageAction lesson={lesson} />
         </div>
       </header>
 
@@ -274,6 +279,78 @@ function TabButton({
   );
 }
 
+/**
+ * Takes a published lesson back from students, or deletes one that was never published.
+ * Both ask once more, because students or the teacher's work would be affected.
+ */
+function LessonManageAction({ lesson }: { lesson: SchoolLesson }) {
+  const t = text.lessonDetail.manage;
+  const school = useSchool();
+  const navigate = useNavigate();
+  const [confirming, setConfirming] = useState(false);
+  const [withdrawn, setWithdrawn] = useState(false);
+  const published = lesson.status === 'assigned';
+  if (lesson.status === 'processing') return null;
+
+  if (confirming) {
+    return (
+      <div
+        role="group"
+        aria-label={published ? t.unpublish : t.delete}
+        className="flex max-w-sm flex-col gap-3 rounded-3xl bg-blush p-4 text-ink"
+      >
+        <p>{published ? t.unpublishConfirm : t.deleteConfirm}</p>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={() => {
+              if (published) {
+                school.unpublishLesson(lesson.id);
+                setWithdrawn(true);
+                setConfirming(false);
+              } else {
+                school.deleteLesson(lesson.id);
+                navigate(coursePath(lesson.subjectId, lesson.classId));
+              }
+            }}
+            className="h-10 px-4"
+          >
+            {published ? t.unpublishYes : t.deleteYes}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setConfirming(false)}
+            className="h-10 px-4"
+          >
+            {t.cancel}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div role="status" className="flex flex-col items-end gap-2">
+      {withdrawn && !published && <p className="text-sm text-mint-ink">{t.unpublished}</p>}
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={() => setConfirming(true)}
+        className="h-10 px-3 text-blush-ink hover:bg-blush"
+      >
+        {published ? (
+          <ArrowUUpLeftIcon aria-hidden="true" weight="bold" />
+        ) : (
+          <TrashIcon aria-hidden="true" weight="duotone" />
+        )}
+        {published ? t.unpublish : t.delete}
+      </Button>
+    </div>
+  );
+}
+
 /** The quiz questions and word explanations come from the AI too, so they need a yes. */
 function ExtrasApproval({ lesson }: { lesson: SchoolLesson }) {
   const t = text.lessonDetail;
@@ -339,11 +416,9 @@ function OriginalPanel({ lesson }: { lesson: SchoolLesson }) {
               {t.ai.suggestionsIntro}
             </h2>
             <ul className="mt-2 grid gap-2 text-sm text-ink">
-              {suggestions.map((item) => (
-                <li key={item.id}>
-                  {school.getStudent(item.childId)?.firstName}: „{item.text}“
-                </li>
-              ))}
+              {suggestions.flatMap((item) =>
+                item.aiNote ? [<li key={item.id}>„{item.aiNote}“</li>] : [],
+              )}
             </ul>
           </section>
         )}

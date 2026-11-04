@@ -55,6 +55,12 @@ export function VersionPanel({ lesson, kind }: { lesson: SchoolLesson; kind: Ada
             {t.stale}
           </p>
         )}
+        {version?.aiComment && (
+          <p className="mt-4 rounded-2xl bg-lilac/60 px-4 py-3 text-sm text-ink">
+            <span className="font-semibold text-lilac-ink">{t.aiCommentLabel}</span>{' '}
+            {version.aiComment}
+          </p>
+        )}
         {lesson.aiFailed === kind && (
           <p
             role="alert"

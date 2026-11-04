@@ -326,3 +326,19 @@ describe('Stars for effort', () => {
     );
   });
 });
+
+describe('Undoing a mistaken tap', () => {
+  it('lets the student take back "Označi kao pređeno", and the star with it', async () => {
+    const { user } = renderApp({ path: '/student/lessons/kruzenje-vode' });
+    const finish = screen.getByRole('region', { name: 'Kad završiš' });
+
+    await user.click(within(finish).getByRole('button', { name: 'Označi kao pređeno' }));
+    await user.click(within(finish).getByRole('button', { name: 'Poništi' }));
+    expect(within(finish).getByRole('button', { name: 'Označi kao pređeno' })).toBeInTheDocument();
+  });
+
+  it('offers to sign out on every page', () => {
+    renderApp({ path: '/student' });
+    expect(screen.getByRole('link', { name: 'Odjavi se' })).toHaveAttribute('href', '/login');
+  });
+});

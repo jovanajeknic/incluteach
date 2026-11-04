@@ -1,6 +1,11 @@
-import { screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { createMemoryRouter, RouterProvider } from 'react-router';
+import { DemoParentProvider } from '@/features/parent/data/DemoParentProvider';
+import { DemoSchoolProvider } from '@/features/school/DemoSchoolProvider';
+import { DemoStudentProvider } from '@/features/student/data/DemoStudentProvider';
 import { describe, expect, it } from 'vitest';
 import { renderApp } from '@/test/renderApp';
+import { routes } from './routes';
 
 describe('App routes', () => {
   it('shows the public landing page at the root address', () => {
@@ -44,5 +49,25 @@ describe('App routes', () => {
     const { user, router } = renderApp({ path: '/teacher' });
     await user.click(screen.getByRole('link', { name: 'IncluTeach – početna stranica' }));
     expect(router.state.location.pathname).toBe('/');
+  });
+});
+
+describe('Code splitting', () => {
+  it.each([
+    ['/teacher', 'Moji predmeti'],
+    ['/student', 'Moji predmeti'],
+    ['/parent', 'Moja djeca'],
+  ])('loads the %s area on demand', async (path, heading) => {
+    const router = createMemoryRouter(routes, { initialEntries: [path] });
+    render(
+      <DemoSchoolProvider aiDelayMs={0}>
+        <DemoStudentProvider>
+          <DemoParentProvider>
+            <RouterProvider router={router} />
+          </DemoParentProvider>
+        </DemoStudentProvider>
+      </DemoSchoolProvider>,
+    );
+    expect(await screen.findByRole('heading', { level: 1, name: heading })).toBeInTheDocument();
   });
 });

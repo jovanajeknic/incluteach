@@ -104,12 +104,19 @@ export function DemoSchoolProvider({
     [data, studentsOf],
   );
 
+  // Only the teacher's own instructions reach the AI, never what a parent wrote.
+  const aiNotesFor = useCallback(
+    (lesson: Pick<SchoolLesson, 'id' | 'classId'>) =>
+      suggestionsForAdaptation(lesson).flatMap((item) => (item.aiNote ? [item.aiNote] : [])),
+    [suggestionsForAdaptation],
+  );
+
   // Takes the lesson itself, so a lesson created in the same click can be generated at once.
   const runFullGeneration = useCallback(
     async (lesson: SchoolLesson) => {
       if (lesson.status === 'processing') return;
       const previousStatus = lesson.status;
-      const suggestions = suggestionsForAdaptation(lesson).map((item) => item.text);
+      const suggestions = aiNotesFor(lesson);
       updateLessonById(lesson.id, (current) => ({
         ...current,
         status: 'processing',
@@ -150,7 +157,7 @@ export function DemoSchoolProvider({
         status: previousStatus === 'assigned' ? 'assigned' : 'in_review',
       }));
     },
-    [aiService, suggestionsForAdaptation, updateLessonById],
+    [aiService, aiNotesFor, updateLessonById],
   );
 
   const generateAll = useCallback(
@@ -168,7 +175,7 @@ export function DemoSchoolProvider({
       const key = `${lessonId}:${kind}`;
       const attempt = (attempts.current.get(key) ?? 0) + 1;
       attempts.current.set(key, attempt);
-      const suggestions = suggestionsForAdaptation(lesson).map((item) => item.text);
+      const suggestions = aiNotesFor(lesson);
       updateLessonById(lessonId, (current) => ({
         ...current,
         regenerating: [...(current.regenerating ?? []), kind],
@@ -204,7 +211,7 @@ export function DemoSchoolProvider({
         status: current.status === 'approved' ? 'in_review' : current.status,
       }));
     },
-    [data, aiService, suggestionsForAdaptation, updateLessonById],
+    [data, aiService, aiNotesFor, updateLessonById],
   );
 
   const createLesson = useCallback(
@@ -289,6 +296,30 @@ export function DemoSchoolProvider({
     [updateLessonById],
   );
 
+  const unpublishLesson = useCallback(
+    (lessonId: string) =>
+      updateLessonById(lessonId, (lesson) =>
+        lesson.status === 'assigned'
+          ? {
+              ...lesson,
+              published: undefined,
+              status: isFullyApproved(lesson) ? 'approved' : 'in_review',
+            }
+          : lesson,
+      ),
+    [updateLessonById],
+  );
+
+  const deleteLesson = useCallback((lessonId: string) => {
+    setData((current) => ({
+      ...current,
+      // A published lesson must be taken back first, so nothing disappears from students.
+      lessons: current.lessons.filter(
+        (lesson) => lesson.id !== lessonId || lesson.status === 'assigned',
+      ),
+    }));
+  }, []);
+
   const updateLesson = useCallback(
     (lessonId: string, edits: LessonEdits) =>
       updateLessonById(lessonId, (lesson) => ({ ...lesson, ...edits })),
@@ -311,6 +342,29 @@ export function DemoSchoolProvider({
         item.id === suggestionId ? { ...item, status } : item,
       ),
     }));
+  }, []);
+
+  const useSuggestionForAi = useCallback((suggestionId: string, aiNote: string) => {
+    setData((current) => ({
+      ...current,
+      suggestions: current.suggestions.map((item) =>
+        item.id === suggestionId ? { ...item, status: 'use-for-adaptation', aiNote } : item,
+      ),
+    }));
+  }, []);
+
+  const unmarkLessonDone = useCallback((studentId: string, lessonId: string) => {
+    setData((current) =>
+      current.progress[studentId]?.[lessonId] !== 'completed'
+        ? current
+        : {
+            ...current,
+            progress: {
+              ...current.progress,
+              [studentId]: { ...current.progress[studentId], [lessonId]: 'started' },
+            },
+          },
+    );
   }, []);
 
   const addSuggestion = useCallback((suggestion: NewSuggestion) => {
@@ -422,6 +476,8 @@ export function DemoSchoolProvider({
       approveVersion,
       approveExtras,
       publishLesson,
+      unpublishLesson,
+      deleteLesson,
       updateLesson,
       studentsOf,
       versionAudience: (lesson) => {
@@ -436,11 +492,22 @@ export function DemoSchoolProvider({
       suggestionsForAdaptation,
       setStudentSupport,
       setSuggestionStatus,
+      useSuggestionForAi,
+      suggestionsForTeacher: () =>
+        data.suggestions.filter((item) => {
+          const lesson = item.lessonId
+            ? data.lessons.find((entry) => entry.id === item.lessonId)
+            : undefined;
+          return lesson
+            ? teachesCourse(lesson.subjectId, lesson.classId)
+            : isClassTeacherOf(item.childId);
+        }),
       visibleLessonsFor,
       progressOf: (studentId, lessonId) => data.progress[studentId]?.[lessonId] ?? 'new',
       practiceOf: (studentId, lessonId) => data.practice[studentId]?.[lessonId],
       markStarted,
       markLessonDone,
+      unmarkLessonDone,
       recordPractice,
       starsOf: (studentId) =>
         visibleLessonsFor(studentId).reduce(
@@ -462,11 +529,15 @@ export function DemoSchoolProvider({
     approveVersion,
     approveExtras,
     publishLesson,
+    unpublishLesson,
+    deleteLesson,
     updateLesson,
     studentsOf,
     suggestionsForAdaptation,
     setStudentSupport,
     setSuggestionStatus,
+    useSuggestionForAi,
+    unmarkLessonDone,
     markStarted,
     markLessonDone,
     recordPractice,

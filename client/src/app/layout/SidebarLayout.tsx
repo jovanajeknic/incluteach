@@ -1,7 +1,8 @@
-import { ListIcon, XIcon, type Icon } from '@phosphor-icons/react';
+import { ListIcon, SignOutIcon, XIcon, type Icon } from '@phosphor-icons/react';
 import { MotionConfig, motion } from 'motion/react';
 import { useId, useState } from 'react';
 import { Link, NavLink, Outlet, ScrollRestoration, useLocation } from 'react-router';
+import { loginPath } from '@/features/auth/paths';
 import { Logo } from '@/shared/brand/Logo';
 import { MAIN_CONTENT_ID, SkipLink } from '@/shared/components/SkipLink';
 import { cn } from '@/shared/lib/utils';
@@ -154,6 +155,14 @@ export function SidebarLayout({
                   </p>
                 </div>
               </div>
+              {/* Demo: there is no session to end yet, so this only returns to sign-in. */}
+              <Link
+                to={loginPath}
+                className="mt-4 inline-flex items-center gap-2 rounded-full px-1 font-display font-medium text-ink hover:text-forest"
+              >
+                <SignOutIcon aria-hidden="true" weight="bold" className="size-5" />
+                {text.nav.signOut}
+              </Link>
               <p className="mt-4 text-xs leading-relaxed text-ink-soft">{demoNotice}</p>
             </div>
           </div>

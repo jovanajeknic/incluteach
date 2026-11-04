@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router';
-import { routes } from '@/app/routes';
+import { eagerRoutes } from './eagerRoutes';
 import { DemoParentProvider } from '@/features/parent/data/DemoParentProvider';
 import { demoSchoolData, demoStudent } from '@/features/school/demoSchoolData';
 import type { AiService } from '@/features/school/demoAiService';
@@ -40,7 +40,7 @@ export function renderApp({
         ),
       }
     : school;
-  const router = createMemoryRouter(routes, { initialEntries: [path] });
+  const router = createMemoryRouter(eagerRoutes, { initialEntries: [path] });
   const user = userEvent.setup();
   const result = render(
     <DemoSchoolProvider initialData={data} aiDelayMs={aiDelayMs} aiService={aiService}>

@@ -26,13 +26,13 @@ export interface AiService {
   generate(request: GenerationRequest): Promise<GenerationResult>;
 }
 
-const DEMO_NOTE = '(Demo AI prijedlog — pregledajte i uredite ovaj tekst.)';
+const DEMO_NOTE =
+  'Demo AI prijedlog napravljen po jednostavnim pravilima. Pregledajte i uredite tekst.';
 
 /** Very rough "shortening": the first sentence of each paragraph. Good enough to edit. */
 function genericShortened(content: string): string {
   return splitParagraphs(content)
     .map((paragraph) => splitSentences(paragraph)[0] ?? paragraph)
-    .concat(DEMO_NOTE)
     .join('\n\n');
 }
 
@@ -46,7 +46,6 @@ function genericEasier(content: string): string {
         .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
         .join(' '),
     )
-    .concat(DEMO_NOTE)
     .join('\n\n');
 }
 
@@ -54,7 +53,6 @@ function genericEasier(content: string): string {
 function genericDyslexia(content: string): string {
   return splitParagraphs(content)
     .flatMap((paragraph) => splitSentences(paragraph))
-    .concat(DEMO_NOTE)
     .join('\n\n');
 }
 
@@ -123,12 +121,17 @@ export function createDemoAiService(delayMs: number): AiService {
             illustrations: demoIllustrationsFor(lesson.id, lesson.subjectId, attempt),
           };
         }
-        const base = textFor(kind, lesson, content);
+        const curatedText = curatedAdaptations[lesson.id]?.[kind] !== undefined;
         return {
           kind,
           source: 'ai',
           approvedByTeacher: false,
-          content: note ? `${base}\n\n(Demo AI: prepravljeno prema napomeni „${note}“.)` : base,
+          content: textFor(kind, lesson, content),
+          aiComment: note
+            ? `Prepravljeno prema napomeni „${note}“. (Demo: tekst se ne mijenja stvarno.)`
+            : curatedText || kind === 'audio'
+              ? undefined
+              : DEMO_NOTE,
         };
       });
 

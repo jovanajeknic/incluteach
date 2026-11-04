@@ -1,4 +1,5 @@
 import { Check, Clock, Sparkles } from 'lucide-react';
+import { useId, useState } from 'react';
 import { Link } from 'react-router';
 import { lessonPath, teacherStudentPath } from '@/features/lessons/paths';
 import { useSchool } from '@/features/school/schoolContext';
@@ -6,6 +7,7 @@ import type { Suggestion } from '@/features/school/types';
 import { formatDate } from '@/shared/lib/format';
 import { cn } from '@/shared/lib/utils';
 import { Button } from '@/shared/ui/button';
+import { Textarea } from '@/shared/ui/textarea';
 import { text } from '@/text/sr-Latn';
 
 const statusStyle: Record<Suggestion['status'], string> = {
@@ -33,6 +35,7 @@ export function SuggestionItem({
   const student = school.getStudent(suggestion.childId);
   const lesson = suggestion.lessonId ? school.getLesson(suggestion.lessonId) : undefined;
   const Icon = statusIcon[suggestion.status];
+  const [writing, setWriting] = useState(false);
   const studentName = student ? `${student.firstName} ${student.lastName}` : '';
 
   return (
@@ -63,12 +66,26 @@ export function SuggestionItem({
         </span>
       </div>
       <p className="mt-2 whitespace-pre-line text-ink">{suggestion.text}</p>
+      {suggestion.aiNote && (
+        <p className="mt-2 text-sm font-medium text-lilac-ink">
+          {t.aiNoteShown(suggestion.aiNote)}
+        </p>
+      )}
+      {writing && (
+        <AiNoteForm
+          onSave={(note) => {
+            school.useSuggestionForAi(suggestion.id, note);
+            setWriting(false);
+          }}
+          onCancel={() => setWriting(false)}
+        />
+      )}
       <div className="mt-3 flex flex-wrap gap-2">
-        {suggestion.status !== 'use-for-adaptation' && (
+        {suggestion.status !== 'use-for-adaptation' && !writing && (
           <Button
             type="button"
             variant="outline"
-            onClick={() => school.setSuggestionStatus(suggestion.id, 'use-for-adaptation')}
+            onClick={() => setWriting(true)}
             className="h-10 px-4"
           >
             <Sparkles aria-hidden="true" />
@@ -93,5 +110,67 @@ export function SuggestionItem({
         )}
       </div>
     </li>
+  );
+}
+
+/** The teacher's own, anonymous instruction for the AI, written because of the suggestion. */
+function AiNoteForm({
+  onSave,
+  onCancel,
+}: {
+  onSave: (note: string) => void;
+  onCancel: () => void;
+}) {
+  const t = text.suggestionsInbox;
+  const [note, setNote] = useState('');
+  const [error, setError] = useState<string>();
+  const fieldId = useId();
+  const hintId = useId();
+  const errorId = useId();
+
+  return (
+    <div className="mt-3 rounded-2xl bg-lilac/50 p-4">
+      <label htmlFor={fieldId} className="font-display font-semibold text-ink">
+        {t.aiNoteLabel}
+      </label>
+      <p id={hintId} className="mt-1 text-sm text-ink-soft">
+        {t.aiNoteHint}
+      </p>
+      <Textarea
+        id={fieldId}
+        rows={2}
+        value={note}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? `${hintId} ${errorId}` : hintId}
+        onChange={(event) => {
+          setNote(event.target.value);
+          setError(undefined);
+        }}
+        className="mt-2 rounded-2xl bg-card text-base md:text-base"
+      />
+      {error && (
+        <p id={errorId} className="mt-1 text-sm font-medium text-destructive">
+          {error}
+        </p>
+      )}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button
+          type="button"
+          onClick={() => {
+            if (!note.trim()) {
+              setError(t.aiNoteRequired);
+              return;
+            }
+            onSave(note.trim());
+          }}
+          className="h-10 px-4"
+        >
+          {t.saveAiNote}
+        </Button>
+        <Button type="button" variant="outline" onClick={onCancel} className="h-10 px-4">
+          {t.cancelAiNote}
+        </Button>
+      </div>
+    </div>
   );
 }
