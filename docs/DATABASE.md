@@ -94,7 +94,7 @@ Nobody can create the first admin through the app, so a script does it once per 
 npm run create-admin -- --school "School name" --name "Admin Full Name"
 ```
 
-It creates the school and the admin, and prints the username and an activation link (valid 7 days). The admin opens the link and chooses a password and email, so no password passes through the terminal. The script always creates a new school. Adding a second admin to an existing school is not possible yet.
+It creates the school (or finds it) and the admin, and prints the username and an activation link (valid 7 days). The admin opens the link and chooses a password and email, so no password passes through the terminal. If a school with that name already exists (letter case does not matter), the new admin is added to it instead of a second school being created, so several admins can share one school. Add `--new-school` to create a separate school with the same name anyway, for example for a school with the same name in another town. If several schools already share the name, the script stops and asks for a more precise name.
 
 The link looks like `PUBLIC_URL/activate?token=...` (`PUBLIC_URL` is set in `server/.env`). A link that was used, cancelled or has expired always gives the same `invalid_activation_link` error. The token is shown only once, when the admin asks for it.
 

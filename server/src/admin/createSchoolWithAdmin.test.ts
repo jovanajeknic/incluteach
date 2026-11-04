@@ -72,6 +72,124 @@ describe.skipIf(!process.env.DATABASE_URL)('createSchoolWithAdmin', () => {
     });
   });
 
+  describe('when the school already exists', () => {
+    const countSchools = async (client: pg.PoolClient, name: string) =>
+      (
+        await client.query<{ count: string }>(
+          'SELECT count(*) FROM schools WHERE lower(name) = lower($1)',
+          [name],
+        )
+      ).rows[0].count;
+
+    it('adds the new admin to that school instead of creating another one', async () => {
+      await inTransaction(async (client) => {
+        const first = await createSchoolWithAdmin(client, {
+          schoolName: 'OŠ Test',
+          adminName: 'Ana Ivić',
+        });
+        const second = await createSchoolWithAdmin(client, {
+          schoolName: 'OŠ Test',
+          adminName: 'Jovan Jovanović',
+        });
+
+        expect(first.schoolCreated).toBe(true);
+        expect(second.schoolCreated).toBe(false);
+        expect(second.school.id).toBe(first.school.id);
+        expect(second.admin.schoolId).toBe(first.school.id);
+        expect(await countSchools(client, 'OŠ Test')).toBe('1');
+      });
+    });
+
+    it('finds the school whatever the letter case', async () => {
+      await inTransaction(async (client) => {
+        const first = await createSchoolWithAdmin(client, {
+          schoolName: 'OŠ Test',
+          adminName: 'Ana Ivić',
+        });
+        const second = await createSchoolWithAdmin(client, {
+          schoolName: 'oš TEST',
+          adminName: 'Jovan Jovanović',
+        });
+
+        expect(second.school.id).toBe(first.school.id);
+      });
+    });
+
+    it('does not mix up schools with different names', async () => {
+      await inTransaction(async (client) => {
+        const first = await createSchoolWithAdmin(client, {
+          schoolName: 'OŠ Test',
+          adminName: 'Ana Ivić',
+        });
+        const second = await createSchoolWithAdmin(client, {
+          schoolName: 'OŠ Test 2',
+          adminName: 'Jovan Jovanović',
+        });
+
+        expect(second.schoolCreated).toBe(true);
+        expect(second.school.id).not.toBe(first.school.id);
+      });
+    });
+
+    it('lets the admins of that school issue links for each other', async () => {
+      await inTransaction(async (client) => {
+        const app = createApp({ pool: client, publicUrl: PUBLIC_URL });
+        const first = await createSchoolWithAdmin(client, {
+          schoolName: 'OŠ Test',
+          adminName: 'Ana Ivić',
+        });
+        const second = await createSchoolWithAdmin(client, {
+          schoolName: 'OŠ Test',
+          adminName: 'Jovan Jovanović',
+        });
+
+        await request(app).post('/auth/activate').send({
+          token: first.activation.token,
+          password: 'admin-lozinka',
+          email: 'ana@skola.example.com',
+        });
+        const login = await request(app)
+          .post('/auth/login')
+          .send({ identifier: 'ana_ivic', password: 'admin-lozinka' });
+        const response = await request(app)
+          .post(`/users/${second.admin.id}/activation`)
+          .set('Cookie', login.headers['set-cookie']);
+
+        expect(response.status).toBe(201);
+      });
+    });
+
+    it('creates a separate school when asked to', async () => {
+      await inTransaction(async (client) => {
+        const first = await createSchoolWithAdmin(client, {
+          schoolName: 'OŠ Test',
+          adminName: 'Ana Ivić',
+        });
+        const second = await createSchoolWithAdmin(client, {
+          schoolName: 'OŠ Test',
+          adminName: 'Jovan Jovanović',
+          forceNewSchool: true,
+        });
+
+        expect(second.schoolCreated).toBe(true);
+        expect(second.school.id).not.toBe(first.school.id);
+        expect(await countSchools(client, 'OŠ Test')).toBe('2');
+      });
+    });
+
+    it('refuses to guess when several schools have that name', async () => {
+      await inTransaction(async (client) => {
+        await client.query("INSERT INTO schools (name) VALUES ('OŠ Test'), ('OŠ Test')");
+
+        await expect(
+          createSchoolWithAdmin(client, { schoolName: 'OŠ Test', adminName: 'Ana Ivić' }),
+        ).rejects.toThrow(/2 schools are called "OŠ Test"/);
+        const { rows } = await client.query('SELECT 1 FROM users');
+        expect(rows).toHaveLength(0);
+      });
+    });
+  });
+
   it('leads from the script to a working school: activate, sign in, add a teacher', async () => {
     await inTransaction(async (client) => {
       const app = createApp({ pool: client, publicUrl: PUBLIC_URL });
