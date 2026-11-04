@@ -4,10 +4,12 @@ import { getUser, requireRole } from '../auth/currentUser.ts';
 import type { Queryable } from '../db/pool.ts';
 import {
   createEnrollment,
+  decideEnrollment,
   listCatalogClasses,
   listEnrollments,
   resolveChild,
   searchCatalog,
+  type Decision,
   type EnrollmentStatus,
 } from '../enrollments/enrollments.ts';
 import { HttpError } from '../http/errors.ts';
@@ -131,6 +133,27 @@ export function enrollmentsRouter(pool: Queryable): Router {
       }),
     );
   });
+
+  // A parent or the teacher of the subject answers a request. A parent acts on a request that
+  // waits for a parent (for one of their own children), a teacher on one the parent has passed
+  // on. Answers 409 `wrong_state` when the request is no longer waiting for that person.
+  const decide = (action: Decision) => {
+    router.post(`/:id/${action}`, requireRole('parent', 'teacher'), async (req, res) => {
+      const enrollmentId = req.params.id;
+      if (!isUuid(enrollmentId)) {
+        throw new HttpError(404, 'not_found', 'Request not found.');
+      }
+
+      const enrollment = await decideEnrollment(pool, {
+        user: getUser(req),
+        enrollmentId,
+        decision: action,
+      });
+      res.json({ enrollment });
+    });
+  };
+  decide('approve');
+  decide('reject');
 
   return router;
 }

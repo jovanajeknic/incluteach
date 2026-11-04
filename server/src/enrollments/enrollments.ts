@@ -384,3 +384,79 @@ export async function listCatalogClasses(
     subjectCount: row.subject_count,
   }));
 }
+
+export type Decision = 'approve' | 'reject';
+
+const wrongState = () =>
+  new HttpError(409, 'wrong_state', 'This request is not waiting for your decision any more.');
+const requestNotFound = () => new HttpError(404, 'not_found', 'Request not found.');
+
+// A parent or a teacher answers a request. Each acts at their own step:
+// - a parent on a request still waiting for a parent, for one of their own linked children:
+//   approving passes it on to the teacher, rejecting ends it;
+// - the teacher of the subject on a request the parent has passed on: approving enrols the
+//   student, rejecting ends it.
+// The change is one statement that only matches a request in the right state, so when two
+// people answer at once only the first one counts.
+// A request the person is not allowed to see looks the same as one that does not exist.
+export async function decideEnrollment(
+  pool: Queryable,
+  { user, enrollmentId, decision }: { user: AuthUser; enrollmentId: string; decision: Decision },
+): Promise<Enrollment> {
+  const approve = decision === 'approve';
+
+  if (user.role === 'parent') {
+    const { rows } = await pool.query<{ id: string }>(
+      `UPDATE enrollments e
+       SET status = $3, parent_decided_by = $4, parent_decided_at = now(), updated_at = now()
+       WHERE e.id = $1 AND e.school_id = $2 AND e.status = 'awaiting_parent'
+         AND EXISTS (
+           SELECT 1 FROM parent_students ps
+           WHERE ps.parent_id = $4 AND ps.student_id = e.student_id
+         )
+       RETURNING e.id`,
+      [enrollmentId, user.schoolId, approve ? 'awaiting_teacher' : 'rejected', user.id],
+    );
+    if (rows[0]) {
+      return findEnrollment(pool, rows[0].id);
+    }
+
+    const { rows: visible } = await pool.query(
+      `SELECT 1 FROM enrollments e
+       WHERE e.id = $1 AND e.school_id = $2
+         AND EXISTS (
+           SELECT 1 FROM parent_students ps
+           WHERE ps.parent_id = $3 AND ps.student_id = e.student_id
+         )`,
+      [enrollmentId, user.schoolId, user.id],
+    );
+    throw visible.length > 0 ? wrongState() : requestNotFound();
+  }
+
+  if (user.role === 'teacher') {
+    const { rows } = await pool.query<{ id: string }>(
+      `UPDATE enrollments e
+       SET status = $3, teacher_decided_by = $4, teacher_decided_at = now(), updated_at = now()
+       FROM subjects s
+       WHERE e.id = $1 AND e.school_id = $2 AND e.status = 'awaiting_teacher'
+         AND s.id = e.subject_id AND s.teacher_id = $4
+       RETURNING e.id`,
+      [enrollmentId, user.schoolId, approve ? 'approved' : 'rejected', user.id],
+    );
+    if (rows[0]) {
+      return findEnrollment(pool, rows[0].id);
+    }
+
+    // The teacher only knows about requests the parent has passed on, like in the list.
+    const { rows: visible } = await pool.query(
+      `SELECT 1 FROM enrollments e JOIN subjects s ON s.id = e.subject_id
+       WHERE e.id = $1 AND e.school_id = $2 AND s.teacher_id = $3
+         AND (e.status IN ('awaiting_teacher', 'approved')
+           OR (e.status = 'rejected' AND e.teacher_decided_by IS NOT NULL))`,
+      [enrollmentId, user.schoolId, user.id],
+    );
+    throw visible.length > 0 ? wrongState() : requestNotFound();
+  }
+
+  throw forbidden();
+}

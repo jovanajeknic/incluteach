@@ -4,15 +4,17 @@ Summary of the backend database work and the agreements behind it. Working rules
 
 ## Status
 
-| Part                                                                   | State                                |
-| ---------------------------------------------------------------------- | ------------------------------------ |
-| PostgreSQL connection, migrations, `db:check`                          | Done                                 |
-| Schools, users with one role, classes, subjects, parent links, enrollments | Done (database only, with tests) |
-| Express app, API endpoints, `requireRole` middleware                   | Not started                          |
-| Sign-in tables: usernames, activation tokens, sessions                 | Done (database only, with tests)     |
-| Sign-in code: Express, passwords, login, activation, admin creating accounts, first admin | **Next**          |
+| Part                                                                                      | State       |
+| ----------------------------------------------------------------------------------------- | ----------- |
+| PostgreSQL connection, migrations, `db:check`                                             | Done        |
+| Database: schools, users with one role, classes, subjects, parent links, enrollments, sign-in tables | Done |
+| Sign-in: login, logout, activation links, passwords, sessions, role checks, first admin script | Done   |
+| Admin API: users (create, list, rename, deactivate, delete), classes, subjects, parent links | Done     |
+| Enrollment API: subject catalog, requests, parent and teacher decisions                   | Done        |
+| Lessons and AI adaptation (upload, versions, quiz, audio), reading and progress           | Not started |
+| Not built yet, smaller: removing students from subjects at the end of a school year, copying classes and subjects to a new school year, changing one's own password, verifying emails and sending messages, the school request form of the landing page, production setup | Open |
 
-Everything built so far is the database. No API or working sign-in exists yet.
+The backend covers accounts, sign-in, the school structure and enrollments, all with tests. The frontend still uses demo data and is connected to this API step by step (see `docs/FRONTEND-PLAN.md`, "Backend API and frontend work").
 
 ## Agreements
 
@@ -86,6 +88,7 @@ Steps, each with tests:
 | `GET /catalog/subjects` | Student or parent. Query: `studentId` (a parent names one of their own children; 403 for another child), `classId` (only the subjects of that class), `search` (part of the subject, class or teacher name), `schoolYear` (default: the current one, the year starting on 1 September), `limit`, `offset`. Answers `{ subjects, total, schoolYear }`: the subjects of the user's own school whose teacher is still active, each `{ id, name, className, schoolYear, teacher: { id, fullName }, request: { id, status } or null }` where `request` is the child's newest request for it |
 | `POST /enrollments` | Student (body `{ subjectId }`) or parent (body `{ subjectId, studentId }` for their own child). A student's request starts as `awaiting_parent`; a parent's goes straight to `awaiting_teacher`, because it counts as the parent's confirmation. Errors: `invalid_subject`, `invalid_student`, `no_parent` (409: the student has no active parent or guardian linked), `request_exists` (409: a request that is not rejected already exists). Answers 201 `{ enrollment }` |
 | `GET /enrollments` | Student, parent or teacher. Query: `status`, `subjectId`, `studentId` (parents only), `limit`, `offset`. A student sees their own requests, a parent their children's, a teacher the requests for subjects they teach **once the parent has passed them on** (never those still waiting for the parent or rejected by the parent). Newest first. Answers `{ enrollments, total }`; an enrollment is `{ id, status, student, subject, requestedBy, parentDecidedAt, teacherDecidedAt, createdAt }` |
+| `POST /enrollments/:id/approve` and `POST /enrollments/:id/reject` | Parent or teacher. A **parent** answers a request that waits for a parent (`awaiting_parent`), for one of their own linked children: approving passes it to the teacher (`awaiting_teacher`), rejecting ends it (`rejected`). Either parent of the child can answer; the first answer counts. The **teacher of the subject** answers a request the parent has passed on: approving enrols the student (`approved`), rejecting ends it. Answers `{ enrollment }`. 409 `wrong_state` when the request is not waiting for that person any more; 404 for a request the person may not see (another family's, another teacher's, or one that still waits for the parent). If the admin gives the subject a new teacher, the new teacher answers the pending requests |
 | `GET /parent-students` | Admin only. Query: `studentId` (the parents of one child), `parentId` (the children of one parent), `limit`, `offset`. Answers `{ links, total }`; a link is `{ parent, student, createdAt }` where each person is `{ id, fullName, username, deactivated, deleted }`. Sorted by the child's name, then the parent's |
 | `POST /parent-students` | Admin only. Body `{ parentId, studentId }`: links an active parent to an active student of the school (400 `invalid_parent` / `invalid_student` otherwise; 409 `link_exists` if already linked). A parent can have several children and a child several parents (also a guardian: a normal parent account). There is no endpoint to remove a link by agreement |
 | `GET /classes` | Admin only. Optional `schoolYear` (the year it starts in). Answers `{ classes }`, newest school year first, each `{ id, name, schoolYear, subjectCount, createdAt }` |
