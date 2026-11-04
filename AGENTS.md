@@ -99,7 +99,7 @@ Responsibility boundary:
 
 ## 9. Backend
 
-The backend lives in `server/`. Setup instructions are in [server/README.md](server/README.md).
+The backend lives in `server/`. Setup instructions are in [server/README.md](server/README.md). The data model and access agreements are in [docs/DATABASE.md](docs/DATABASE.md).
 
 Agreed technologies (added as packages only when a task needs them):
 

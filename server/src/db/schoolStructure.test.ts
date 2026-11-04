@@ -110,6 +110,25 @@ describe.skipIf(!process.env.DATABASE_URL)('schools, classes and subjects', () =
       },
     );
 
+    it('allow several teachers for the same subject name, in one class or in different classes', async () => {
+      await inTransaction(async (client) => {
+        const schoolId = await insertSchool(client);
+        const firstTeacherId = await insertUser(client, schoolId, 'teacher');
+        const secondTeacherId = await insertUser(client, schoolId, 'teacher');
+        const classId = await insertClass(client, schoolId, '5-2');
+        const otherClassId = await insertClass(client, schoolId, '6-1');
+
+        await insertSubject(client, schoolId, classId, firstTeacherId, 'Matematika');
+
+        await expect(
+          insertSubject(client, schoolId, classId, secondTeacherId, 'Matematika'),
+        ).resolves.toBeTruthy();
+        await expect(
+          insertSubject(client, schoolId, otherClassId, firstTeacherId, 'Matematika'),
+        ).resolves.toBeTruthy();
+      });
+    });
+
     it('reject a teacher from another school', async () => {
       await inTransaction(async (client) => {
         const schoolId = await insertSchool(client, 'School A');
