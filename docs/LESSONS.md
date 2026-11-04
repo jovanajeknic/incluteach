@@ -32,13 +32,20 @@ These come from the owner on 2026-11-04. They build on lessons and quizzes, so t
 - **Stars for effort**: the teacher can give a student a star for effort.
 - **Progress of a student per subject**: how many lessons were finished and how many quizzes were done, for the student, the parent and the teacher.
 
-To settle when we get there (each with a recommendation):
+Decided on 2026-11-04:
 
-1. *Stars*: only the teacher gives them, or also automatically (the demo gave one for finishing a lesson and one for finishing its quiz)? Recommendation: both, with the teacher's star clearly different from the automatic ones.
-2. *Parent comments*: seen by the teacher only (recommendation), or also by the child? Can the teacher answer? Is a comment tied to one lesson, or to a quiz question?
-3. *Progress*: what counts as "a lesson finished"? Recommendation: the student marks it ("Označi kao pređeno") and it is the same mark that gives the progress; a quiz counts as done when all questions are answered once.
-4. *Who sees what*: a subject teacher sees progress only in their own subjects; the class teacher (razredni starešina) sees all subjects of their odeljenje. The class teacher is not recorded in the database yet and would need a field on the class. Do we want this rule?
-5. The demo of the frontend already shows stars, progress and a suggestion inbox; the real versions should replace those.
+1. **Stars**: both kinds exist. The teacher can give a star for effort, and there are also automatic stars (the demo gave one for finishing a lesson and one for finishing its quiz). The two kinds must be clearly different on screen.
+2. **Parent comments**: only the teacher and the parent see them (not the child, not other parents). They can be answered: the teacher can reply, and the parent can reply to the reply, so a comment is a small conversation.
+3. **A lesson counts as finished when the child does the quiz and answers all questions correctly.** This replaces the idea of the child just marking it as done.
+4. **No class-teacher rules.** That was a misunderstanding; the class teacher (razredni starešina) is not part of this. Progress is seen by the student (own), by the parent (own children, in the subjects they joined) and by the subject's teacher (in their own subject). The school admin does not see it.
+5. **The teacher can edit what the AI made**, by hand in the browser: delete a summary point or a question, change the wording, add new ones, and fix an answer, before approving. This is part of the core flow, not an extra.
+
+Still to settle when we get there:
+
+- *Lessons without a quiz* (the quiz is optional): how are they finished? Recommendation: the child marks them as done.
+- *"All questions correct"*: in a single attempt, or each question correct at least once over several attempts? Recommendation: in a single attempt, since the child gets feedback after every answer and may try again.
+- Does a comment belong to the whole lesson, to the quiz, or to one question? Recommendation: to a lesson or to the quiz as a whole, with the option to name a question.
+- The demo of the frontend already shows stars, progress and a suggestion inbox; the real versions should replace those.
 
 ## Proposed defaults (please confirm or change)
 
@@ -56,6 +63,6 @@ To settle when we get there (each with a recommendation):
 2. Lessons from **pasted text**: create, list, edit and delete for the teacher; publish; students read. No file and no AI yet.
 3. **File upload**: Word and PDF to text, the message for scanned PDFs, the limits.
 4. The **AI interface with the fake AI**: make the summary and the quiz, show progress, the teacher edits and approves.
-5. **Quiz for students**: answer, feedback, attempts; the mark "lesson finished"; what parents and teachers see.
+5. **Quiz for students**: answer, feedback, attempts; a lesson is finished when all answers are correct; what parents and teachers see.
 6. **Effort, comments and progress**: stars, parent comments, progress per subject (see "Wanted next").
 7. A real AI provider, when one is chosen.
