@@ -6,6 +6,7 @@ import { createApp } from '../app.ts';
 import { hashToken } from '../auth/sessions.ts';
 import { createPool } from '../db/pool.ts';
 import {
+  FAST_HASH_COST,
   inRolledBackTransaction,
   insertActivatedUser,
   insertSchool,
@@ -57,13 +58,17 @@ describe.skipIf(!process.env.DATABASE_URL)('activation links', () => {
       const otherSchoolId = await insertSchool(client, 'School B');
       const otherSchoolUserId = await insertUser(client, otherSchoolId, 'student', 'tudji_ucenik');
 
-      await run(createApp({ pool: client, publicUrl: PUBLIC_URL }), client, {
-        schoolId,
-        adminId,
-        studentId,
-        activatedStudentId,
-        otherSchoolUserId,
-      });
+      await run(
+        createApp({ pool: client, publicUrl: PUBLIC_URL, passwordCost: FAST_HASH_COST }),
+        client,
+        {
+          schoolId,
+          adminId,
+          studentId,
+          activatedStudentId,
+          otherSchoolUserId,
+        },
+      );
     });
   }
 

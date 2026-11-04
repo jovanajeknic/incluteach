@@ -6,6 +6,7 @@ import { createApp } from '../app.ts';
 import { hashToken } from '../auth/sessions.ts';
 import { createPool } from '../db/pool.ts';
 import {
+  FAST_HASH_COST,
   inRolledBackTransaction,
   insertActivatedUser,
   insertSchool,
@@ -46,7 +47,7 @@ describe.skipIf(!process.env.DATABASE_URL)('authentication routes', () => {
       });
       const notActivatedId = await insertUser(client, schoolId, 'student', 'novi_nalog');
 
-      await run(createApp({ pool: client, ...options }), client, {
+      await run(createApp({ pool: client, passwordCost: FAST_HASH_COST, ...options }), client, {
         schoolId,
         userId,
         otherUserId,

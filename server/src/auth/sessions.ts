@@ -60,7 +60,7 @@ export async function findSessionUser(pool: Queryable, token: string): Promise<A
   const { rows } = await pool.query<UserRow>(
     `SELECT u.id, u.username, u.full_name, u.email, u.role, u.school_id
      FROM sessions s JOIN users u ON u.id = s.user_id
-     WHERE s.token_hash = $1 AND s.expires_at > now()`,
+     WHERE s.token_hash = $1 AND s.expires_at > now() AND u.deactivated_at IS NULL`,
     [hashToken(token)],
   );
   return rows[0] ? toAuthUser(rows[0]) : null;

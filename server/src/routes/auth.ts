@@ -11,6 +11,7 @@ import {
   hashPassword,
   MAX_PASSWORD_LENGTH,
   verifyPassword,
+  type ScryptCost,
 } from '../auth/password.ts';
 import {
   createSession,
@@ -38,19 +39,13 @@ const MAX_FAILED_ACTIVATIONS_PER_ADDRESS = 30;
 
 export interface AuthRouterOptions {
   secureCookies: boolean;
+  // Hashing settings for new passwords. Leave out for the secure default; tests use cheaper ones.
+  passwordCost?: ScryptCost;
 }
 
 interface LoginRow extends UserRow {
   password_hash: string | null;
-}
-
-// Verifying against this when the account is unknown or not activated makes those
-// requests take as long as real ones, so response time does not reveal which accounts exist.
-let decoyHash: Promise<string> | undefined;
-
-function getDecoyHash(): Promise<string> {
-  decoyHash ??= hashPassword(randomUUID());
-  return decoyHash;
+  deactivated_at: Date | null;
 }
 
 function readLoginBody(req: Request): { identifier: string; password: string } {
@@ -124,8 +119,16 @@ function limitFailedAttempts(max: number, keyFor: (req: Request) => string) {
   });
 }
 
-export function authRouter(pool: Queryable, { secureCookies }: AuthRouterOptions): Router {
+export function authRouter(
+  pool: Queryable,
+  { secureCookies, passwordCost }: AuthRouterOptions,
+): Router {
   const router = Router();
+
+  // Verifying against this when the account is unknown or not activated makes those
+  // requests take as long as real ones, so response time does not reveal which accounts exist.
+  let decoyHash: Promise<string> | undefined;
+  const getDecoyHash = () => (decoyHash ??= hashPassword(randomUUID(), passwordCost));
 
   const addressKey = (req: Request) => ipKeyGenerator(req.ip ?? '');
   const accountKey = (req: Request) => {
@@ -144,7 +147,7 @@ export function authRouter(pool: Queryable, { secureCookies }: AuthRouterOptions
       // An email contains "@" and a username never does, so the two are told apart safely.
       const column = identifier.includes('@') ? 'email' : 'username';
       const { rows } = await pool.query<LoginRow>(
-        `SELECT id, username, full_name, email, role, school_id, password_hash
+        `SELECT id, username, full_name, email, role, school_id, password_hash, deactivated_at
          FROM users WHERE lower(${column}) = lower($1)`,
         [identifier],
       );
@@ -156,8 +159,8 @@ export function authRouter(pool: Queryable, { secureCookies }: AuthRouterOptions
         user?.password_hash ?? (await getDecoyHash()),
       );
 
-      // Unknown account, not activated yet and wrong password all look the same.
-      if (!user || !user.password_hash || tooLong || !passwordCorrect) {
+      // Unknown account, not activated yet, deactivated and wrong password all look the same.
+      if (!user || !user.password_hash || user.deactivated_at || tooLong || !passwordCorrect) {
         throw new HttpError(
           401,
           'invalid_credentials',
@@ -189,7 +192,7 @@ export function authRouter(pool: Queryable, { secureCookies }: AuthRouterOptions
       try {
         user = await activateAccount(pool, {
           token,
-          passwordHash: await hashPassword(password),
+          passwordHash: await hashPassword(password, passwordCost),
           email,
         });
       } catch (error) {

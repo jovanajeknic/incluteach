@@ -40,8 +40,9 @@ export async function issueActivationToken(
 // The user a link belongs to, if the link can still be used.
 export async function findUserOfLiveToken(pool: Queryable, token: string): Promise<string | null> {
   const { rows } = await pool.query<{ user_id: string }>(
-    `SELECT user_id FROM activation_tokens
-     WHERE token_hash = $1 AND used_at IS NULL AND revoked_at IS NULL AND expires_at > now()`,
+    `SELECT t.user_id FROM activation_tokens t JOIN users u ON u.id = t.user_id
+     WHERE t.token_hash = $1 AND t.used_at IS NULL AND t.revoked_at IS NULL
+       AND t.expires_at > now() AND u.deactivated_at IS NULL`,
     [hashToken(token)],
   );
   return rows[0]?.user_id ?? null;
@@ -68,9 +69,11 @@ export async function activateAccount(
 ): Promise<UserRow | null> {
   const { rows } = await pool.query<UserRow>(
     `WITH claimed AS (
-       UPDATE activation_tokens SET used_at = now()
-       WHERE token_hash = $1 AND used_at IS NULL AND revoked_at IS NULL AND expires_at > now()
-       RETURNING user_id
+       UPDATE activation_tokens t SET used_at = now()
+       FROM users u
+       WHERE t.token_hash = $1 AND t.used_at IS NULL AND t.revoked_at IS NULL
+         AND t.expires_at > now() AND u.id = t.user_id AND u.deactivated_at IS NULL
+       RETURNING t.user_id
      )
      UPDATE users SET password_hash = $2, email = $3, updated_at = now()
      FROM claimed WHERE users.id = claimed.user_id

@@ -18,7 +18,7 @@ Everything built so far is the database. No API or working sign-in exists yet.
 
 1. **One role per user**: `admin`, `teacher`, `student` or `parent`. A guardian is a normal `parent` account linked to the student.
 2. **Every user belongs to exactly one school.** There are several admins, each one for their own school. Data of one school is never visible to another.
-3. **The admin creates everything**: teacher, student and parent accounts, the links between parents and children, and the subjects with their teachers. Nobody else can create these. Parent-child links are never deleted.
+3. **The admin creates everything**: teacher, student and parent accounts, the links between parents and children, and the subjects with their teachers. Nobody else can create these. A parent-child link is never deleted on its own; it disappears only when a person's data is erased for good (see agreement 11).
 4. **A student is not tied to a class.** A student is connected to the school only through approved enrollments in subjects.
 5. **A subject is "name + class + teacher"**, assigned by the admin. The same name (for example Matematika) can have several rows, with different teachers in one class or in different classes. A student who searches for a subject sees, for example, "Matematika, teacher X". Only subjects of the student's own school are shown.
 6. **A class has a school year**, stored as the starting year (`2026` means 2026/27).
@@ -26,13 +26,14 @@ Everything built so far is the database. No API or working sign-in exists yet.
 8. **Accounts are activated with a QR code**: the admin generates it and sends it by their own means, nothing is sent automatically. The QR is single-use and valid for 7 days; a new QR cancels the previous one. After scanning, the user sets a password (at least 7 characters) and adds an email, which is also used for future notifications about subjects. A lost password is handled the same way: the admin issues a new QR.
 9. **Usernames are created by the admin** as `ime_prezime` (lowercase letters, digits and underscore, 3 to 40 characters). When a name is taken, a number is added at the end. A username is unique across all schools and is how a user signs in; the email is added at activation.
 10. **Sessions** are kept in the database and tied to a cookie; only hashes of tokens (sessions and QR codes) are stored.
+11. **Deactivating and deleting accounts** (admin only, one or many at a time, never one's own account). *Deactivate* is for people who leave the school, such as students who finished it: they can no longer sign in and their sessions end, but all data stays and the account can be reactivated. *Delete* is for accounts created by mistake and erases the personal data for good; it works only on deactivated accounts. The row stays as an anonymous shell ("Deleted user", no email, no password, no sign-in), because other records may point at it, such as a parent's confirmation of an enrollment or the teacher of a subject. The username and email become free again. Sessions, activation links, a student's own enrollment requests and family links are removed (a link that a remaining enrollment depends on stays, holding only ids).
 
 ## Tables
 
 | Table              | Purpose                                                                 |
 | ------------------ | ----------------------------------------------------------------------- |
 | `schools`          | A school                                                                |
-| `users`            | All accounts: `username`, `role`, `school_id`; `email` and `password_hash` stay empty until activation, and an account with a password always has an email |
+| `users`            | All accounts: `username`, `role`, `school_id`; `email` and `password_hash` stay empty until activation, and an account with a password always has an email; `deactivated_at` and `deleted_at` mark deactivated and erased accounts |
 | `activation_tokens` | One-time QR/link for a user, issued by an admin of the same school; has an expiry, and is used or revoked |
 | `sessions`         | Signed-in sessions (hash of the cookie value, expiry)                   |
 | `classes`          | A class of a school in one school year                                  |
@@ -74,8 +75,13 @@ Steps, each with tests:
 | `POST /auth/login`  | Body `{ identifier, password }`. The identifier is an email or a username (told apart by `@`), in any letter case. Returns `{ user }` and sets the `session` cookie |
 | `POST /auth/logout` | Ends the session and clears the cookie; always answers 204                                       |
 | `GET /auth/me`      | Returns `{ user }` for the signed-in user, or 401                                                |
-| `POST /users` | Admin only. Body `{ fullName, role }` with `role` one of `teacher`, `student`, `parent`. Creates the account in the admin's school and returns `{ user }` (status 201) with the generated username (`ime_prezime`, a number is added when it is taken). The account cannot sign in until it is activated. Errors: `invalid_full_name`, `invalid_role` |
-| `POST /users/:id/activation` | Admin only, for a user of the admin's school (otherwise 404). Returns `{ activation: { url, expiresAt } }` with a one-time link valid for 7 days; a new link cancels the previous one, so it also serves as "forgot my password" |
+| `GET /users` | Admin only. Query: `role`, `status` (`active` by default, `deactivated` or `all`), `search` (part of the name or username, any letter case), `limit` (1 to 200, default 50) and `offset`. Answers `{ users, total }`; a user is `{ id, username, fullName, email, role, activated, deactivatedAt, createdAt }`. Only the admin's school; erased users are never listed |
+| `PATCH /users/:id` | Admin only. Body `{ fullName }`. Fixes the name; the username stays. Answers `{ user }`. 404 for another school's user |
+| `POST /users/deactivate` | Admin only. Body `{ ids }` (1 to 200 ids). Answers `{ affectedIds, skippedIds }`: skipped are ids of another school, unknown ids and users already in that state. Cannot include the admin's own id (400 `cannot_change_self`) |
+| `POST /users/reactivate` | Same shape. Lets deactivated users sign in again (not erased ones) |
+| `POST /users/delete` | Same shape. Erases personal data for good; only for deactivated users |
+| `POST /users` | Admin only. Body `{ fullName, role }` with `role` one of `teacher`, `student`, `parent`. Creates the account in the admin's school and returns `{ user }` (status 201, same shape as in the list) with the generated username (`ime_prezime`, a number is added when it is taken). The account cannot sign in until it is activated. Errors: `invalid_full_name`, `invalid_role` |
+| `POST /users/:id/activation` | Admin only, for a user of the admin's school (otherwise 404; 409 `user_deactivated` for a deactivated user). Returns `{ activation: { url, expiresAt } }` with a one-time link valid for 7 days; a new link cancels the previous one, so it also serves as "forgot my password" |
 | `POST /auth/activate` | Public. Body `{ token, password, email }`. Sets the password and email, uses up the link, ends the user's older sessions and signs the user in. Errors: `invalid_activation_link`, `invalid_email`, `password_too_short`, `password_too_long`, `email_taken` (409) |
 
 - The cookie is `httpOnly`, `SameSite=Lax`, `Secure` in production, and lasts 7 days. Only a hash of its value is stored.

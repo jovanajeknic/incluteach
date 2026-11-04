@@ -39,11 +39,12 @@ export async function insertUser(
   schoolId: string,
   role: UserRole,
   username: string = randomUsername(),
+  fullName = 'Test User',
 ): Promise<string> {
   const { rows } = await client.query<{ id: string }>(
     `INSERT INTO users (full_name, role, school_id, username)
-     VALUES ('Test User', $1, $2, $3) RETURNING id`,
-    [role, schoolId, username],
+     VALUES ($4, $1, $2, $3) RETURNING id`,
+    [role, schoolId, username, fullName],
   );
   return rows[0].id;
 }
@@ -130,20 +131,20 @@ export async function insertEnrollment(
 }
 
 // Cheap hashing settings keep tests fast; sign-in reads the settings from the stored hash.
-const FAST_HASH_COST = { N: 1024, r: 8, p: 1 };
+export const FAST_HASH_COST = { N: 1024, r: 8, p: 1 };
 
 // A user who has already activated the account: with a password and an email.
 export async function insertActivatedUser(
   client: pg.PoolClient,
   schoolId: string,
   role: UserRole,
-  fields: { username: string; email: string; password: string },
+  fields: { username: string; email: string; password: string; fullName?: string },
 ): Promise<string> {
   const passwordHash = await hashPassword(fields.password, FAST_HASH_COST);
   const { rows } = await client.query<{ id: string }>(
     `INSERT INTO users (full_name, role, school_id, username, email, password_hash)
-     VALUES ('Test User', $1, $2, $3, $4, $5) RETURNING id`,
-    [role, schoolId, fields.username, fields.email, passwordHash],
+     VALUES ($6, $1, $2, $3, $4, $5) RETURNING id`,
+    [role, schoolId, fields.username, fields.email, passwordHash, fields.fullName ?? 'Test User'],
   );
   return rows[0].id;
 }

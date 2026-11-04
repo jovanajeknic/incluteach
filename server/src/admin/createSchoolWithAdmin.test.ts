@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../app.ts';
 import { activationUrl } from '../auth/activation.ts';
 import { createPool } from '../db/pool.ts';
-import { inRolledBackTransaction } from '../db/testUtils.ts';
+import { FAST_HASH_COST, inRolledBackTransaction } from '../db/testUtils.ts';
 import { createSchoolWithAdmin } from './createSchoolWithAdmin.ts';
 
 const PUBLIC_URL = 'https://skola.example.com';
@@ -133,7 +133,11 @@ describe.skipIf(!process.env.DATABASE_URL)('createSchoolWithAdmin', () => {
 
     it('lets the admins of that school issue links for each other', async () => {
       await inTransaction(async (client) => {
-        const app = createApp({ pool: client, publicUrl: PUBLIC_URL });
+        const app = createApp({
+          pool: client,
+          publicUrl: PUBLIC_URL,
+          passwordCost: FAST_HASH_COST,
+        });
         const first = await createSchoolWithAdmin(client, {
           schoolName: 'OŠ Test',
           adminName: 'Ana Ivić',
@@ -192,7 +196,7 @@ describe.skipIf(!process.env.DATABASE_URL)('createSchoolWithAdmin', () => {
 
   it('leads from the script to a working school: activate, sign in, add a teacher', async () => {
     await inTransaction(async (client) => {
-      const app = createApp({ pool: client, publicUrl: PUBLIC_URL });
+      const app = createApp({ pool: client, publicUrl: PUBLIC_URL, passwordCost: FAST_HASH_COST });
       const { activation } = await createSchoolWithAdmin(client, {
         schoolName: 'OŠ Test',
         adminName: 'Ana Ivić',
@@ -218,7 +222,11 @@ describe.skipIf(!process.env.DATABASE_URL)('createSchoolWithAdmin', () => {
         .set('Cookie', login.headers['set-cookie'])
         .send({ fullName: 'Jovan Jovanović', role: 'teacher' });
       expect(teacher.status).toBe(201);
-      expect(teacher.body.user.schoolId).toBe(activated.body.user.schoolId);
+      const { rows } = await client.query<{ school_id: string }>(
+        'SELECT school_id FROM users WHERE id = $1',
+        [teacher.body.user.id],
+      );
+      expect(rows[0].school_id).toBe(activated.body.user.schoolId);
     });
   });
 

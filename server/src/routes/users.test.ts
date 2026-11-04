@@ -4,7 +4,12 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { createApp } from '../app.ts';
 import { createPool } from '../db/pool.ts';
-import { inRolledBackTransaction, insertActivatedUser, insertSchool } from '../db/testUtils.ts';
+import {
+  FAST_HASH_COST,
+  inRolledBackTransaction,
+  insertActivatedUser,
+  insertSchool,
+} from '../db/testUtils.ts';
 import { sessionCookie } from './testHelpers.ts';
 
 const PASSWORD = 'tajna-lozinka';
@@ -32,7 +37,7 @@ describe.skipIf(!process.env.DATABASE_URL)('POST /users', () => {
         email: 'admin@example.com',
         password: PASSWORD,
       });
-      await run(createApp({ pool: client }), client, schoolId);
+      await run(createApp({ pool: client, passwordCost: FAST_HASH_COST }), client, schoolId);
     });
   }
 
@@ -52,7 +57,7 @@ describe.skipIf(!process.env.DATABASE_URL)('POST /users', () => {
   it.each(['teacher', 'student', 'parent'] as const)(
     "creates a %s in the admin's school",
     async (role) => {
-      await inApp(async (app, _client, schoolId) => {
+      await inApp(async (app, client, schoolId) => {
         const response = await create(app, { fullName: 'Ana Ivić', role });
 
         expect(response.status).toBe(201);
@@ -61,10 +66,16 @@ describe.skipIf(!process.env.DATABASE_URL)('POST /users', () => {
           fullName: 'Ana Ivić',
           email: null,
           role,
-          schoolId,
+          activated: false,
+          deactivatedAt: null,
         });
-        expect(response.body.user.id).toBeTruthy();
         expect(JSON.stringify(response.body)).not.toMatch(/password|scrypt/i);
+
+        const { rows } = await client.query<{ school_id: string }>(
+          'SELECT school_id FROM users WHERE id = $1',
+          [response.body.user.id],
+        );
+        expect(rows[0].school_id).toBe(schoolId);
       });
     },
   );
