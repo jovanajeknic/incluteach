@@ -65,3 +65,17 @@ export async function insertSubject(
   );
   return rows[0].id;
 }
+
+export async function insertParentStudent(
+  client: pg.PoolClient,
+  schoolId: string,
+  parentId: string,
+  studentId: string,
+  createdBy: string,
+): Promise<void> {
+  await client.query(
+    `INSERT INTO parent_students (school_id, parent_id, student_id, created_by)
+     VALUES ($1, $2, $3, $4)`,
+    [schoolId, parentId, studentId, createdBy],
+  );
+}
