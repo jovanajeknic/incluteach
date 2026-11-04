@@ -21,6 +21,8 @@ export function DemoParentProvider({ children }: { children: ReactNode }) {
           lessons: school.visibleLessonsFor(childId),
           progressOf: (lessonId) => school.progressOf(childId, lessonId),
           practiceOf: (lessonId) => school.practiceOf(childId, lessonId),
+          className: school.classOf(childId)?.name,
+          stars: school.starsOf(childId),
         },
       ];
     });

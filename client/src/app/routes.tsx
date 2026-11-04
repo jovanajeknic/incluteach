@@ -18,6 +18,7 @@ import { studentHomePath } from '@/features/student/paths';
 import { ChildLessonPage } from '@/features/parent/pages/ChildLessonPage';
 import { ChildPage } from '@/features/parent/pages/ChildPage';
 import { ParentHomePage } from '@/features/parent/pages/ParentHomePage';
+import { ParentSuggestionsPage } from '@/features/parent/pages/ParentSuggestionsPage';
 import { parentHomePath } from '@/features/parent/paths';
 import { ParentLayout } from './layout/ParentLayout';
 import { PublicLayout } from './layout/PublicLayout';
@@ -77,6 +78,7 @@ export const routes: RouteObject[] = [
         children: [
           { index: true, element: <ParentHomePage /> },
           { path: 'children/:childId', element: <ChildPage /> },
+          { path: 'suggestions', element: <ParentSuggestionsPage /> },
           { path: 'children/:childId/lessons/:lessonId', element: <ChildLessonPage /> },
           { path: '*', element: <NotFoundPage homePath={parentHomePath} /> },
         ],

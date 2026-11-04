@@ -1,20 +1,34 @@
-import { Users } from 'lucide-react';
+import { ChatsCircleIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import { useParent } from '@/features/parent/data/parentContext';
-import { parentHomePath } from '@/features/parent/paths';
-import { text } from '@/text/sr-Latn';
+import { parentHomePath, parentSuggestionsPath } from '@/features/parent/paths';
 import { initialsOf } from '@/shared/lib/format';
-import { RoleLayout } from './RoleLayout';
+import { text } from '@/text/sr-Latn';
+import { SidebarLayout } from './SidebarLayout';
 
 export function ParentLayout() {
   const t = text.parent;
   const { parent } = useParent();
 
   return (
-    <RoleLayout
+    <SidebarLayout
       navLabel={t.nav.label}
-      navItems={[{ to: parentHomePath, label: t.nav.children, icon: Users }]}
+      navItems={[
+        {
+          to: parentHomePath,
+          label: t.nav.children,
+          icon: UsersThreeIcon,
+          tone: 'bg-sky text-sky-ink',
+          end: true,
+        },
+        {
+          to: parentSuggestionsPath,
+          label: t.nav.suggestions,
+          icon: ChatsCircleIcon,
+          tone: 'bg-blush text-blush-ink',
+        },
+      ]}
       person={{
-        firstName: parent.firstName,
+        name: `${parent.firstName} ${parent.lastName}`,
         initials: initialsOf(parent.firstName, parent.lastName),
         role: t.profile.role,
         badge: t.profile.badge,

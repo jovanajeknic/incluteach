@@ -1,4 +1,6 @@
-import { MessageSquareHeart } from 'lucide-react';
+import { ChatsCircleIcon } from '@phosphor-icons/react';
+import { cn } from '@/shared/lib/utils';
+import { blobShape } from '@/shared/visual/subjectIcons';
 import { text } from '@/text/sr-Latn';
 import { useParent } from '../data/parentContext';
 import type { ChildData } from '../types';
@@ -19,17 +21,20 @@ export function SuggestionsPanel({ child, lessonId }: SuggestionsPanelProps) {
   return (
     <section
       aria-labelledby="suggestions-heading"
-      className="rounded-3xl border border-border bg-card p-6 shadow-soft sm:p-8"
+      className="rounded-[2rem] bg-card p-6 shadow-soft sm:p-8"
     >
       <div className="flex items-start gap-3">
         <span
           aria-hidden="true"
-          className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-blush text-blush-ink"
+          className={cn(
+            'flex size-12 shrink-0 items-center justify-center bg-blush text-blush-ink',
+            blobShape,
+          )}
         >
-          <MessageSquareHeart className="size-6" />
+          <ChatsCircleIcon weight="duotone" className="size-7" />
         </span>
         <div>
-          <h2 id="suggestions-heading" className="font-display text-2xl font-bold text-ink">
+          <h2 id="suggestions-heading" className="font-display text-2xl font-semibold text-ink">
             {t.heading}
           </h2>
           <p className="mt-1 text-ink-soft">{t.intro}</p>

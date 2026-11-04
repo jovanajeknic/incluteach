@@ -213,7 +213,7 @@
 }
 
 @layer components {
-  /* Type for the teacher and student areas: see docs/DESIGN.md, "Teacher and student areas". */
+  /* Type for the signed-in areas: see docs/DESIGN.md, "Teacher, student and parent areas". */
   .area-theme {
     --app-font-sans: 'Nunito Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
     --app-font-display: 'Fredoka Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;

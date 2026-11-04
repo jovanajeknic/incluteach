@@ -1,4 +1,4 @@
-import { CheckCircle2, Lock, Send } from 'lucide-react';
+import { CheckCircleIcon, LockKeyIcon, PaperPlaneTiltIcon } from '@phosphor-icons/react';
 import { useRef, useState, type FormEvent } from 'react';
 import { FormField } from '@/shared/components/FormField';
 import { Button } from '@/shared/ui/button';
@@ -59,25 +59,25 @@ export function SuggestionForm({ childId, lessonId }: SuggestionFormProps) {
               setValue(event.target.value);
               setSent(false);
             }}
-            className="min-h-32 bg-card text-base md:text-base"
+            className="min-h-32 rounded-2xl bg-paper text-base md:text-base"
           />
         )}
       </FormField>
       <p className="flex items-center gap-2 text-sm text-ink-soft">
-        <Lock aria-hidden="true" className="size-4 shrink-0" />
+        <LockKeyIcon aria-hidden="true" weight="duotone" className="size-5 shrink-0 text-forest" />
         {t.privacy}
       </p>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Button type="submit" className="h-11 px-5">
-          <Send aria-hidden="true" />
+        <Button type="submit" className="h-12 px-6 text-base">
+          <PaperPlaneTiltIcon aria-hidden="true" weight="duotone" />
           {t.submit}
         </Button>
       </div>
       {/* Always rendered so the confirmation is announced when it appears. */}
       <div role="status" aria-live="polite">
         {sent && (
-          <p className="flex items-start gap-2 rounded-2xl bg-mint px-4 py-3 font-medium text-mint-ink">
-            <CheckCircle2 aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+          <p className="flex items-start gap-2 rounded-3xl bg-mint px-5 py-3 font-medium text-mint-ink">
+            <CheckCircleIcon aria-hidden="true" weight="fill" className="mt-0.5 size-5 shrink-0" />
             {t.demoSent}
           </p>
         )}

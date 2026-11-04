@@ -1,11 +1,22 @@
-import { ArrowLeft, Home, Lightbulb, PencilLine } from 'lucide-react';
+import {
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  CircleDashedIcon,
+  HouseLineIcon,
+  LightbulbIcon,
+  PuzzlePieceIcon,
+} from '@phosphor-icons/react';
 import { Link, useParams } from 'react-router';
+import { versionAppearance } from '@/features/lessons/workflow/versionKinds';
 import { LessonContent } from '@/features/lesson-content/LessonContent';
-import { pickLessonVersion } from '@/features/student/lessonVersion';
+import { LessonStars } from '@/features/student/components/LessonStars';
+import { approvedVersion, pickLessonVersion } from '@/features/student/lessonVersion';
 import type { PracticeRecord, StudentLesson } from '@/features/student/types';
 import { MessagePage } from '@/shared/components/MessagePage';
 import { formatDate } from '@/shared/lib/format';
+import { cn } from '@/shared/lib/utils';
 import { Button } from '@/shared/ui/button';
+import { blobShape } from '@/shared/visual/subjectIcons';
 import { text } from '@/text/sr-Latn';
 import { ForbiddenChild } from '../components/ForbiddenChild';
 import { SuggestionsPanel } from '../components/SuggestionsPanel';
@@ -25,24 +36,32 @@ function PracticeSummary({
   );
 
   return (
-    <section aria-labelledby="practice-heading" className="rounded-3xl bg-lilac p-6 sm:p-8">
+    <section aria-labelledby="practice-heading" className="rounded-[1.75rem] bg-lilac p-6 sm:p-8">
       <h2
         id="practice-heading"
-        className="flex items-center gap-2 font-display text-xl font-bold text-ink"
+        className="flex items-center gap-3 font-display text-xl font-semibold text-ink"
       >
-        <PencilLine aria-hidden="true" className="size-5 text-lilac-ink" />
+        <span
+          aria-hidden="true"
+          className={cn(
+            'flex size-10 items-center justify-center bg-card text-lilac-ink',
+            blobShape,
+          )}
+        >
+          <PuzzlePieceIcon weight="duotone" className="size-5" />
+        </span>
         {t.practiceHeading}
       </h2>
       {!record ? (
-        <p className="mt-3 text-ink">{t.practiceNotDone}</p>
+        <p className="mt-4 text-ink">{t.practiceNotDone}</p>
       ) : (
         <>
-          <p className="mt-3 text-ink">{t.practiceDone(formatDate(record.completedAt))}</p>
+          <p className="mt-4 text-ink">{t.practiceDone(formatDate(record.completedAt))}</p>
           {difficult.length === 0 ? (
             <p className="mt-2 text-ink">{t.noDifficult}</p>
           ) : (
-            <div className="mt-4 rounded-2xl bg-card p-4">
-              <h3 className="font-display font-bold text-ink">{t.difficultHeading}</h3>
+            <div className="mt-4 rounded-3xl bg-card p-5">
+              <h3 className="font-display font-semibold text-ink">{t.difficultHeading}</h3>
               <p className="mt-1 text-ink-soft">{t.difficultIntro}</p>
               <ul className="mt-3 grid gap-2">
                 {difficult.map((question) => (
@@ -90,50 +109,112 @@ export function ChildLessonPage() {
   }
 
   const name = child.profile.firstName;
+  const done = child.progressOf(lesson.id) === 'completed';
+  const practice = child.practiceOf(lesson.id);
+  const illustrations = approvedVersion(lesson, 'illustrations')?.illustrations ?? [];
+  const { icon: VersionIcon, tone: versionTone } = versionAppearance[version.kind];
 
   return (
     <>
       <title>{text.app.pageTitle(`${lesson.title} · ${name}`)}</title>
       <Link
         to={childPath(child.profile.id)}
-        className="inline-flex items-center gap-2 rounded-full font-display font-medium text-forest hover:underline"
+        className="inline-flex items-center gap-1.5 rounded-full font-display font-medium text-ink-soft hover:text-forest"
       >
-        <ArrowLeft aria-hidden="true" className="size-5" />
+        <ArrowLeftIcon aria-hidden="true" weight="bold" className="size-4" />
         {t.backToChild(name)}
       </Link>
-      <h1 className="mt-6 font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
+      <h1 className="mt-5 font-display text-4xl font-semibold tracking-tight text-ink">
         {lesson.title}
       </h1>
+      <p className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
+        <span
+          className={cn(
+            'inline-flex items-center gap-1.5 font-display font-medium',
+            done ? 'text-mint-ink' : 'text-ink-soft',
+          )}
+        >
+          {done ? (
+            <CheckCircleIcon aria-hidden="true" weight="fill" className="size-5" />
+          ) : (
+            <CircleDashedIcon aria-hidden="true" weight="bold" className="size-5" />
+          )}
+          {done ? t.lessonDone : t.lessonNotDone}
+        </span>
+        <LessonStars lesson={done} quiz={practice !== undefined} />
+      </p>
 
-      <section aria-labelledby="version-heading" className="mt-6">
-        <div className="flex flex-wrap items-center gap-3">
-          <h2 id="version-heading" className="font-display text-lg font-bold text-ink">
+      <section aria-labelledby="version-heading" className="mt-8">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <h2 id="version-heading" className="font-display text-xl font-semibold text-ink">
             {t.versionHeading(name)}
           </h2>
-          <span className="rounded-full bg-sky px-3 py-1 font-display text-sm font-medium text-sky-ink">
+          <span className="inline-flex items-center gap-2 font-display font-medium text-ink">
+            <span
+              aria-hidden="true"
+              className={cn('flex size-8 items-center justify-center', blobShape, versionTone)}
+            >
+              <VersionIcon weight="duotone" className="size-4.5" />
+            </span>
             {t.versionNames[version.kind]}
           </span>
         </div>
-        <div className="mt-4 rounded-3xl border border-border bg-card p-6 shadow-soft sm:p-8">
-          <LessonContent content={version.content} glossary={lesson.glossary} />
+        <div className="mt-4 rounded-[2rem] bg-card px-6 py-8 shadow-soft sm:px-10">
+          <LessonContent
+            content={version.content}
+            glossary={lesson.glossary}
+            className={cn(
+              'text-lg text-ink',
+              version.kind === 'dyslexia' && 'font-dyslexic leading-loose tracking-wide',
+            )}
+          />
+          {illustrations.length > 0 && (
+            <div className="mt-8 grid gap-6 sm:grid-cols-2">
+              {illustrations.map((item) => (
+                <figure key={item.id}>
+                  <img
+                    src={item.src}
+                    alt={item.alt}
+                    className="w-full rounded-3xl border border-border bg-paper"
+                  />
+                  <figcaption className="mt-2 text-ink-soft">{item.caption}</figcaption>
+                </figure>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <PracticeSummary lesson={lesson} record={child.practiceOf(lesson.id)} />
+        <PracticeSummary lesson={lesson} record={practice} />
         {lesson.homeGuidance && lesson.homeGuidance.length > 0 && (
-          <section aria-labelledby="home-heading" className="rounded-3xl bg-butter p-6 sm:p-8">
+          <section
+            aria-labelledby="home-heading"
+            className="rounded-[1.75rem] bg-butter p-6 sm:p-8"
+          >
             <h2
               id="home-heading"
-              className="flex items-center gap-2 font-display text-xl font-bold text-ink"
+              className="flex items-center gap-3 font-display text-xl font-semibold text-ink"
             >
-              <Home aria-hidden="true" className="size-5 text-butter-ink" />
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'flex size-10 items-center justify-center bg-card text-butter-ink',
+                  blobShape,
+                )}
+              >
+                <HouseLineIcon weight="duotone" className="size-5" />
+              </span>
               {t.homeHeading}
             </h2>
-            <ul className="mt-3 grid gap-3">
+            <ul className="mt-4 grid gap-3">
               {lesson.homeGuidance.map((tip) => (
                 <li key={tip} className="flex gap-3 text-ink">
-                  <Lightbulb aria-hidden="true" className="mt-1 size-5 shrink-0 text-butter-ink" />
+                  <LightbulbIcon
+                    aria-hidden="true"
+                    weight="duotone"
+                    className="mt-0.5 size-5 shrink-0 text-butter-ink"
+                  />
                   {tip}
                 </li>
               ))}

@@ -14,4 +14,7 @@ export interface ChildData {
   lessons: readonly StudentLesson[];
   progressOf: (lessonId: string) => LessonProgress;
   practiceOf: (lessonId: string) => PracticeRecord | undefined;
+  className?: string;
+  /** Stars for effort, counted the same way the child sees them. */
+  stars: number;
 }

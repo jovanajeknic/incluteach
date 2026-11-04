@@ -14,16 +14,24 @@ describe('Parent overview', () => {
   it('lists only the linked children with their progress', () => {
     renderApp({ path: '/parent' });
 
-    expect(
-      screen.getByRole('heading', { level: 1, name: 'Dobro došli, Jelena' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Moja djeca' })).toBeInTheDocument();
+    expect(screen.getByText('Dobro došli, Jelena')).toBeInTheDocument();
     const list = within(screen.getByRole('region', { name: 'Povezana djeca' })).getAllByRole(
       'link',
     );
     expect(list).toHaveLength(2);
     expect(list[0]).toHaveTextContent('Luka Petrović');
     expect(list[1]).toHaveTextContent('Mia Petrović');
-    expect(list[1]).toHaveTextContent('Započetih lekcija: 1 · Završenih: 1');
+    // Mia: one of six lessons done, its quiz done, two stars, one question to repeat.
+    const mia = within(list[1]!)
+      .getAllByRole('listitem')
+      .map((item) => item.textContent);
+    expect(mia).toEqual([
+      'Pređene lekcije1 od 6',
+      'Urađeni kvizovi1 od 6',
+      'Zvjezdice2',
+      'Pitanja za ponavljanje1',
+    ]);
   });
 
   it('refuses a child that is not linked to this parent', () => {
@@ -60,8 +68,12 @@ describe('Child lessons', () => {
     expect(screen.getByText('Lekcija kako je vidi Mia')).toBeInTheDocument();
     expect(screen.getByText('Osnovna verzija')).toBeInTheDocument();
 
-    const practice = screen.getByRole('region', { name: 'Vježba' });
-    expect(practice).toHaveTextContent('Vježba je urađena 2. novembar 2026.');
+    expect(screen.getByText('Označeno kao pređeno')).toBeInTheDocument();
+    expect(screen.getByText('2 od 2 zvjezdice')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /od nje nastaje oblak/ })).toBeInTheDocument();
+
+    const practice = screen.getByRole('region', { name: 'Kviz' });
+    expect(practice).toHaveTextContent('Kviz je urađen 2. novembar 2026.');
     expect(within(practice).getByText('Gdje je bilo teško')).toBeInTheDocument();
     expect(practice).toHaveTextContent('Od čega nastaju oblaci?');
     expect(practice).not.toHaveTextContent('Šta grije vodu');
@@ -83,7 +95,8 @@ describe('Child lessons', () => {
     await act(() => router.navigate('/parent/children/demo-student-luka/lessons/kruzenje-vode'));
 
     expect(screen.getByText('Verzija nižeg nivoa')).toBeInTheDocument();
-    const practice = screen.getByRole('region', { name: 'Vježba' });
+    expect(screen.getByText('Još nije označeno kao pređeno')).toBeInTheDocument();
+    const practice = screen.getByRole('region', { name: 'Kviz' });
     expect(practice).toHaveTextContent('Šta grije vodu u morima i rijekama?');
     expect(practice).not.toHaveTextContent('Od čega nastaju oblaci?');
   });
@@ -131,5 +144,35 @@ describe('Suggestions for the teacher', () => {
       screen.getByRole('heading', { level: 1, name: 'Kruženje vode u prirodi' }),
     ).toBeInTheDocument();
     expect(document.body.textContent).not.toContain('Treba mu više vremena za čitanje.');
+  });
+});
+
+describe('Child page and suggestions overview', () => {
+  it('shows what to repeat at home and the stars per lesson', () => {
+    renderApp({ path: '/parent/children/demo-student-mia' });
+
+    const repeat = screen.getByRole('region', { name: 'Za ponavljanje kod kuće' });
+    expect(repeat).toHaveTextContent('Od čega nastaju oblaci?');
+    expect(repeat).toHaveTextContent('Kruženje vode u prirodi');
+    const lesson = screen.getByRole('link', { name: /Kruženje vode u prirodi/ });
+    expect(lesson).toHaveTextContent('kviz urađen');
+    expect(lesson).toHaveTextContent('2 od 2 zvjezdice');
+  });
+
+  it('lists every suggestion per child with what the teacher did', async () => {
+    const { user } = renderApp({ path: '/parent' });
+
+    await user.click(screen.getByRole('link', { name: 'Moji prijedlozi' }));
+    expect(screen.getByRole('heading', { level: 1, name: 'Moji prijedlozi' })).toBeInTheDocument();
+    const luka = screen.getByRole('region', { name: 'Luka Petrović' });
+    expect(luka).toHaveTextContent('uz tekst ima sliku ili crtež');
+    expect(luka).toHaveTextContent('Čeka pregled nastavnika');
+    expect(screen.getByRole('region', { name: 'Mia Petrović' })).not.toHaveTextContent(
+      'Čeka pregled',
+    );
+    expect(within(luka).getByRole('link', { name: 'Napiši prijedlog za: Luka' })).toHaveAttribute(
+      'href',
+      '/parent/children/demo-student-luka#suggestions-heading',
+    );
   });
 });

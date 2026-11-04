@@ -113,9 +113,9 @@ The owner wants the app to feel made by a creative person, not generated. Lesson
 - **Copy**: short and natural; say it once. Footnotes for side remarks (for example that the AI is simulated) instead of repeated notices.
 - **Fewer badges and icon bubbles**: use plain text or a handwritten tick where a pill or a coloured icon circle is not needed.
 
-## Teacher and student areas ("profesorski" and "učenički kutak")
+## Teacher, student and parent areas
 
-The owner asked for a livelier, more professional look. The teacher area got it first and the student area follows the same design; the parent and public pages keep theirs until the owner decides to carry the style over.
+The owner asked for a livelier, more professional look. The teacher area got it first; the student and parent areas follow the same design through the shared `SidebarLayout`. The public pages (landing, sign-in) keep their own look.
 
 - **Type**: **Fredoka** (variable) for headings, navigation and buttons, **Nunito** (variable) for text. Both are self-hosted (`@fontsource-variable`), latin-ext included. They apply through the `.area-theme` class on the shared `SidebarLayout`, which swaps the `--app-font-display` and `--app-font-sans` variables; components keep using `font-display` and `font-sans`.
 - **Icons**: [Phosphor](https://phosphoricons.com) in the **duotone** weight (`@phosphor-icons/react`), usually on a pastel "blob" (`blobShape`: an organic outline, not a circle, pill or square). Subject icons, colours, `SubjectBlob`, `SubjectCard` and `AiPulse` are in `client/src/shared/visual/`.
