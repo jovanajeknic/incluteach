@@ -53,6 +53,7 @@ Differences from this plan, all intentional for this step:
 - **Teacher area decisions (owner)**: lesson input is text only for now (file upload waits for the backend). A teacher teaches subjects in classes (a class teacher teaches several subjects in one class; a subject teacher one subject in several classes), so the home page shows "Moji predmeti" with a switch between a view by subject and a view by class, and no statistics or greeting. Adding a lesson starts the AI at once; it prepares a shortened version, an easier (lower-level) version, a dyslexia-friendly text, an audio version and illustrations, plus glossary words and quiz questions. The teacher reviews each version separately, can edit it or give the AI a note to redo it, and approves each one; "Objavi učenicima" becomes available only when all are approved. A published lesson goes to its whole class, and every student automatically gets the versions named in their profile.
 - **Student version profile (owner)**: replaces the earlier "needs". Teachers set, together with the parents, which text version a student reads (original, shortened, easier, dyslexia-friendly) and whether they also get audio. The profile is never shown to the student or to other pupils and is not labelled on the student's lesson page; it only lets the system send the right version. Illustrations go to every student. Parents see the version name, because they agreed to it.
 - **Accounts and sign-in (owner, 2026-11-04)**: nobody registers on their own. A school joins IncluTeach once and gets its first administrator account. The administrator imports two lists each school year: students with their parents' contacts (the school already has them from enrolment, often in eDnevnik), and teachers with the subjects they teach in each class. The system then sends every parent and teacher an **invitation** (email, SMS, or a printed letter with a code for parents without email); they only **activate** the account by choosing a password, and parents give their consent for the lesson versions at that point. Students sign in with a **QR card** that the teacher prints; a lost card is replaced and the old one stops working. Both parents of a child can have their own accounts, and one parent account covers all their children. The public site therefore has only "Prijavi se" (teachers and parents with email and password, students with their card) and "Aktiviraj nalog" (`/activate`, optionally `?code=`); the registration page was removed. How invitations, card codes and sessions work technically is the backend developer's decision.
+- **Accounts and sign-in, backend agreement (2026-11-04; replaces the item above where they differ)**: the admin creates every account one by one (full name and role); there is no list import yet. The system sends nothing by itself: for each account the admin asks for a **one-time activation link** (valid 7 days, drawn as a QR code by the frontend) and hands it to the person in their own way. Opening the link, the person chooses a password (at least 7 characters) and adds an email, and is signed in. **Everyone, students included, signs in with email or username plus password**; the QR is only a way to hand out the activation link, not a sign-in card. A forgotten password is handled by the admin issuing a new link. Usernames are generated as `ime_prezime` (a number is added when taken). Parent consent for lesson versions is **not** part of activation in the backend yet (open question). Each user has exactly one role and belongs to one school; a guardian is a normal parent account. The admin links a parent to a child (many to many). A student joins a subject by **request**: the student asks, a linked parent confirms, the subject's teacher approves or rejects. A subject is "name + class + teacher" assigned by the admin; the same name can have several teachers. Details: [DATABASE.md](DATABASE.md). The tasks this creates for the frontend are listed in "Backend API and frontend work" below.
 - **Publishing rules (owner, 2026-11-04)**: students and parents see a published copy of a lesson, never the teacher's working copy. Everything the AI prepares needs approval before publishing: the five versions and also the quiz questions and word explanations. Changes to a published lesson (a redone version, an edit, a full AI rerun) reach students only after "Objavi izmjene"; until then they keep the published copy. When the teacher changes the original text, the AI versions are marked as outdated and must be approved again. If the AI fails, nothing is lost and the teacher can try again.
 - **Class teacher and subject teachers (owner)**: only the class teacher ("razredni starešina") changes which versions a student receives; other teachers see it read-only. A subject teacher sees a student's progress only in the subjects they teach; the class teacher sees all. A teacher can open only lessons of subjects they teach in that class.
 - **Parents and the version profile (owner)**: parents see which versions their child receives (never shown to the child) and can send a suggestion to change it.
@@ -60,6 +61,30 @@ Differences from this plan, all intentional for this step:
 - **Second review (owner, 2026-11-04)**: everyone can sign out (a demo link to sign-in for now). Parent suggestions go to the teacher of the lesson's subject, or to the class teacher when general. The AI never gets a parent's text: the teacher writes a short instruction in their own words (`aiNote`), and only that is sent. Teachers can withdraw a published lesson or delete one that was never published. Students can undo "Označi kao pređeno". AI remarks are shown to the teacher beside the text, never inside it. Teachers do not reply to suggestions; parents see the status only.
 - **Audio in the teacher area**: the AI writes a narration script; the teacher can listen to it with the browser voice. Students with audio hear that script; others hear the text on screen.
 - **Illustrations in the demo** are prepared drawings; the real AI service on the backend will provide its own.
+
+## Backend API and frontend work
+
+A living list. Whenever a backend endpoint is added, it is added here with what the frontend needs to do for it. The exact behaviour of each endpoint is in [DATABASE.md](DATABASE.md) ("Sign-in API"); this section only says what the screens must do. Status: **ready** means the endpoint exists and is tested; **planned** means it is agreed but not built.
+
+### Rules for every call
+
+- Errors always look like `{ "error": { "code": "...", "message": "..." } }`. The `message` is English and for developers; the screen shows its own Serbian text chosen by `code`.
+- Authentication is a cookie named `session` that the browser keeps by itself (`httpOnly`; the frontend cannot and must not read it). Every request must be sent **with credentials**. Run the frontend and the API on one address in development with a Vite proxy, so no CORS setup is needed; this is to be done in FE-17.
+- A `401` with code `unauthenticated` means the session ended: clear cached data and go to `/login`. A `403` with code `forbidden` shows the forbidden page. The frontend role checks stay for navigation only (AGENTS.md, section 8).
+- The server limits failed sign-ins (`429`, code `too_many_attempts`): show a calm message asking to wait a few minutes.
+
+### Endpoints
+
+| Endpoint | Status | What the frontend does |
+| -------- | ------ | ---------------------- |
+| `POST /auth/login` | ready | Sign-in form: one field "email or username" and a password. Remove the separate student card tab. Show the same message for every `invalid_credentials`. On success go to the home page of `user.role`. |
+| `GET /auth/me` | ready | Ask on every page load whether a session exists, to restore the signed-in user (and role) after a refresh. |
+| `POST /auth/logout` | ready | "Odjavi se": call it, clear cached data, go to `/login`. |
+| `POST /auth/activate` | ready | The `/activate` page reads `?token=` from the link (not `?code=`), asks for a new password, its confirmation and an **email**, and shows errors by `code`: `invalid_activation_link` (explain that the link was used or has expired and to ask the school admin), `invalid_email`, `password_too_short` (minimum 7), `password_too_long` (maximum 128), `email_taken`. On success the user is already signed in: go to their home page. Replace the temporary 12-character rule and the 8-letter code field. |
+| `POST /users` | ready | Admin screen "Novi nalog": full name and role (teacher, student or parent). Show the generated username from the answer. Errors: `invalid_full_name`, `invalid_role`. |
+| `POST /users/:id/activation` | ready | Admin screen: after creating an account, or on "Novi link" for an existing one (forgotten password), call it and show the link as a **QR code** drawn in the browser (a small library such as `qrcode`; never send the link to an outside QR service) plus "Kopiraj link" and "Preuzmi sliku". Show the expiry date. The link appears only in this answer; asking again cancels the old one. |
+| Admin: list users, classes, subjects with teachers, parent-child links | planned | Admin screens to view and manage them. Endpoints to be added; see the admin routes in section 6. |
+| Enrollment requests (student asks, parent confirms, teacher decides) | planned | Student: search the school's subjects ("Matematika, nastavnik X") and send a request. Parent: confirm or reject a child's request. Teacher: approve or reject. Needs its own screens and endpoints. |
 
 ## 1. Goal and scope of v1
 
@@ -231,6 +256,18 @@ Reading preferences open as a panel from the reading view and the header, not as
 | `/parent/children`                                | Linked children                   |
 | `/parent/children/:childId`                       | Child's lessons and results       |
 | `/parent/children/:childId/lessons/:assignmentId` | Lesson activity and home guidance |
+
+### Admin (`/admin`)
+
+_Proposal, to be confirmed when the admin endpoints exist._ The admin manages accounts and the timetable only and does not see lessons, progress, version profiles or parent suggestions.
+
+| Route                       | Screen                                                                      |
+| --------------------------- | --------------------------------------------------------------------------- |
+| `/admin/users`              | Users of the school, by role, with "Novi link" for each                     |
+| `/admin/users/new`          | New account (full name, role); then the activation link and QR              |
+| `/admin/classes`            | Classes of a school year                                                    |
+| `/admin/subjects`           | Subjects: name, class and teacher                                           |
+| `/admin/families`           | Link parents to children                                                    |
 
 ## 7. Shared UI components
 
@@ -493,12 +530,12 @@ Every task also follows the verification rules in [AGENTS.md](../AGENTS.md#4-ver
 3. **Demo mode**: only during development, or also in a public demo build?
 4. **Teacher view of support needs**: may the teacher UI show any information about a student's needs, and in what wording? (Students and peers never see diagnoses.)
 5. **Quiz rules**: decided: practice only, no score. Still open: what parents and teachers see about practice activity.
-6. **Registration**: decided by the owner: teachers and parents register themselves through the public form; students do not (the school adds them). Still to agree with the backend developer: the password policy (the frontend uses a temporary 12-character minimum), email verification and how a parent is linked to a child.
+6. **Registration**: decided by the owner: teachers and parents register themselves through the public form; students do not (the school adds them). Still to agree with the backend developer: the password policy (the frontend uses a temporary 12-character minimum), email verification and how a parent is linked to a child. **Answered by the backend (2026-11-04)**: there is no self-registration; password minimum is 7 characters; the email is added at activation (not verified yet); an admin links a parent to a child.
 
 ### For the backend developer
 
 1. **API contract**: format (for example OpenAPI), base URL, error format, and who maintains it.
-2. **Authentication**: mechanism (for example httpOnly cookie session or tokens), session lifetime, and what the frontend receives about the signed-in user and role. The owner chose QR cards for students and school-created accounts for teachers and parents (see "Accounts and sign-in" above): how a card is issued, what it encodes, and how a lost card is revoked.
+2. **Authentication**: mechanism (for example httpOnly cookie session or tokens), session lifetime, and what the frontend receives about the signed-in user and role. The owner chose QR cards for students and school-created accounts for teachers and parents (see "Accounts and sign-in" above): how a card is issued, what it encodes, and how a lost card is revoked. **Answered (2026-11-04)**: cookie session of 7 days; no student cards for sign-in, only a one-time activation link per account that the admin hands out. See "Backend API and frontend work".
 3. **School import**: the format of the class-list import (columns, encoding) and whether eDnevnik export can be used.
 4. **Lesson model**: what a "version" is (per student, per group or per adaptation profile), status values, and how an approved version is assigned.
 5. **Processing status updates**: polling, or push (for example Server-Sent Events)?
