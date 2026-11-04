@@ -59,7 +59,7 @@ export function createApp({
   app.use(rejectNul);
   app.use(authenticate(pool));
 
-  app.use(healthRouter(pool));
+  app.use(healthRouter(pool, { ai: ai.name }));
   app.use('/auth', authRouter(pool, { secureCookies, passwordCost }));
   app.use('/users', usersRouter(pool, { publicUrl }));
   app.use('/classes', classesRouter(pool));

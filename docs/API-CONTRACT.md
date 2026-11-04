@@ -74,7 +74,7 @@ The status follows the people involved: the student asks (`awaiting_parent`), a 
 - **Purpose**: tells whether the server runs and can reach the database.
 - **Who may call it**: anyone, no sign-in.
 - **Request**: none.
-- **Success response**: `200 { "status": "ok" }`.
+- **Success response**: `200 { "status": "ok", "ai": "fake" }`. `ai` is the name of the AI service that is set up; `fake` means it makes invented test results, so a screen should show a clear "test AI" label.
 - **Errors**: `503 { "status": "unavailable" }` when the database cannot be reached (no details are given).
 - **Notes**: for monitoring and for checking the connection during setup.
 - **Used by (frontend)**: none.
@@ -436,6 +436,45 @@ A lesson belongs to a subject and holds the text of the teacher, as written. See
 - **Notes**: what the AI makes starts as a **draft** and nothing reaches students until a teacher approves it. Asking again replaces the summary and/or quiz that were made before, and cancels their approval (the frontend should ask the teacher to confirm, because their manual edits are replaced). While the lesson is `processing` it cannot be changed, deleted or published. A lesson that stays in `processing` after the server stopped is put back to a draft when the server starts again. Until a real AI service is chosen, a **fake** one makes invented but complete results, so the screens can be built; the text `[[ai-fail]]` or `[[ai-bad-output]]` inside a lesson makes it fail on purpose, to test the error screen.
 - **Used by (frontend)**: teacher button "Napravi sažetak i kviz" in the lesson editor, a waiting state while `processing`, then the review of what was made.
 
+### PUT /lessons/{id}/summary
+
+- **Status**: implemented
+- **Purpose**: the teacher writes the summary, or replaces the one that is there (also the one the AI made). This is how the teacher deletes a point, rewords one or adds one: send the whole list of points as it should be.
+- **Who may call it**: `teacher` of the subject.
+- **Request**: body `{ points: string[] }`. 1 to 30 points, each 1 to 300 characters, spaces tidied.
+- **Success response**: `200 { lesson: Lesson }`. The summary is a **draft** again, with `approvedAt: null`, even if it was approved before. `origin` stays `ai` if the AI made it first, otherwise it is `teacher`.
+- **Errors**: `400 invalid_summary` (the message says what is wrong), `404 not_found`, `409 lesson_published`, `409 lesson_busy`.
+- **Used by (frontend)**: the summary editor next to the lesson text: one field per point with delete, add and move, a "Sačuvaj" button and "Odobri".
+
+### PUT /lessons/{id}/quiz
+
+- **Status**: implemented
+- **Purpose**: the teacher writes the whole quiz, or replaces the one that is there. Send **all** the questions as they should be, so deleting, rewording or adding a question is one save. The questions get new ids each time.
+- **Who may call it**: `teacher` of the subject.
+- **Request**: body `{ questions: [{ kind, prompt, explanation?, options: [{ text, isCorrect }] }] }`. 1 to 20 questions. `kind` is `choice` (3 or 4 options, all different) or `true_false` (the options "Tačno" and "Netačno", in any order and letter case; the server puts them in one order). Exactly one option is right. A question is at most 500 characters, an option at most 300, an explanation at most 500.
+- **Success response**: `200 { lesson: Lesson }`. The quiz is a **draft** again, not approved.
+- **Errors**: `400 invalid_quiz` (the message says what is wrong), `404 not_found`, `409 lesson_published`, `409 lesson_busy`.
+- **Used by (frontend)**: the quiz editor: a list of questions with their answers, a mark for the right one, delete, add (choice or true/false) and "Odobri".
+
+### DELETE /lessons/{id}/summary and DELETE /lessons/{id}/quiz
+
+- **Status**: implemented
+- **Purpose**: remove the summary (or the quiz, with all its questions) from the lesson. The lesson can then be published as plain text, or the AI can be asked again.
+- **Who may call it**: `teacher` of the subject.
+- **Success response**: `200 { lesson: Lesson }`.
+- **Errors**: `404 not_found` (no such lesson, or it has no summary / quiz), `409 lesson_published`, `409 lesson_busy`.
+
+### POST /lessons/{id}/summary/approve and POST /lessons/{id}/quiz/approve
+
+- **Status**: implemented
+- **Purpose**: the teacher confirms that the summary (or the quiz) is right. Only approved ones are seen by students and parents, and a lesson cannot be published while a summary or quiz that exists is not approved.
+- **Who may call it**: `teacher` of the subject.
+- **Request**: none.
+- **Success response**: `200 { lesson: Lesson }` with `status: "approved"` and `approvedAt`.
+- **Errors**: `404 not_found`, `409 lesson_published`, `409 lesson_busy`.
+- **Notes**: approving is also how a summary or quiz is confirmed again after the text of the lesson changed (`outdated` becomes false): the teacher says that it still fits. Any later change makes it a draft again.
+- **Used by (frontend)**: buttons "Odobri sažetak" and "Odobri kviz" in the review; show the warning when `outdated` is true. After both are approved "Objavi" works.
+
 ### POST /lessons/{id}/publish
 
 - **Status**: implemented
@@ -458,4 +497,4 @@ A lesson belongs to a subject and holds the text of the teacher, as written. See
 
 ## Not defined yet
 
-Editing and approving the summary and the quiz by the teacher, the quiz for students, comments, stars, progress, removing a student from a subject at the end of the year, copying classes and subjects to a new school year, changing one's own password, the school request form of the landing page.
+The quiz for students (answering, feedback, attempts), comments, stars, progress, removing a student from a subject at the end of the year, copying classes and subjects to a new school year, changing one's own password, the school request form of the landing page.

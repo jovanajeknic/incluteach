@@ -1,9 +1,11 @@
 import express, { Router, type RequestHandler } from 'express';
 
+import { ContentError, validateQuiz, validateSummary } from '../ai/validate.ts';
 import { getUser, requireRole } from '../auth/currentUser.ts';
 import type { Queryable } from '../db/pool.ts';
 import { HttpError } from '../http/errors.ts';
 import { cleanText, isUuid, readWholeNumber } from '../http/validation.ts';
+import { approveContent, deleteContent, saveQuiz, saveSummary } from '../lessons/editContent.ts';
 import { extractLessonText } from '../lessons/extract/index.ts';
 import { startGeneration, type GenerationOptions } from '../lessons/generate.ts';
 import { MAX_BODY_LENGTH, MAX_FILE_BYTES } from '../lessons/limits.ts';
@@ -217,6 +219,48 @@ export function lessonsRouter(pool: Queryable, generation: GenerationOptions): R
     });
     res.status(202).json({ lesson });
   });
+
+  // The summary and the quiz of a lesson are written, edited and approved by its teacher,
+  // whether the AI made them first or not. Every change makes them a draft again, and only
+  // approved ones can be published. Not while the lesson is published or being processed.
+  const checked = <T>(code: string, check: (value: unknown) => T, value: unknown): T => {
+    try {
+      return check(value);
+    } catch (error) {
+      if (error instanceof ContentError) {
+        throw new HttpError(400, code, error.message);
+      }
+      throw error;
+    }
+  };
+
+  // Body: { points: string[] }. Writes the summary, or replaces the existing one.
+  router.put('/:id/summary', requireRole('teacher'), async (req, res) => {
+    const lessonId = readLessonId(req.params.id);
+    const content = checked('invalid_summary', validateSummary, req.body);
+
+    res.json({ lesson: await saveSummary(pool, { user: getUser(req), lessonId, content }) });
+  });
+
+  // Body: { questions: [...] }, the whole quiz. Writes it, or replaces the existing one.
+  router.put('/:id/quiz', requireRole('teacher'), async (req, res) => {
+    const lessonId = readLessonId(req.params.id);
+    const content = checked('invalid_quiz', validateQuiz, req.body);
+
+    res.json({ lesson: await saveQuiz(pool, { user: getUser(req), lessonId, content }) });
+  });
+
+  for (const part of ['summary', 'quiz'] as const) {
+    router.delete(`/:id/${part}`, requireRole('teacher'), async (req, res) => {
+      const lessonId = readLessonId(req.params.id);
+      res.json({ lesson: await deleteContent(pool, { user: getUser(req), lessonId, part }) });
+    });
+
+    router.post(`/:id/${part}/approve`, requireRole('teacher'), async (req, res) => {
+      const lessonId = readLessonId(req.params.id);
+      res.json({ lesson: await approveContent(pool, { user: getUser(req), lessonId, part }) });
+    });
+  }
 
   router.post('/:id/publish', requireRole('teacher'), async (req, res) => {
     const lesson = await publishLesson(pool, {

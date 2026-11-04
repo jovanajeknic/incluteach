@@ -5,6 +5,7 @@ import type { AuthUser } from '../auth/sessions.ts';
 import type { Queryable } from '../db/pool.ts';
 import { inTransaction } from '../db/transaction.ts';
 import { HttpError } from '../http/errors.ts';
+import { writeQuiz, writeSummary } from './contentWrite.ts';
 import type { BackgroundJobs } from './jobs.ts';
 import { assertEditable, getLesson, requireOwnedLesson, type Lesson } from './lessons.ts';
 
@@ -123,43 +124,18 @@ async function saveResults(
   job: { schoolId: string; lessonId: string; revision: number },
   results: { summary: SummaryContent | null; quiz: QuizContent | null },
 ): Promise<void> {
+  const common = {
+    schoolId: job.schoolId,
+    lessonId: job.lessonId,
+    revision: job.revision,
+    origin: 'ai' as const,
+    keepOrigin: false,
+  };
   if (results.summary) {
-    await db.query(
-      `INSERT INTO lesson_summaries (lesson_id, school_id, points, origin, based_on_revision)
-       VALUES ($1, $2, $3, 'ai', $4)
-       ON CONFLICT (lesson_id) DO UPDATE SET
-         points = EXCLUDED.points, origin = 'ai', status = 'draft',
-         based_on_revision = EXCLUDED.based_on_revision,
-         approved_by = NULL, approved_at = NULL, updated_at = now()`,
-      [job.lessonId, job.schoolId, results.summary.points, job.revision],
-    );
+    await writeSummary(db, { ...common, content: results.summary });
   }
-
   if (results.quiz) {
-    await db.query(
-      `INSERT INTO lesson_quizzes (lesson_id, school_id, origin, based_on_revision)
-       VALUES ($1, $2, 'ai', $3)
-       ON CONFLICT (lesson_id) DO UPDATE SET
-         origin = 'ai', status = 'draft', based_on_revision = EXCLUDED.based_on_revision,
-         approved_by = NULL, approved_at = NULL, updated_at = now()`,
-      [job.lessonId, job.schoolId, job.revision],
-    );
-    await db.query('DELETE FROM quiz_questions WHERE lesson_id = $1', [job.lessonId]);
-
-    for (const [index, question] of results.quiz.questions.entries()) {
-      const { rows } = await db.query<{ id: string }>(
-        `INSERT INTO quiz_questions (lesson_id, position, kind, prompt, explanation)
-         VALUES ($1, $2, $3::quiz_question_kind, $4, $5) RETURNING id`,
-        [job.lessonId, index + 1, question.kind, question.prompt, question.explanation],
-      );
-      for (const [optionIndex, option] of question.options.entries()) {
-        await db.query(
-          `INSERT INTO quiz_options (question_id, position, text, is_correct)
-           VALUES ($1, $2, $3, $4)`,
-          [rows[0].id, optionIndex + 1, option.text, option.isCorrect],
-        );
-      }
-    }
+    await writeQuiz(db, { ...common, content: results.quiz });
   }
 
   await db.query(

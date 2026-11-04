@@ -36,6 +36,7 @@ export interface Requests {
   get: (path: string) => request.Test;
   post: (path: string, body?: object) => request.Test;
   patch: (path: string, body?: object) => request.Test;
+  put: (path: string, body?: object) => request.Test;
   delete: (path: string) => request.Test;
   // Sends a file as the whole body of the request, like a browser does with fetch.
   postFile: (
@@ -68,6 +69,11 @@ function requestsWith(app: App, cookie: string): Requests {
     patch: (path, body) =>
       request(app)
         .patch(path)
+        .set('Cookie', cookie)
+        .send(body ?? {}),
+    put: (path, body) =>
+      request(app)
+        .put(path)
         .set('Cookie', cookie)
         .send(body ?? {}),
     delete: (path) => request(app).delete(path).set('Cookie', cookie),
