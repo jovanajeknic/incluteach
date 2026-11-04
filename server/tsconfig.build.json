@@ -12,6 +12,8 @@
   "exclude": [
     "src/**/*.test.ts",
     "src/db/testUtils.ts",
+    "src/lessons/extract/testFiles.ts",
+    "src/lessons/fixtures",
     "src/routes/testApi.ts",
     "src/routes/testHelpers.ts"
   ]

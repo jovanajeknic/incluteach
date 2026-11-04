@@ -1,23 +1,24 @@
-import { Router } from 'express';
+import express, { Router, type RequestHandler } from 'express';
 
 import { getUser, requireRole } from '../auth/currentUser.ts';
 import type { Queryable } from '../db/pool.ts';
 import { HttpError } from '../http/errors.ts';
 import { cleanText, isUuid, readWholeNumber } from '../http/validation.ts';
+import { extractLessonText } from '../lessons/extract/index.ts';
+import { MAX_BODY_LENGTH, MAX_FILE_BYTES } from '../lessons/limits.ts';
 import {
   createLesson,
   deleteLesson,
   getLesson,
   listLessons,
   publishLesson,
+  setBodyFromFile,
   unpublishLesson,
   updateLesson,
   type LessonStatus,
 } from '../lessons/lessons.ts';
 
 const MAX_TITLE_LENGTH = 200;
-// About 15 pages. Keeps the work of the AI (and so its cost) under control.
-export const MAX_BODY_LENGTH = 40_000;
 const DEFAULT_PAGE_SIZE = 50;
 const MAX_PAGE_SIZE = 200;
 const STATUSES: readonly LessonStatus[] = ['draft', 'processing', 'in_review', 'published'];
@@ -62,6 +63,44 @@ function readOptionalUuid(value: unknown, what: string): string | undefined {
     throw new HttpError(400, 'invalid_request', `The ${what} is not valid.`);
   }
   return value;
+}
+
+// The file arrives as the plain content of the request (not as a form), whatever its type
+// says. Too large a file gets its own clear error.
+const fileBody: RequestHandler = (req, res, next) => {
+  express.raw({ type: () => true, limit: MAX_FILE_BYTES })(req, res, (error?: unknown) => {
+    if ((error as { type?: string } | undefined)?.type === 'entity.too.large') {
+      next(
+        new HttpError(
+          413,
+          'file_too_large',
+          `The file is larger than ${MAX_FILE_BYTES / (1024 * 1024)} MB.`,
+        ),
+      );
+      return;
+    }
+    next(error);
+  });
+};
+
+// The name the browser sent along, made safe to keep: decoded, without a folder, without
+// control characters, and not too long.
+function readFileName(header: unknown): string | null {
+  if (typeof header !== 'string' || header === '') {
+    return null;
+  }
+
+  let name = header;
+  try {
+    name = decodeURIComponent(header);
+  } catch {
+    // Not encoded: use it as it is.
+  }
+  const cleaned = (name.split(/[\\/]/).pop() ?? '')
+    .replace(/\p{Cc}/gu, '')
+    .trim()
+    .slice(0, 255);
+  return cleaned === '' ? null : cleaned;
 }
 
 // Lessons. A teacher makes and manages the lessons of the subjects they teach; students and
@@ -133,6 +172,28 @@ export function lessonsRouter(pool: Queryable): Router {
   router.delete('/:id', requireRole('teacher'), async (req, res) => {
     await deleteLesson(pool, { user: getUser(req), lessonId: readLessonId(req.params.id) });
     res.status(204).end();
+  });
+
+  // Fills the lesson with the text of a Word (.docx) or PDF file. The body of the request is
+  // the file itself (at most 10 MB); the name can be sent in the X-File-Name header, written
+  // with encodeURIComponent. The type is found out from the content. The text replaces what
+  // the lesson had; the teacher reads and corrects it afterwards.
+  router.post('/:id/source', requireRole('teacher'), fileBody, async (req, res) => {
+    const lessonId = readLessonId(req.params.id);
+    const file: unknown = req.body;
+    if (!Buffer.isBuffer(file) || file.length === 0) {
+      throw new HttpError(400, 'invalid_request', 'Send the file as the body of the request.');
+    }
+
+    const { text, source } = await extractLessonText(file);
+    const lesson = await setBodyFromFile(pool, {
+      user: getUser(req),
+      lessonId,
+      text,
+      source,
+      fileName: readFileName(req.get('x-file-name')),
+    });
+    res.json({ lesson });
   });
 
   router.post('/:id/publish', requireRole('teacher'), async (req, res) => {

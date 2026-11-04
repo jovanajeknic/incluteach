@@ -26,6 +26,8 @@ export interface LessonListItem {
 export interface Lesson extends Omit<LessonListItem, 'subject'> {
   body: string;
   source: 'pasted' | 'docx' | 'pdf';
+  // The name of the file the text came from, if it came from a file.
+  sourceFileName: string | null;
   // Goes up by one whenever the text changes.
   bodyRevision: number;
   subject: LessonSubject & { teacher: { id: string; fullName: string } };
@@ -37,6 +39,7 @@ interface LessonRow {
   status: LessonStatus;
   body?: string;
   source?: 'pasted' | 'docx' | 'pdf';
+  source_file_name?: string | null;
   body_revision?: number;
   published_at: Date | null;
   created_at: Date;
@@ -81,6 +84,7 @@ function toLesson(row: LessonRow): Lesson {
     ...item,
     body: row.body as string,
     source: row.source as Lesson['source'],
+    sourceFileName: row.source_file_name ?? null,
     bodyRevision: row.body_revision as number,
     subject: { ...item.subject, teacher: { id: row.teacher_id, fullName: row.teacher_name } },
   };
@@ -167,7 +171,7 @@ export async function listLessons(
   return { lessons: rows.map(toListItem), total: Number(counted[0].total) };
 }
 
-const DETAIL_COLUMNS = `${LIST_COLUMNS}, l.body, l.source, l.body_revision`;
+const DETAIL_COLUMNS = `${LIST_COLUMNS}, l.body, l.source, l.source_file_name, l.body_revision`;
 
 // A lesson the person may see, or a 404 as if it did not exist.
 export async function getLesson(
@@ -265,6 +269,45 @@ export async function updateLesson(
      WHERE id = $1 AND school_id = $4 AND status = $5`,
     [lessonId, title ?? null, body ?? null, user.schoolId, current.status],
   );
+  return getLesson(pool, { user, lessonId });
+}
+
+// Puts the text taken out of a Word or PDF file into the lesson, in place of what was there,
+// and remembers where it came from. The teacher then reads it and corrects it. Same rules as
+// for other changes: not while the lesson is published or being processed.
+export async function setBodyFromFile(
+  pool: Queryable,
+  {
+    user,
+    lessonId,
+    text,
+    source,
+    fileName,
+  }: {
+    user: AuthUser;
+    lessonId: string;
+    text: string;
+    source: 'docx' | 'pdf';
+    fileName: string | null;
+  },
+): Promise<Lesson> {
+  const current = await requireOwnedLesson(pool, { user, lessonId });
+  assertEditable(current);
+
+  const { rows } = await pool.query(
+    `UPDATE lessons SET
+       body = $2,
+       body_revision = body_revision + (CASE WHEN body <> $2 THEN 1 ELSE 0 END),
+       source = $3::lesson_source,
+       source_file_name = $4,
+       updated_at = now()
+     WHERE id = $1 AND school_id = $5 AND status = $6
+     RETURNING id`,
+    [lessonId, text, source, fileName, user.schoolId, current.status],
+  );
+  if (rows.length === 0) {
+    throw new HttpError(409, 'wrong_state', 'The lesson changed in the meantime. Try again.');
+  }
   return getLesson(pool, { user, lessonId });
 }
 

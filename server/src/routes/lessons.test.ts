@@ -119,6 +119,7 @@ describe.skipIf(!process.env.DATABASE_URL)('lessons', () => {
           status: 'draft',
           body: BODY,
           source: 'pasted',
+          sourceFileName: null,
           bodyRevision: 1,
           subject: {
             id: w.mathId,

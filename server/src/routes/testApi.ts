@@ -35,6 +35,12 @@ export interface Requests {
   post: (path: string, body?: object) => request.Test;
   patch: (path: string, body?: object) => request.Test;
   delete: (path: string) => request.Test;
+  // Sends a file as the whole body of the request, like a browser does with fetch.
+  postFile: (
+    path: string,
+    data: Buffer,
+    options?: { name?: string; type?: string },
+  ) => request.Test;
 }
 
 export interface Api extends Requests {
@@ -61,6 +67,16 @@ function requestsWith(app: App, cookie: string): Requests {
         .set('Cookie', cookie)
         .send(body ?? {}),
     delete: (path) => request(app).delete(path).set('Cookie', cookie),
+    postFile: (path, data, options = {}) => {
+      const upload = request(app)
+        .post(path)
+        .set('Cookie', cookie)
+        .set('Content-Type', options.type ?? 'application/octet-stream');
+      if (options.name !== undefined) {
+        upload.set('X-File-Name', options.name);
+      }
+      return upload.send(data);
+    },
   };
 }
 

@@ -61,7 +61,7 @@ Still to settle when we get there:
 
 1. Database for lessons, summaries and quiz questions (done). The child's quiz answers come with the quiz for students.
 2. Lessons from **pasted text** (done): create, list, edit and delete for the teacher; publish and take back; students and parents read. No file and no AI yet.
-3. **File upload**: Word and PDF to text, the message for scanned PDFs, the limits.
+3. **File upload** (done): Word and PDF to text, the message for scanned PDFs, the limits. The file is sent as the plain body of a request, the kind is found out from its content, and the text is read on the server (Word with `fflate`, which also protects against files that unpack into enormous data; PDF with `unpdf`, the PDF reader of Firefox). Limits: 10 MB, 40,000 characters, 100 pages.
 4. The **AI interface with the fake AI**: make the summary and the quiz, show progress, the teacher edits and approves.
 5. **Quiz for students**: answer, feedback, attempts; a lesson is finished when all answers are correct; what parents and teachers see.
 6. **Effort, comments and progress**: stars, parent comments, progress per subject (see "Wanted next").

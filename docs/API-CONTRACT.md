@@ -13,7 +13,7 @@ Changing an `agreed` endpoint needs both developers' approval. Mocks in the fron
 - **Authentication**: a cookie named `session`, set by `POST /auth/login` or `POST /auth/activate`. It is `httpOnly`, `SameSite=Lax`, `Secure` in production, and lasts 7 days. The browser keeps it; the frontend never reads it. Every request must be sent with credentials. Proposed by the backend developer; to be confirmed.
 - **Roles**: one per user: `admin`, `teacher`, `student`, `parent`. Every user belongs to exactly one school, and every endpoint works only on the data of the caller's school. Something that belongs to another school looks exactly like something that does not exist (404).
 - **Error format**: every error is `{ "error": { "code": "...", "message": "..." } }`. `message` is English and for developers; screens choose their own Serbian text from `code`.
-- **Common errors** (not repeated below): `401 unauthenticated` (not signed in or session ended), `403 forbidden` (signed in, but the role may not do this), `400 invalid_request` (the body or query is not valid, or contains the NUL character, which cannot be stored), `400 bad_request` (the JSON cannot be read), `413 bad_request` (body above 256 kB), `404 not_found` (unknown path), `429 too_many_attempts` (sign-in and activation only), `500 internal_error`.
+- **Common errors** (not repeated below): `401 unauthenticated` (not signed in or session ended), `403 forbidden` (signed in, but the role may not do this), `400 invalid_request` (the body or query is not valid, or contains the NUL character, which cannot be stored), `400 bad_request` (the JSON cannot be read), `413 bad_request` (a JSON body above 256 kB), `404 not_found` (unknown path), `429 too_many_attempts` (sign-in and activation only), `500 internal_error`.
 - **Ids** are UUIDs (text). A malformed id in a path gives 404. **Dates** are ISO 8601 text in UTC.
 - **Paging**: lists accept `limit` (1 to 200, default 50) and `offset` (default 0) and answer with `total`.
 - **Letter case**: usernames, emails, class names and subject names are compared ignoring letter case.
@@ -353,11 +353,11 @@ Where a student or a parent looks for subjects to join. Only the subjects of the
 
 ## Lessons
 
-A lesson belongs to a subject and holds the text of the teacher, as written. See `docs/LESSONS.md` for the whole idea. At this stage a lesson is made from **pasted text**; files, the AI summary and the quiz come in later steps and will add fields (the summary and the quiz will appear in the lesson, approved ones only for students).
+A lesson belongs to a subject and holds the text of the teacher, as written. See `docs/LESSONS.md` for the whole idea. A lesson is made from **pasted text** or from a **Word or PDF file**; the AI summary and the quiz come in a later step and will add fields (the summary and the quiz will appear in the lesson, approved ones only for students).
 
 **LessonListItem**: `{ id, title, status, subject: { id, name, className, schoolYear }, publishedAt, createdAt, updatedAt }`. `status` is `draft`, `processing`, `in_review` or `published`.
 
-**Lesson** (the whole lesson): a LessonListItem plus `body` (the text, line breaks kept), `source` (`pasted`, later `docx` or `pdf`), `bodyRevision` (goes up by one whenever the text really changes) and `subject.teacher: { id, fullName }`.
+**Lesson** (the whole lesson): a LessonListItem plus `body` (the text, line breaks kept), `source` (`pasted`, `docx` or `pdf`: how the text came about), `sourceFileName` (the name of the file, or null), `bodyRevision` (goes up by one whenever the text really changes) and `subject.teacher: { id, fullName }`.
 
 **Who sees what**: the teacher of a subject sees all its lessons in every state. A student sees the **published** lessons of the subjects they joined (an approved enrollment). A parent sees the published lessons of the subjects any of their children joined. The school admin sees no lessons. Anything a person may not see looks like it does not exist (404). If the admin gives the subject a new teacher, the lessons go to the new teacher.
 
@@ -408,6 +408,17 @@ A lesson belongs to a subject and holds the text of the teacher, as written. See
 - **Success response**: `204`.
 - **Errors**: `404 not_found`, `409 lesson_published`, `409 lesson_busy`.
 
+### POST /lessons/{id}/source
+
+- **Status**: implemented
+- **Purpose**: fill the lesson with the text of a Word or PDF file. The teacher then reads the text and corrects it by hand (`PATCH /lessons/{id}`) before anything else is done with it.
+- **Who may call it**: `teacher` of the subject.
+- **Request**: the **file itself is the body of the request** (not a form), at most 10 MB. Send the name in the header `X-File-Name`, written with `encodeURIComponent` (optional). Do not use `application/json` as the content type; anything else is fine, because the kind of file is found out from its content, not from the type or the name. Supported: Word `.docx`, and PDF **that has text** (a page you can select text on).
+- **Success response**: `200 { lesson: Lesson }`. The text replaces what the lesson had; `source` is `docx` or `pdf`, `sourceFileName` the name, and `bodyRevision` goes up if the text really differs.
+- **Errors**: `400 invalid_request` (empty body), `413 file_too_large`, `415 unsupported_file` (not Word or PDF, an old `.doc` file, or a zip that is not Word), `422 no_text_in_file` (a PDF that is a scan, or a file with no text), `422 unreadable_file` (damaged, cut short or protected with a password), `422 text_too_long` (more than 40,000 characters, or a PDF of more than 100 pages), `404 not_found`, `409 lesson_published`, `409 lesson_busy`.
+- **Notes**: the text is tidied (spaces, empty lines) and in a PDF the lines of one paragraph are joined again; headings and list items stay on their own lines. Word list items get a bullet `•` and table cells are separated by ` | `. Pictures, headers and footers are not read. The original file is not kept, only the text. Pictures of pages (scans) are not read (no OCR); the message says to send a Word file or paste the text.
+- **Used by (frontend)**: teacher "Nova lekcija" (choose a file or paste text), and "Zamijeni tekst iz fajla" in the editor. After the answer, show the text for correction. Send the file with `fetch(url, { method: 'POST', body: file, headers: { 'X-File-Name': encodeURIComponent(file.name) } })`.
+
 ### POST /lessons/{id}/publish
 
 - **Status**: implemented
@@ -430,4 +441,4 @@ A lesson belongs to a subject and holds the text of the teacher, as written. See
 
 ## Not defined yet
 
-File upload, the AI summary and quiz, the quiz for students, comments, stars, progress, removing a student from a subject at the end of the year, copying classes and subjects to a new school year, changing one's own password, the school request form of the landing page.
+The AI summary and quiz, the quiz for students, comments, stars, progress, removing a student from a subject at the end of the year, copying classes and subjects to a new school year, changing one's own password, the school request form of the landing page.
