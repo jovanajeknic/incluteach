@@ -1,8 +1,9 @@
 import { Router } from 'express';
-import type pg from 'pg';
+
+import type { Queryable } from '../db/pool.ts';
 
 // Reports whether the server is running and can reach the database.
-export function healthRouter(pool: Pick<pg.Pool, 'query'>): Router {
+export function healthRouter(pool: Queryable): Router {
   const router = Router();
 
   router.get('/health', async (_req, res) => {

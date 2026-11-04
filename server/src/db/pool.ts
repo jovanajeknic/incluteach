@@ -2,6 +2,9 @@ import pg from 'pg';
 
 import { loadConfig } from '../config.ts';
 
+// What most code needs from a pool. Tests pass a single connection inside a transaction instead.
+export type Queryable = Pick<pg.Pool, 'query'>;
+
 export function createPool(databaseUrl: string = loadConfig().databaseUrl): pg.Pool {
   const pool = new pg.Pool({
     connectionString: databaseUrl,

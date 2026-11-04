@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import type pg from 'pg';
 
+import { hashPassword } from '../auth/password.ts';
 import type { UserRole } from '../roles.ts';
 
 // Runs a test body in a transaction that is always rolled back, so tests
@@ -124,6 +125,25 @@ export async function insertEnrollment(
       fields.parentDecidedBy ?? null,
       fields.teacherDecidedBy ?? null,
     ],
+  );
+  return rows[0].id;
+}
+
+// Cheap hashing settings keep tests fast; sign-in reads the settings from the stored hash.
+const FAST_HASH_COST = { N: 1024, r: 8, p: 1 };
+
+// A user who has already activated the account: with a password and an email.
+export async function insertActivatedUser(
+  client: pg.PoolClient,
+  schoolId: string,
+  role: UserRole,
+  fields: { username: string; email: string; password: string },
+): Promise<string> {
+  const passwordHash = await hashPassword(fields.password, FAST_HASH_COST);
+  const { rows } = await client.query<{ id: string }>(
+    `INSERT INTO users (full_name, role, school_id, username, email, password_hash)
+     VALUES ('Test User', $1, $2, $3, $4, $5) RETURNING id`,
+    [role, schoolId, fields.username, fields.email, passwordHash],
   );
   return rows[0].id;
 }

@@ -1,6 +1,8 @@
 export interface Config {
   databaseUrl: string;
   port: number;
+  // Cookies marked Secure are sent only over HTTPS, so this is on in production only.
+  secureCookies: boolean;
 }
 
 const DEFAULT_PORT = 3000;
@@ -14,7 +16,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     );
   }
 
-  return { databaseUrl, port: parsePort(env.PORT) };
+  return {
+    databaseUrl,
+    port: parsePort(env.PORT),
+    secureCookies: env.NODE_ENV === 'production',
+  };
 }
 
 function parsePort(value: string | undefined): number {
