@@ -64,7 +64,7 @@ Differences from this plan, all intentional for this step:
 
 ## Backend API and frontend work
 
-A living list. Whenever a backend endpoint is added, it is added here with what the frontend needs to do for it. The exact requests, answers and errors of every endpoint are in [API-CONTRACT.md](API-CONTRACT.md) (status `proposed` until the frontend developer has reviewed them); the rules and reasons behind them are in [DATABASE.md](DATABASE.md). This section only says what the screens must do. Status: **ready** means the endpoint exists and is tested; **planned** means it is agreed but not built.
+A living list. Whenever a backend endpoint is added, it is added here with what the frontend needs to do for it. The exact requests, answers and errors of every endpoint are in [API-CONTRACT.md](API-CONTRACT.md) (status `implemented`: built and tested on the server, not yet connected to the frontend); the rules and reasons behind them are in [DATABASE.md](DATABASE.md). This section only says what the screens must do. Status: **ready** means the endpoint exists and is tested; **planned** means it is agreed but not built.
 
 ### Terminology
 
@@ -568,7 +568,7 @@ Every task also follows the verification rules in [AGENTS.md](../AGENTS.md#4-ver
 
 | Document                                    | When                                                                                     |
 | ------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `docs/API-CONTRACT.md` (or an OpenAPI file) | **Written**, status `proposed`: [API-CONTRACT.md](API-CONTRACT.md) covers every endpoint of the backend so far. Review it with the backend developer before FE-04 schemas stop being provisional and before FE-17 |
+| `docs/API-CONTRACT.md` (or an OpenAPI file) | **Written**, status `implemented`: [API-CONTRACT.md](API-CONTRACT.md) covers every endpoint of the backend so far. They are built and tested on the server; check them against the screens before FE-04 schemas stop being provisional and before FE-17 |
 | `docs/ARCHITECTURE.md`                      | When backend technologies and authentication are decided                                 |
 | Accessibility checklist                     | During FE-02/FE-03, as a short reusable checklist for UI tasks                           |
 

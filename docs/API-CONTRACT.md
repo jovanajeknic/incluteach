@@ -4,7 +4,7 @@ Agreement between the frontend (`client/`) and the backend (`server/`). Both sid
 Status values: `proposed` (written, not yet agreed with the teammate) -> `agreed` -> `implemented`.
 Changing an `agreed` endpoint needs both developers' approval. Mocks in the frontend must follow this file.
 
-**Where things stand:** every endpoint below already exists in `server/` and has tests (595 tests at the time of writing), but none has been reviewed by the frontend developer yet, so they are all `proposed`. The frontend should read this file, say what does not fit, and only then build against it. What the screens have to do for each endpoint is in `docs/FRONTEND-PLAN.md`, section "Backend API and frontend work". The rules and the reasons behind them are in `docs/DATABASE.md`.
+**Where things stand:** every endpoint below exists in `server/` and has tests (595 tests at the time of writing), so all are `implemented`. The frontend developer has not reviewed them or agreed to them yet (the owner decided that no review is needed before they are used). If something does not fit the screens, the contract and the server are changed together and this file is updated. What the screens have to do for each endpoint is in `docs/FRONTEND-PLAN.md`, section "Backend API and frontend work". The rules and the reasons behind them are in `docs/DATABASE.md`.
 
 ## Common rules
 
@@ -70,7 +70,7 @@ The status follows the people involved: the student asks (`awaiting_parent`), a 
 
 ### GET /health
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: tells whether the server runs and can reach the database.
 - **Who may call it**: anyone, no sign-in.
 - **Request**: none.
@@ -83,7 +83,7 @@ The status follows the people involved: the student asks (`awaiting_parent`), a 
 
 ### POST /auth/login
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: sign in with an email or a username and a password.
 - **Who may call it**: anyone, no sign-in.
 - **Request**: body `{ identifier: string, password: string }`. `identifier` is an email (it contains `@`) or a username, any letter case, up to 254 characters.
@@ -94,7 +94,7 @@ The status follows the people involved: the student asks (`awaiting_parent`), a 
 
 ### GET /auth/me
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: who is signed in, for restoring the user after a page reload.
 - **Who may call it**: any signed-in user.
 - **Request**: none.
@@ -104,7 +104,7 @@ The status follows the people involved: the student asks (`awaiting_parent`), a 
 
 ### POST /auth/logout
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: ends the session and clears the cookie.
 - **Who may call it**: anyone (it works without a session too).
 - **Request**: none.
@@ -114,7 +114,7 @@ The status follows the people involved: the student asks (`awaiting_parent`), a 
 
 ### POST /auth/activate
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: a person opens the activation link they received, chooses a password and adds an email, and is signed in.
 - **Who may call it**: anyone with a valid link, no sign-in.
 - **Request**: body `{ token: string, password: string, email: string }`. `token` comes from the link `PUBLIC_URL/activate?token=...`. The password has 7 to 128 characters (the same letter typed in two ways, such as "č", counts the same). The email is trimmed and must look like an address.
@@ -129,7 +129,7 @@ All endpoints in this group are for `admin` only and work on the admin's school.
 
 ### GET /users
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: the users of the school.
 - **Request**: query `role` (`admin`, `teacher`, `student`, `parent`), `status` (`active` by default, `deactivated` or `all`), `search` (part of the name or username, up to 100 characters), `limit`, `offset`.
 - **Success response**: `200 { users: ManagedUser[], total }`, sorted by name. Users whose data was erased are never listed.
@@ -138,7 +138,7 @@ All endpoints in this group are for `admin` only and work on the admin's school.
 
 ### POST /users
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: create an account that the person activates later.
 - **Request**: body `{ fullName: string, role: "teacher" | "student" | "parent" }`. `fullName` has 2 to 100 characters.
 - **Success response**: `201 { user: ManagedUser }`. The username is generated from the name: first and last word without accents (`Đorđe Đurđević` gives `djordje_djurdjevic`; Cyrillic is converted), with a number added when taken (`ana_ivic2`).
@@ -148,7 +148,7 @@ All endpoints in this group are for `admin` only and work on the admin's school.
 
 ### PATCH /users/{id}
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: fix a name. The username does not change.
 - **Request**: body `{ fullName: string }`.
 - **Success response**: `200 { user: ManagedUser }`.
@@ -157,7 +157,7 @@ All endpoints in this group are for `admin` only and work on the admin's school.
 
 ### POST /users/{id}/activation
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: gives the admin the one-time link (and so the QR code) for a user to choose a password. Issuing a new one cancels the previous one, so it is also the answer to a forgotten password.
 - **Request**: none.
 - **Success response**: `201 { activation: { url: string, expiresAt: date } }`. The link is valid for 7 days.
@@ -167,7 +167,7 @@ All endpoints in this group are for `admin` only and work on the admin's school.
 
 ### POST /users/deactivate
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: users who leave the school (for example students who finished it) can no longer sign in, and their sessions end. All data stays and it can be undone.
 - **Request**: body `{ ids: uuid[] }`, 1 to 200 ids.
 - **Success response**: `200 { affectedIds: uuid[], skippedIds: uuid[] }`. Skipped are ids of another school, unknown ids and users already deactivated.
@@ -176,14 +176,14 @@ All endpoints in this group are for `admin` only and work on the admin's school.
 
 ### POST /users/reactivate
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: undoes a deactivation.
 - **Request / Success response / Errors**: same as `POST /users/deactivate`. Erased users are skipped.
 - **Used by (frontend)**: admin screen "Korisnici".
 
 ### POST /users/delete
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: erases a person's data for good (for an account created by mistake). Only deactivated users are deleted.
 - **Request / Success response / Errors**: same as `POST /users/deactivate`. Users that are not deactivated are skipped.
 - **Notes**: name, username, email and password are erased and the user becomes an anonymous "Deleted user", so records that point at it (for example an enrollment a parent confirmed, or a subject's teacher) stay valid. The username and email become free again. Sessions, activation links, the student's own requests and the family links are removed (a link that a remaining enrollment depends on stays, holding only ids). It cannot be undone.
@@ -195,7 +195,7 @@ All endpoints in this group are for `admin` only and work on the admin's school.
 
 ### GET /classes
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: the classes (odeljenja) of the school.
 - **Request**: query `schoolYear` (2000 to 2100) to see one school year.
 - **Success response**: `200 { classes: Class[] }`, newest school year first, then by name.
@@ -204,7 +204,7 @@ All endpoints in this group are for `admin` only and work on the admin's school.
 
 ### POST /classes
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: create a class for a school year.
 - **Request**: body `{ name: string, schoolYear: integer }`. `name` has 1 to 50 characters; `schoolYear` is 2000 to 2100.
 - **Success response**: `201 { class: Class }`.
@@ -213,7 +213,7 @@ All endpoints in this group are for `admin` only and work on the admin's school.
 
 ### PATCH /classes/{id}
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: rename a class. The school year cannot change.
 - **Request**: body `{ name: string }`.
 - **Success response**: `200 { class: Class }`.
@@ -221,7 +221,7 @@ All endpoints in this group are for `admin` only and work on the admin's school.
 
 ### DELETE /classes/{id}
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: delete a class that has no subjects.
 - **Success response**: `204`.
 - **Errors**: `404 not_found`, `409 class_not_empty`.
@@ -232,7 +232,7 @@ A subject is a name in one class taught by one teacher. The same name can appear
 
 ### GET /subjects
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: the subjects of the school.
 - **Request**: query `classId`, `teacherId`, `schoolYear`, `limit`, `offset`.
 - **Success response**: `200 { subjects: Subject[], total }`, newest school year first, then by class, subject and teacher.
@@ -241,7 +241,7 @@ A subject is a name in one class taught by one teacher. The same name can appear
 
 ### POST /subjects
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: create a subject.
 - **Request**: body `{ name: string, classId: uuid, teacherId: uuid }`. `name` has 1 to 100 characters. The teacher must be an active teacher of the school.
 - **Success response**: `201 { subject: Subject }`.
@@ -250,7 +250,7 @@ A subject is a name in one class taught by one teacher. The same name can appear
 
 ### PATCH /subjects/{id}
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: change the name, the teacher, or both. The class cannot change.
 - **Request**: body `{ name?: string, teacherId?: uuid }`, at least one.
 - **Success response**: `200 { subject: Subject }`.
@@ -259,7 +259,7 @@ A subject is a name in one class taught by one teacher. The same name can appear
 
 ### DELETE /subjects/{id}
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: delete a subject nobody has asked to join.
 - **Success response**: `204`.
 - **Errors**: `404 not_found`, `409 subject_has_enrollments`.
@@ -270,7 +270,7 @@ A parent can have several children and a child several parents (a guardian is a 
 
 ### GET /parent-students
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: the links of the school, or the parents of one child, or the children of one parent.
 - **Request**: query `studentId`, `parentId`, `limit`, `offset`.
 - **Success response**: `200 { links, total }`. A link is `{ parent, student, createdAt }` and each person is `{ id, fullName, username, deactivated, deleted }`. Sorted by the child's name, then the parent's.
@@ -279,7 +279,7 @@ A parent can have several children and a child several parents (a guardian is a 
 
 ### POST /parent-students
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: link an active parent to an active student of the school.
 - **Request**: body `{ parentId: uuid, studentId: uuid }`.
 - **Success response**: `201 { link }`.
@@ -292,7 +292,7 @@ Where a student or a parent looks for subjects to join. Only the subjects of the
 
 ### GET /catalog/classes
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: the classes to choose from in the filter.
 - **Who may call it**: `student`, `parent`.
 - **Request**: query `schoolYear` (default: the current school year, which starts on 1 September).
@@ -302,7 +302,7 @@ Where a student or a parent looks for subjects to join. Only the subjects of the
 
 ### GET /catalog/subjects
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: search the subjects a child can ask to join.
 - **Who may call it**: `student` (for themselves), `parent` (for one of their own children).
 - **Request**: query `studentId` (a parent must name a child), `classId`, `search` (part of the subject, class or teacher name, up to 100 characters), `schoolYear` (default: current), `limit`, `offset`.
@@ -314,7 +314,7 @@ Where a student or a parent looks for subjects to join. Only the subjects of the
 
 ### POST /enrollments
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: ask to join a subject.
 - **Who may call it**: `student` (for themselves) or `parent` (for one of their own children).
 - **Request**: body `{ subjectId: uuid, studentId?: uuid }`. A student sends only `subjectId`; a parent also sends `studentId`.
@@ -324,7 +324,7 @@ Where a student or a parent looks for subjects to join. Only the subjects of the
 
 ### GET /enrollments
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: the requests the caller may see.
 - **Who may call it**: `student`, `parent`, `teacher`.
 - **Request**: query `status`, `subjectId`, `studentId` (parents only: one child), `limit`, `offset`.
@@ -334,7 +334,7 @@ Where a student or a parent looks for subjects to join. Only the subjects of the
 
 ### POST /enrollments/{id}/approve
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: a parent confirms a request, or the teacher of the subject approves it.
 - **Who may call it**: `parent` (a request that waits for a parent, for their own child) or `teacher` (a request the parent passed on, for a subject they teach).
 - **Request**: none.
@@ -345,7 +345,7 @@ Where a student or a parent looks for subjects to join. Only the subjects of the
 
 ### POST /enrollments/{id}/reject
 
-- **Status**: proposed
+- **Status**: implemented
 - **Purpose**: a parent or the teacher of the subject rejects a request.
 - **Request / Success response / Errors**: same as `POST /enrollments/{id}/approve`; the new status is `rejected`.
 - **Notes**: after a rejection the student may send a new request for the same subject.
