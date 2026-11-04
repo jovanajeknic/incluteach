@@ -96,3 +96,22 @@ Responsibility boundary:
 - Frontend role checks are for navigation only, not security.
 - A demo role picker is not authentication and must be clearly labelled as demo mode.
 - Mocked API responses must follow the same agreed format as the real API.
+
+## 9. Backend
+
+The backend lives in `server/`. Setup instructions are in [server/README.md](server/README.md).
+
+Agreed technologies (added as packages only when a task needs them):
+
+- Node.js + TypeScript with strict type checking
+- Express
+- PostgreSQL, using the `pg` driver
+- SQL migrations with `node-pg-migrate`
+- Vitest for tests
+- ESLint, Prettier and npm
+
+Database rules:
+
+- The database structure changes only through migration files in `server/migrations/`, never by hand.
+- The application connects with its own limited database user, not the `postgres` admin user.
+- The connection string is read from `DATABASE_URL` in `server/.env` (never committed).

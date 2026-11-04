@@ -6,6 +6,7 @@ IncluTeach is an innovative AI-driven digital platform whose primary goal is to 
 | Folder | Contents |
 |---|---|
 | `client/` | Frontend (React, TypeScript, Vite, Tailwind CSS, shadcn/ui) |
+| `server/` | Backend (Node.js, TypeScript, Express, PostgreSQL); see [server/README.md](server/README.md) |
 | `docs/` | Project documentation: the [frontend plan](docs/FRONTEND-PLAN.md) and the [design system](docs/DESIGN.md) |
 
 Working rules for contributors and AI agents are in [AGENTS.md](AGENTS.md).
