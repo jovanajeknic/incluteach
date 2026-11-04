@@ -4,6 +4,7 @@ import { authenticate } from './auth/currentUser.ts';
 import type { ScryptCost } from './auth/password.ts';
 import type { Queryable } from './db/pool.ts';
 import { errorHandler, notFoundHandler } from './http/errors.ts';
+import { requestLog } from './http/requestLog.ts';
 import { authRouter } from './routes/auth.ts';
 import { classesRouter } from './routes/classes.ts';
 import { catalogRouter, enrollmentsRouter } from './routes/enrollments.ts';
@@ -19,6 +20,8 @@ export interface AppDependencies {
   publicUrl?: string;
   // Only tests set this, to make password hashing quicker.
   passwordCost?: ScryptCost;
+  // Writes one line per request (method, path, status, time). Off by default; the server turns it on.
+  logRequests?: boolean;
 }
 
 // Builds the Express app without starting it, so tests can call it directly.
@@ -27,11 +30,15 @@ export function createApp({
   secureCookies = false,
   publicUrl = 'http://localhost:5173',
   passwordCost,
+  logRequests = false,
 }: AppDependencies): express.Express {
   const app = express();
 
   // Do not tell the world which framework runs the server.
   app.disable('x-powered-by');
+  if (logRequests) {
+    app.use(requestLog());
+  }
   app.use(express.json({ limit: '100kb' }));
   app.use(authenticate(pool));
 

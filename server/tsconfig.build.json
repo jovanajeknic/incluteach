@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "dist",
+    "rootDir": "src",
+    // The source imports files with ".ts" in the name; this rewrites them to ".js" in the output.
+    "rewriteRelativeImportExtensions": true,
+    "sourceMap": true
+  },
+  "include": ["src"],
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/db/testUtils.ts",
+    "src/routes/testApi.ts",
+    "src/routes/testHelpers.ts"
+  ]
+}

@@ -51,6 +51,54 @@ The server restarts when files change. It listens on `PORT` from `.env` (default
 
 Every error response has the same shape, which the frontend relies on: `{ "error": { "code": "not_found", "message": "..." } }`.
 
+## Run the built server
+
+`npm run dev` is for working on the code. To run the server the normal way (compiled, no file watching):
+
+```sh
+npm run build
+npm start
+```
+
+`build` compiles `src/` into `dist/` (both are ignored by Git). The server writes one line per request, for example `POST /auth/login 401 112ms`: the method, the path, the status and the time, and nothing else (no query string, body or cookies). Once an hour it removes ended sessions and activation links that expired more than 30 days ago.
+
+## Connect the frontend on this computer
+
+The frontend (`http://localhost:5173`) and the server (`http://localhost:3000`) are two different addresses for the browser. The simplest way to make them one is a proxy in the Vite dev server (`client/vite.config.ts`):
+
+```ts
+server: {
+  proxy: {
+    '/api': {
+      target: 'http://localhost:3000',
+      // The server has no /api in its paths.
+      rewrite: (path) => path.replace(/^\/api/, ''),
+    },
+  },
+},
+```
+
+The frontend then calls `/api/auth/login`, `/api/users`, and so on, the session cookie works as usual, and the server needs no CORS settings. (For `npm run preview` the same block goes under `preview:`.)
+
+## Back up the database
+
+All the data lives in one database on this computer, so make backups.
+
+```sh
+npm run db:backup
+```
+
+It saves a compressed copy to `server/backups/incluteach-<date>-<time>.dump` (that folder is ignored by Git, because it holds real data). It needs PostgreSQL's `pg_dump` program, of the same version as the database server or newer; it looks in `PG_DUMP_PATH` from `.env`, on the PATH, and in the PostgreSQL folders in Program Files. **Copy the file somewhere other than this computer** (another drive, a cloud folder), otherwise one broken disk loses everything.
+
+To restore, never write over the live database. Restore into a new one, look at it, and only then point `DATABASE_URL` at it. As the PostgreSQL admin:
+
+```sh
+psql -U postgres -c "CREATE DATABASE incluteach_restored OWNER incluteach_app;"
+pg_restore -U postgres --no-owner --role=incluteach_app -d incluteach_restored backups/<file>.dump
+```
+
+What has been checked: the backup is made, lists every table, and its SQL recreates all 9 tables and their 110 constraints in a scratch schema. What has **not** been tried end to end: restoring the data into a new database with `pg_restore` (it needs the admin password), so try the two commands above once with real data before you rely on them.
+
 ## Create the first admin of a school
 
 Nobody can create the first admin of a school from the app, so run this for each school (and again to add another admin to the same school):

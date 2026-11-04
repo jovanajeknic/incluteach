@@ -9,7 +9,7 @@ Changing an `agreed` endpoint needs both developers' approval. Mocks in the fron
 ## Common rules
 
 - **Format of this contract**: Markdown (provisional - TBD whether to move to OpenAPI).
-- **Base URL**: TBD. In development the server listens on `http://localhost:3000` and paths below are relative to it. Proposal: serve the frontend and the API from one address (a Vite proxy in development), so no CORS setup is needed.
+- **Base URL**: the server listens on `http://localhost:3000` and the paths below are relative to it (it has no `/api` prefix). During development the frontend calls `/api/...` and the Vite dev server forwards the call to the server with `/api` removed, so the browser sees one address and no CORS is needed. The exact setting is in `server/README.md`, section "Connect the frontend on this computer". The server runs on the owner's computer for now; hosting is not decided.
 - **Authentication**: a cookie named `session`, set by `POST /auth/login` or `POST /auth/activate`. It is `httpOnly`, `SameSite=Lax`, `Secure` in production, and lasts 7 days. The browser keeps it; the frontend never reads it. Every request must be sent with credentials. Proposed by the backend developer; to be confirmed.
 - **Roles**: one per user: `admin`, `teacher`, `student`, `parent`. Every user belongs to exactly one school, and every endpoint works only on the data of the caller's school. Something that belongs to another school looks exactly like something that does not exist (404).
 - **Error format**: every error is `{ "error": { "code": "...", "message": "..." } }`. `message` is English and for developers; screens choose their own Serbian text from `code`.

@@ -73,7 +73,7 @@ In the API and the code a **class** is what Serbian schools call an **odeljenje*
 ### Rules for every call
 
 - Errors always look like `{ "error": { "code": "...", "message": "..." } }`. The `message` is English and for developers; the screen shows its own Serbian text chosen by `code`.
-- Authentication is a cookie named `session` that the browser keeps by itself (`httpOnly`; the frontend cannot and must not read it). Every request must be sent **with credentials**. Run the frontend and the API on one address in development with a Vite proxy, so no CORS setup is needed; this is to be done in FE-17.
+- Authentication is a cookie named `session` that the browser keeps by itself (`httpOnly`; the frontend cannot and must not read it). Every request must be sent **with credentials**. Call the API as `/api/...`: the Vite dev server forwards those calls to the backend (`http://localhost:3000`) and removes `/api`, so the browser sees one address and no CORS setup is needed. The proxy block to add to `client/vite.config.ts` is in `server/README.md`, section "Connect the frontend on this computer". This is part of FE-17.
 - A `401` with code `unauthenticated` means the session ended: clear cached data and go to `/login`. A `403` with code `forbidden` shows the forbidden page. The frontend role checks stay for navigation only (AGENTS.md, section 8).
 - The server limits failed sign-ins (`429`, code `too_many_attempts`): show a calm message asking to wait a few minutes.
 

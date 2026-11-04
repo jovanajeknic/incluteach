@@ -8,7 +8,10 @@
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc -p tsconfig.build.json",
+    "start": "node dist/server.js",
     "db:check": "tsx src/scripts/checkDb.ts",
+    "db:backup": "tsx src/scripts/backupDb.ts",
     "create-admin": "tsx src/scripts/createAdmin.ts",
     "migrate": "node-pg-migrate -m migrations --envPath .env",
     "migrate:up": "npm run migrate -- up",
