@@ -79,3 +79,42 @@ export async function insertParentStudent(
     [schoolId, parentId, studentId, createdBy],
   );
 }
+
+export interface EnrollmentFields {
+  schoolId: string;
+  studentId: string;
+  subjectId: string;
+  requestedBy: string;
+  requestedByRole: 'student' | 'parent';
+  status?: 'awaiting_parent' | 'awaiting_teacher' | 'approved' | 'rejected';
+  parentDecidedBy?: string;
+  teacherDecidedBy?: string;
+}
+
+// Decision times are filled in automatically when the matching decision is given.
+export async function insertEnrollment(
+  client: pg.PoolClient,
+  fields: EnrollmentFields,
+): Promise<string> {
+  const { rows } = await client.query<{ id: string }>(
+    `INSERT INTO enrollments (
+       school_id, student_id, subject_id, requested_by, requested_by_role, status,
+       parent_decided_by, parent_decided_at, teacher_decided_by, teacher_decided_at
+     ) VALUES (
+       $1, $2, $3, $4, $5, COALESCE($6::enrollment_status, 'awaiting_parent'),
+       $7::uuid, CASE WHEN $7::uuid IS NULL THEN NULL ELSE now() END,
+       $8::uuid, CASE WHEN $8::uuid IS NULL THEN NULL ELSE now() END
+     ) RETURNING id`,
+    [
+      fields.schoolId,
+      fields.studentId,
+      fields.subjectId,
+      fields.requestedBy,
+      fields.requestedByRole,
+      fields.status ?? null,
+      fields.parentDecidedBy ?? null,
+      fields.teacherDecidedBy ?? null,
+    ],
+  );
+  return rows[0].id;
+}
