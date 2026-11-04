@@ -29,7 +29,6 @@ export const text = {
     nav: {
       label: 'Glavna navigacija',
       about: 'O nama',
-      howItWorks: 'Kako funkcioniše',
       audiences: 'Za koga je',
       login: 'Prijavi se',
       register: 'Registruj se',
@@ -62,14 +61,6 @@ export const text = {
         title: 'Za roditelje',
         description: 'Sigurnost da dijete dobija podršku koja mu je potrebna.',
       },
-    },
-    howItWorks: {
-      title: 'Kako funkcioniše',
-      steps: [
-        'Nastavnik unosi lekciju.',
-        'Platforma pomaže da se lekcija prilagodi, a nastavnik je pregleda.',
-        'Učenik uči na svoj način, a roditelj prati i podržava.',
-      ],
     },
     about: {
       title: 'Naša priča',

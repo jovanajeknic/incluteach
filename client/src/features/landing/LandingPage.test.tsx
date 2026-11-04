@@ -4,7 +4,6 @@ import { renderApp } from '@/test/renderApp';
 
 const sectionNavigation = [
   { name: 'O nama', id: 'o-nama' },
-  { name: 'Kako funkcioniše', id: 'kako-funkcionise' },
   { name: 'Za koga je', id: 'za-koga-je' },
 ];
 
@@ -126,7 +125,7 @@ describe('LandingPage', () => {
       const { user } = renderApp({ path: '/' });
       await user.click(getMenuButton());
 
-      await user.click(within(getMenu()!).getByRole('link', { name: 'Kako funkcioniše' }));
+      await user.click(within(getMenu()!).getByRole('link', { name: 'Za koga je' }));
 
       expect(getMenu()).not.toBeInTheDocument();
     });
