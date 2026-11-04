@@ -1,7 +1,8 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type pg from 'pg';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { createPool } from './db/pool.ts';
+import { inRolledBackTransaction, insertSchool } from './db/testUtils.ts';
 import { isUserRole, USER_ROLES } from './roles.ts';
 
 describe('isUserRole', () => {
@@ -25,17 +26,8 @@ describe.skipIf(!process.env.DATABASE_URL)('users.role column', () => {
 
   afterAll(() => pool.end());
 
-  // Every test runs in a transaction that is rolled back, so no test data is left behind.
-  async function inRolledBackTransaction(run: (client: pg.PoolClient) => Promise<void>) {
-    const client = await pool.connect();
-    try {
-      await client.query('BEGIN');
-      await run(client);
-    } finally {
-      await client.query('ROLLBACK');
-      client.release();
-    }
-  }
+  const inTransaction = (run: (client: pg.PoolClient) => Promise<void>) =>
+    inRolledBackTransaction(pool, run);
 
   it('has the same values as USER_ROLES', async () => {
     const { rows } = await pool.query<{ role: string }>(
@@ -47,10 +39,12 @@ describe.skipIf(!process.env.DATABASE_URL)('users.role column', () => {
   });
 
   it.each(USER_ROLES)('accepts a user with the role "%s"', async (role) => {
-    await inRolledBackTransaction(async (client) => {
+    await inTransaction(async (client) => {
+      const schoolId = await insertSchool(client);
+
       const { rows } = await client.query<{ role: string }>(
-        `INSERT INTO users (full_name, role) VALUES ('Test User', $1) RETURNING role`,
-        [role],
+        `INSERT INTO users (full_name, role, school_id) VALUES ('Test User', $1, $2) RETURNING role`,
+        [role, schoolId],
       );
 
       expect(rows[0].role).toBe(role);
@@ -58,17 +52,26 @@ describe.skipIf(!process.env.DATABASE_URL)('users.role column', () => {
   });
 
   it('rejects an unknown role', async () => {
-    await inRolledBackTransaction(async (client) => {
+    await inTransaction(async (client) => {
+      const schoolId = await insertSchool(client);
+
       await expect(
-        client.query(`INSERT INTO users (full_name, role) VALUES ('Test User', 'superadmin')`),
+        client.query(
+          `INSERT INTO users (full_name, role, school_id) VALUES ('Test User', 'superadmin', $1)`,
+          [schoolId],
+        ),
       ).rejects.toThrow(/invalid input value for enum user_role/);
     });
   });
 
   it('rejects a user without a role', async () => {
-    await inRolledBackTransaction(async (client) => {
+    await inTransaction(async (client) => {
+      const schoolId = await insertSchool(client);
+
       await expect(
-        client.query(`INSERT INTO users (full_name) VALUES ('Test User')`),
+        client.query(`INSERT INTO users (full_name, school_id) VALUES ('Test User', $1)`, [
+          schoolId,
+        ]),
       ).rejects.toThrow(/null value in column "role"/);
     });
   });
