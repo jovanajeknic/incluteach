@@ -4,6 +4,7 @@ import { activationUrl, issueActivationToken } from '../auth/activation.ts';
 import { getUser, requireRole } from '../auth/currentUser.ts';
 import type { Queryable } from '../db/pool.ts';
 import { HttpError } from '../http/errors.ts';
+import { isUuid, readWholeNumber } from '../http/validation.ts';
 import { isUserRole, type UserRole } from '../roles.ts';
 import { createUser } from '../users/createUser.ts';
 import {
@@ -25,7 +26,6 @@ const MAX_PAGE_SIZE = 200;
 // One request can change at most this many users, for example a whole class.
 const MAX_IDS = 200;
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const STATUSES: readonly UserStatus[] = ['active', 'deactivated', 'all'];
 
 export interface UsersRouterOptions {
@@ -48,7 +48,7 @@ function readIds(body: unknown, selfId: string): string[] {
     !Array.isArray(ids) ||
     ids.length === 0 ||
     ids.length > MAX_IDS ||
-    !ids.every((id) => typeof id === 'string' && UUID.test(id))
+    !ids.every((id) => isUuid(id))
   ) {
     throw new HttpError(400, 'invalid_request', `Send "ids": a list of 1 to ${MAX_IDS} user ids.`);
   }
@@ -59,17 +59,6 @@ function readIds(body: unknown, selfId: string): string[] {
     throw new HttpError(400, 'cannot_change_self', 'You cannot do this to your own account.');
   }
   return unique;
-}
-
-function readWholeNumber(value: unknown, fallback: number, min: number, max: number): number {
-  if (value === undefined) {
-    return fallback;
-  }
-  const number = typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : NaN;
-  if (!Number.isInteger(number) || number < min || number > max) {
-    throw new HttpError(400, 'invalid_request', 'The page settings are not valid.');
-  }
-  return number;
 }
 
 export function usersRouter(pool: Queryable, { publicUrl }: UsersRouterOptions): Router {
@@ -132,7 +121,7 @@ export function usersRouter(pool: Queryable, { publicUrl }: UsersRouterOptions):
     const userId = String(req.params.id);
     const fullName = readFullName((req.body as { fullName?: unknown } | undefined)?.fullName);
 
-    const user = UUID.test(userId)
+    const user = isUuid(userId)
       ? await renameUser(pool, { schoolId: admin.schoolId, userId, fullName })
       : null;
     if (!user) {
@@ -173,7 +162,7 @@ export function usersRouter(pool: Queryable, { publicUrl }: UsersRouterOptions):
     const userId = String(req.params.id);
 
     // A user of another school looks exactly like a user that does not exist.
-    const user = UUID.test(userId)
+    const user = isUuid(userId)
       ? await findManagedUser(pool, { schoolId: admin.schoolId, userId })
       : null;
     if (!user) {

@@ -2,32 +2,15 @@ import type pg from 'pg';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { createApp } from '../app.ts';
 import { createPool } from '../db/pool.ts';
 import {
-  FAST_HASH_COST,
-  inRolledBackTransaction,
-  insertActivatedUser,
   insertClass,
   insertEnrollment,
   insertParentStudent,
-  insertSchool,
   insertSubject,
-  insertUser,
 } from '../db/testUtils.ts';
+import { inApi as runWithApi, type Api } from './testApi.ts';
 import { sessionCookie } from './testHelpers.ts';
-
-const PASSWORD = 'tajna-lozinka';
-
-interface Fixture {
-  schoolId: string;
-  adminId: string;
-  teacherId: string;
-  studentId: string;
-  notActivatedStudentId: string;
-  parentId: string;
-  otherSchoolStudentId: string;
-}
 
 // These tests talk to the real local database, so they run only when DATABASE_URL is set.
 describe.skipIf(!process.env.DATABASE_URL)('user management', () => {
@@ -40,83 +23,7 @@ describe.skipIf(!process.env.DATABASE_URL)('user management', () => {
 
   afterAll(() => pool.end());
 
-  type App = ReturnType<typeof createApp>;
-
-  interface Api {
-    app: App;
-    client: pg.PoolClient;
-    f: Fixture;
-    get: (path: string) => request.Test;
-    post: (path: string, body?: object) => request.Test;
-    patch: (path: string, body?: object) => request.Test;
-    deactivate: (...ids: string[]) => Promise<request.Response>;
-    signIn: (identifier: string) => Promise<request.Response>;
-  }
-
-  // Each test runs against one connection inside a transaction that is rolled back,
-  // and gets a fresh app, so no data and no rate limit counters carry over.
-  function inApi(run: (api: Api) => Promise<void>) {
-    return inRolledBackTransaction(pool, async (client) => {
-      const schoolId = await insertSchool(client, 'School A');
-      const account = (
-        role: 'admin' | 'teacher' | 'student' | 'parent',
-        username: string,
-        fullName: string,
-      ) =>
-        insertActivatedUser(client, schoolId, role, {
-          username,
-          email: `${username}@example.com`,
-          password: PASSWORD,
-          fullName,
-        });
-
-      const f: Fixture = {
-        schoolId,
-        adminId: await account('admin', 'admin_a', 'Admin Adminović'),
-        teacherId: await account('teacher', 'jovan_jovanovic', 'Jovan Jovanović'),
-        studentId: await account('student', 'ana_ivic', 'Ana Ivić'),
-        notActivatedStudentId: await insertUser(
-          client,
-          schoolId,
-          'student',
-          'marko_maric',
-          'Marko Marić',
-        ),
-        parentId: await account('parent', 'petar_ivic', 'Petar Ivić'),
-        otherSchoolStudentId: await insertUser(
-          client,
-          await insertSchool(client, 'School B'),
-          'student',
-          'tudji_ucenik',
-        ),
-      };
-
-      const app = createApp({ pool: client, passwordCost: FAST_HASH_COST });
-      const signIn = (identifier: string) =>
-        request(app).post('/auth/login').send({ identifier, password: PASSWORD });
-      const cookie = sessionCookie(await signIn('admin_a'));
-
-      const api: Api = {
-        app,
-        client,
-        f,
-        get: (path) => request(app).get(path).set('Cookie', cookie),
-        post: (path, body) =>
-          request(app)
-            .post(path)
-            .set('Cookie', cookie)
-            .send(body ?? {}),
-        patch: (path, body) =>
-          request(app)
-            .patch(path)
-            .set('Cookie', cookie)
-            .send(body ?? {}),
-        deactivate: (...ids) => api.post('/users/deactivate', { ids }),
-        signIn,
-      };
-      await run(api);
-    });
-  }
+  const inApi = (run: (api: Api) => Promise<void>) => runWithApi(pool, run);
 
   const names = (response: request.Response) =>
     (response.body.users as { username: string }[]).map((user) => user.username);

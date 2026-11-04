@@ -21,7 +21,7 @@ Everything built so far is the database. No API or working sign-in exists yet.
 3. **The admin creates everything**: teacher, student and parent accounts, the links between parents and children, and the subjects with their teachers. Nobody else can create these. A parent-child link is never deleted on its own; it disappears only when a person's data is erased for good (see agreement 11).
 4. **A student is not tied to a class.** A student is connected to the school only through approved enrollments in subjects.
 5. **A subject is "name + class + teacher"**, assigned by the admin. The same name (for example Matematika) can have several rows, with different teachers in one class or in different classes. A student who searches for a subject sees, for example, "Matematika, teacher X". Only subjects of the student's own school are shown.
-6. **A class has a school year**, stored as the starting year (`2026` means 2026/27).
+6. **A class has a school year**, stored as the starting year (`2026` means 2026/27). Class names are unique within a school year, ignoring letter case. A class is deleted only while it has no subjects; a subject only while nobody has asked to join it. When a teacher leaves, their subjects stay and are marked (`teacher.deactivated`) until the admin gives them a new teacher.
 7. **Enrollment flow**: the student asks, one linked parent confirms, then the teacher of that subject approves or rejects. A parent can ask for their child, which counts as the confirmation. After a rejection a new request is allowed. A student without a parent in the system is not allowed to skip the parent step; the admin links a guardian first.
 8. **Accounts are activated with a QR code**: the admin generates it and sends it by their own means, nothing is sent automatically. The QR is single-use and valid for 7 days; a new QR cancels the previous one. After scanning, the user sets a password (at least 7 characters) and adds an email, which is also used for future notifications about subjects. A lost password is handled the same way: the admin issues a new QR.
 9. **Usernames are created by the admin** as `ime_prezime` (lowercase letters, digits and underscore, 3 to 40 characters). When a name is taken, a number is added at the end. A username is unique across all schools and is how a user signs in; the email is added at activation.
@@ -36,7 +36,7 @@ Everything built so far is the database. No API or working sign-in exists yet.
 | `users`            | All accounts: `username`, `role`, `school_id`; `email` and `password_hash` stay empty until activation, and an account with a password always has an email; `deactivated_at` and `deleted_at` mark deactivated and erased accounts |
 | `activation_tokens` | One-time QR/link for a user, issued by an admin of the same school; has an expiry, and is used or revoked |
 | `sessions`         | Signed-in sessions (hash of the cookie value, expiry)                   |
-| `classes`          | A class of a school in one school year                                  |
+| `classes`          | A class of a school in one school year (unique name per school year, any letter case) |
 | `subjects`         | A subject in a class, taught by one teacher                             |
 | `parent_students`  | Parent-child link (many to many), created by an admin of the same school |
 | `enrollments`      | A student's request to join a subject, with parent and teacher decisions |
@@ -81,6 +81,14 @@ Steps, each with tests:
 | `POST /users/reactivate` | Same shape. Lets deactivated users sign in again (not erased ones) |
 | `POST /users/delete` | Same shape. Erases personal data for good; only for deactivated users |
 | `POST /users` | Admin only. Body `{ fullName, role }` with `role` one of `teacher`, `student`, `parent`. Creates the account in the admin's school and returns `{ user }` (status 201, same shape as in the list) with the generated username (`ime_prezime`, a number is added when it is taken). The account cannot sign in until it is activated. Errors: `invalid_full_name`, `invalid_role` |
+| `GET /classes` | Admin only. Optional `schoolYear` (the year it starts in). Answers `{ classes }`, newest school year first, each `{ id, name, schoolYear, subjectCount, createdAt }` |
+| `POST /classes` | Admin only. Body `{ name, schoolYear }` (name 1 to 50 characters, year 2000 to 2100). The same name cannot repeat in one school year, whatever the letter case (409 `class_exists`). Errors: `invalid_class_name`, `invalid_school_year` |
+| `PATCH /classes/:id` | Admin only. Body `{ name }`; the school year cannot change |
+| `DELETE /classes/:id` | Admin only. 204. Only a class without subjects (409 `class_not_empty`) |
+| `GET /subjects` | Admin only. Query: `classId`, `teacherId`, `schoolYear`, `limit`, `offset`. Answers `{ subjects, total }`; a subject is `{ id, name, classId, className, schoolYear, teacher: { id, fullName, deactivated, deleted }, createdAt }` |
+| `POST /subjects` | Admin only. Body `{ name, classId, teacherId }`. The teacher must be an active teacher of the school (400 `invalid_teacher`), the class one of the school (400 `invalid_class`). The same teacher cannot teach the same name twice in one class (409 `subject_exists`); different teachers can |
+| `PATCH /subjects/:id` | Admin only. Body `{ name }`, `{ teacherId }` or both; the class cannot change |
+| `DELETE /subjects/:id` | Admin only. 204. Only a subject without enrollment requests (409 `subject_has_enrollments`) |
 | `POST /users/:id/activation` | Admin only, for a user of the admin's school (otherwise 404; 409 `user_deactivated` for a deactivated user). Returns `{ activation: { url, expiresAt } }` with a one-time link valid for 7 days; a new link cancels the previous one, so it also serves as "forgot my password" |
 | `POST /auth/activate` | Public. Body `{ token, password, email }`. Sets the password and email, uses up the link, ends the user's older sessions and signs the user in. Errors: `invalid_activation_link`, `invalid_email`, `password_too_short`, `password_too_long`, `email_taken` (409) |
 
