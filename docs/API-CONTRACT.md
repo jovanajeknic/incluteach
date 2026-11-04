@@ -260,9 +260,9 @@ A subject is a name in one class taught by one teacher. The same name can appear
 ### DELETE /subjects/{id}
 
 - **Status**: implemented
-- **Purpose**: delete a subject nobody has asked to join.
+- **Purpose**: delete a subject nobody has asked to join and that has no lessons.
 - **Success response**: `204`.
-- **Errors**: `404 not_found`, `409 subject_has_enrollments`.
+- **Errors**: `404 not_found`, `409 subject_has_enrollments`, `409 subject_has_lessons`.
 
 ## Parent-child links (admin)
 

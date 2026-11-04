@@ -8,6 +8,7 @@ Summary of the backend database work and the agreements behind it. Working rules
 | ----------------------------------------------------------------------------------------- | ----------- |
 | PostgreSQL connection, migrations, `db:check`                                             | Done        |
 | Database: schools, users with one role, classes, subjects, parent links, enrollments, sign-in tables | Done |
+| Database for lessons, summaries and quiz questions (the API for them is next; see `docs/LESSONS.md`) | Done |
 | Sign-in: login, logout, activation links, passwords, sessions, role checks, first admin script | Done   |
 | Admin API: users (create, list, rename, deactivate, delete), classes, subjects, parent links | Done     |
 | Enrollment API: subject catalog, requests, parent and teacher decisions                   | Done        |
@@ -44,6 +45,9 @@ The backend covers accounts, sign-in, the school structure and enrollments, all 
 | `subjects`         | A subject in a class, taught by one teacher                             |
 | `parent_students`  | Parent-child link (many to many), created by an admin of the same school |
 | `enrollments`      | A student's request to join a subject, with parent and teacher decisions |
+| `lessons`          | A lesson of a subject: title, the text as the teacher corrected it, a revision number that goes up when the text changes, status (draft, processing, in review, published) |
+| `lesson_summaries` | The summary of a lesson (bullet points), made by the AI or the teacher, a draft until a teacher approves it |
+| `lesson_quizzes`, `quiz_questions`, `quiz_options` | The quiz of a lesson: questions (choose one answer, or true/false) with their answers, one of them right; approved by a teacher like the summary |
 
 ## Who enforces what
 

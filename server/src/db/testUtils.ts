@@ -148,3 +148,115 @@ export async function insertActivatedUser(
   );
   return rows[0].id;
 }
+
+export interface LessonFields {
+  schoolId: string;
+  subjectId: string;
+  createdBy: string;
+  title?: string;
+  body?: string;
+  status?: 'draft' | 'processing' | 'in_review' | 'published';
+  publishedAt?: string | null;
+}
+
+export async function insertLesson(client: pg.PoolClient, fields: LessonFields): Promise<string> {
+  const { rows } = await client.query<{ id: string }>(
+    `INSERT INTO lessons (school_id, subject_id, created_by, title, body, status, published_at)
+     VALUES ($1, $2, $3, $4, $5, COALESCE($6::lesson_status, 'draft'), $7::timestamptz)
+     RETURNING id`,
+    [
+      fields.schoolId,
+      fields.subjectId,
+      fields.createdBy,
+      fields.title ?? 'Fotosinteza',
+      fields.body ?? 'Biljke prave hranu uz pomoć svjetlosti.',
+      fields.status ?? null,
+      fields.publishedAt ?? null,
+    ],
+  );
+  return rows[0].id;
+}
+
+export async function insertSummary(
+  client: pg.PoolClient,
+  fields: {
+    schoolId: string;
+    lessonId: string;
+    points?: string[];
+    status?: 'draft' | 'approved';
+    approvedBy?: string | null;
+    approvedAt?: string | null;
+  },
+): Promise<void> {
+  await client.query(
+    `INSERT INTO lesson_summaries
+       (lesson_id, school_id, points, origin, status, based_on_revision, approved_by, approved_at)
+     VALUES ($1, $2, $3, 'ai', COALESCE($4::content_status, 'draft'), 1, $5, $6::timestamptz)`,
+    [
+      fields.lessonId,
+      fields.schoolId,
+      fields.points ?? ['Biljke prave hranu uz pomoć svjetlosti.'],
+      fields.status ?? null,
+      fields.approvedBy ?? null,
+      fields.approvedAt ?? null,
+    ],
+  );
+}
+
+export async function insertQuiz(
+  client: pg.PoolClient,
+  fields: {
+    schoolId: string;
+    lessonId: string;
+    status?: 'draft' | 'approved';
+    approvedBy?: string | null;
+    approvedAt?: string | null;
+  },
+): Promise<void> {
+  await client.query(
+    `INSERT INTO lesson_quizzes
+       (lesson_id, school_id, origin, status, based_on_revision, approved_by, approved_at)
+     VALUES ($1, $2, 'ai', COALESCE($3::content_status, 'draft'), 1, $4, $5::timestamptz)`,
+    [
+      fields.lessonId,
+      fields.schoolId,
+      fields.status ?? null,
+      fields.approvedBy ?? null,
+      fields.approvedAt ?? null,
+    ],
+  );
+}
+
+export async function insertQuestion(
+  client: pg.PoolClient,
+  fields: {
+    lessonId: string;
+    position?: number;
+    kind?: 'choice' | 'true_false';
+    prompt?: string;
+  },
+): Promise<string> {
+  const { rows } = await client.query<{ id: string }>(
+    `INSERT INTO quiz_questions (lesson_id, position, kind, prompt)
+     VALUES ($1, $2, $3::quiz_question_kind, $4) RETURNING id`,
+    [
+      fields.lessonId,
+      fields.position ?? 1,
+      fields.kind ?? 'choice',
+      fields.prompt ?? 'Gdje nastaje glukoza?',
+    ],
+  );
+  return rows[0].id;
+}
+
+export async function insertOption(
+  client: pg.PoolClient,
+  fields: { questionId: string; position?: number; text?: string; isCorrect?: boolean },
+): Promise<string> {
+  const { rows } = await client.query<{ id: string }>(
+    `INSERT INTO quiz_options (question_id, position, text, is_correct)
+     VALUES ($1, $2, $3, $4) RETURNING id`,
+    [fields.questionId, fields.position ?? 1, fields.text ?? 'u lisu', fields.isCorrect ?? false],
+  );
+  return rows[0].id;
+}

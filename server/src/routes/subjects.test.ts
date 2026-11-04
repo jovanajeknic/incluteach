@@ -7,6 +7,7 @@ import {
   insertActivatedUser,
   insertClass,
   insertEnrollment,
+  insertLesson,
   insertParentStudent,
   insertSubject,
   insertUser,
@@ -501,6 +502,21 @@ describe.skipIf(!process.env.DATABASE_URL)('subjects', () => {
 
         expect(response.status).toBe(409);
         expect(response.body.error.code).toBe('subject_has_enrollments');
+        expect((await api.get('/subjects')).body.total).toBe(1);
+      });
+    });
+
+    it('refuses to delete a subject that has lessons', async () => {
+      await inApi(async (api) => {
+        const { classId } = await setup(api);
+        const { client, f } = api;
+        const id = await insertSubject(client, f.schoolId, classId, f.teacherId);
+        await insertLesson(client, { schoolId: f.schoolId, subjectId: id, createdBy: f.teacherId });
+
+        const response = await api.delete(`/subjects/${id}`);
+
+        expect(response.status).toBe(409);
+        expect(response.body.error.code).toBe('subject_has_lessons');
         expect((await api.get('/subjects')).body.total).toBe(1);
       });
     });

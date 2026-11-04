@@ -201,7 +201,8 @@ export async function updateSubject(
   return (await findSubject(pool, { schoolId, subjectId })) as Subject;
 }
 
-// A subject that has enrollment requests is part of students' history and cannot be deleted.
+// A subject that has enrollment requests or lessons is part of students' history and cannot
+// be deleted.
 export async function deleteSubject(
   pool: Queryable,
   { schoolId, subjectId }: { schoolId: string; subjectId: string },
@@ -209,6 +210,7 @@ export async function deleteSubject(
   const { rows } = await pool.query(
     `DELETE FROM subjects s WHERE s.id = $1 AND s.school_id = $2
        AND NOT EXISTS (SELECT 1 FROM enrollments e WHERE e.subject_id = s.id)
+       AND NOT EXISTS (SELECT 1 FROM lessons l WHERE l.subject_id = s.id)
      RETURNING s.id`,
     [subjectId, schoolId],
   );
@@ -216,12 +218,23 @@ export async function deleteSubject(
     return;
   }
 
-  const stillThere = await findSubject(pool, { schoolId, subjectId });
-  throw stillThere
+  if (!(await findSubject(pool, { schoolId, subjectId }))) {
+    throw subjectNotFound();
+  }
+
+  const { rows: lessons } = await pool.query(
+    'SELECT 1 FROM lessons WHERE subject_id = $1 LIMIT 1',
+    [subjectId],
+  );
+  throw lessons.length > 0
     ? new HttpError(
+        409,
+        'subject_has_lessons',
+        'This subject has lessons, so it cannot be deleted.',
+      )
+    : new HttpError(
         409,
         'subject_has_enrollments',
         'Students have requested or joined this subject, so it cannot be deleted.',
-      )
-    : subjectNotFound();
+      );
 }
