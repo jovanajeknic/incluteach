@@ -42,9 +42,9 @@ describe.skipIf(!process.env.DATABASE_URL)('classes', () => {
 
     it('tidies spaces in the name', async () => {
       await inApi(async ({ post }) => {
-        const response = await post('/classes', { name: '  5   razred  A ', schoolYear: 2026 });
+        const response = await post('/classes', { name: '  5   A  ', schoolYear: 2026 });
 
-        expect(response.body.class.name).toBe('5 razred A');
+        expect(response.body.class.name).toBe('5 A');
       });
     });
 

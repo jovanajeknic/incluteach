@@ -731,4 +731,138 @@ describe.skipIf(!process.env.DATABASE_URL)('enrollment requests', () => {
       });
     });
   });
+  describe('the class filter', () => {
+    const classNames = (response: request.Response) =>
+      (response.body.classes as { name: string }[]).map((item) => item.name);
+
+    it('lists the classes of the school that have subjects to join, with how many', async () => {
+      await inApi(async (api) => {
+        const { classId } = await setup(api);
+        const { client, f } = api;
+        const student = await api.as('ana_ivic');
+        const sixth = await insertClass(client, f.schoolId, '6-1', YEAR);
+        await insertSubject(client, f.schoolId, sixth, f.teacherId, 'Geografija');
+        // None of these should be offered.
+        await insertClass(client, f.schoolId, '7-1', YEAR);
+        const oldClass = await insertClass(client, f.schoolId, '9-1', YEAR - 1);
+        await insertSubject(client, f.schoolId, oldClass, f.teacherId, 'Prošlogodišnji');
+        const otherTeacher = await insertUser(client, f.otherSchoolId, 'teacher');
+        const otherClass = await insertClass(client, f.otherSchoolId, '5-2', YEAR);
+        await insertSubject(client, f.otherSchoolId, otherClass, otherTeacher);
+        const leftTeacher = await insertUser(client, f.schoolId, 'teacher');
+        const leftClass = await insertClass(client, f.schoolId, '8-1', YEAR);
+        await insertSubject(client, f.schoolId, leftClass, leftTeacher, 'Bez nastavnika');
+        await insertSubject(client, f.schoolId, classId, leftTeacher, 'Takođe bez nastavnika');
+        await api.deactivate(leftTeacher);
+
+        const response = await student.get('/catalog/classes');
+
+        expect(response.status).toBe(200);
+        expect(response.body.schoolYear).toBe(YEAR);
+        expect(response.body.classes).toEqual([
+          { id: classId, name: '5-2', schoolYear: YEAR, subjectCount: 2 },
+          { id: sixth, name: '6-1', schoolYear: YEAR, subjectCount: 1 },
+        ]);
+      });
+    });
+
+    it('can show another school year', async () => {
+      await inApi(async (api) => {
+        await setup(api);
+        const { client, f } = api;
+        const oldClass = await insertClass(client, f.schoolId, '9-1', YEAR - 1);
+        await insertSubject(client, f.schoolId, oldClass, f.teacherId, 'Prošlogodišnji');
+        const student = await api.as('ana_ivic');
+
+        const response = await student.get(`/catalog/classes?schoolYear=${YEAR - 1}`);
+
+        expect(classNames(response)).toEqual(['9-1']);
+      });
+    });
+
+    it('is open to a parent without naming a child', async () => {
+      await inApi(async (api) => {
+        await setup(api);
+        const parent = await api.as('petar_ivic');
+
+        const response = await parent.get('/catalog/classes');
+
+        expect(classNames(response)).toEqual(['5-2']);
+      });
+    });
+
+    it('answers 400 for a school year out of range', async () => {
+      await inApi(async (api) => {
+        const student = await api.as('ana_ivic');
+
+        expect((await student.get('/catalog/classes?schoolYear=1999')).status).toBe(400);
+      });
+    });
+
+    it('answers 401 when nobody is signed in and 403 for teachers and admins', async () => {
+      await inApi(async (api) => {
+        const teacher = await api.as('jovan_jovanovic');
+
+        expect((await request(api.app).get('/catalog/classes')).status).toBe(401);
+        expect((await teacher.get('/catalog/classes')).status).toBe(403);
+        expect((await api.get('/catalog/classes')).status).toBe(403);
+      });
+    });
+
+    it('narrows the subjects to one class', async () => {
+      await inApi(async (api) => {
+        const { classId } = await setup(api);
+        const { client, f } = api;
+        const sixth = await insertClass(client, f.schoolId, '6-1', YEAR);
+        await insertSubject(client, f.schoolId, sixth, f.teacherId, 'Geografija');
+        const student = await api.as('ana_ivic');
+
+        const fifth = await student.get(`/catalog/subjects?classId=${classId}`);
+        const sixthOnly = await student.get(`/catalog/subjects?classId=${sixth}`);
+
+        expect(names(fifth)).toEqual(['Fizika', 'Matematika']);
+        expect(names(sixthOnly)).toEqual(['Geografija']);
+      });
+    });
+
+    it('combines the class with a search', async () => {
+      await inApi(async (api) => {
+        const { classId } = await setup(api);
+        const student = await api.as('ana_ivic');
+
+        const response = await student.get(`/catalog/subjects?classId=${classId}&search=fiz`);
+
+        expect(names(response)).toEqual(['Fizika']);
+      });
+    });
+
+    it('shows nothing for an unknown class or a class of another school', async () => {
+      await inApi(async (api) => {
+        await setup(api);
+        const { client, f } = api;
+        const otherTeacher = await insertUser(client, f.otherSchoolId, 'teacher');
+        const otherClass = await insertClass(client, f.otherSchoolId, '5-2', YEAR);
+        await insertSubject(client, f.otherSchoolId, otherClass, otherTeacher);
+        const student = await api.as('ana_ivic');
+
+        for (const classId of [UNKNOWN, otherClass]) {
+          const response = await student.get(`/catalog/subjects?classId=${classId}`);
+
+          expect(response.status).toBe(200);
+          expect(response.body).toMatchObject({ subjects: [], total: 0 });
+        }
+      });
+    });
+
+    it('answers 400 for a class id that is not a uuid', async () => {
+      await inApi(async (api) => {
+        const student = await api.as('ana_ivic');
+
+        const response = await student.get('/catalog/subjects?classId=abc');
+
+        expect(response.status).toBe(400);
+        expect(response.body.error.code).toBe('invalid_request');
+      });
+    });
+  });
 });

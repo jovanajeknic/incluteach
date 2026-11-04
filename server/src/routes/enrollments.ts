@@ -4,6 +4,7 @@ import { getUser, requireRole } from '../auth/currentUser.ts';
 import type { Queryable } from '../db/pool.ts';
 import {
   createEnrollment,
+  listCatalogClasses,
   listEnrollments,
   resolveChild,
   searchCatalog,
@@ -40,7 +41,7 @@ function readOptionalUuid(value: unknown, what: string): string | undefined {
 export function catalogRouter(pool: Queryable): Router {
   const router = Router();
 
-  // Query: studentId (a parent says which child), search, schoolYear, limit and offset.
+  // Query: studentId (a parent says which child), classId, search, schoolYear, limit and offset.
   router.get('/subjects', requireRole('student', 'parent'), async (req, res) => {
     const user = getUser(req);
     const studentId = await resolveChild(
@@ -62,11 +63,30 @@ export function catalogRouter(pool: Queryable): Router {
       schoolId: user.schoolId,
       studentId,
       schoolYear: year,
+      classId: readOptionalUuid(req.query.classId, 'class id'),
       search: search?.trim() || undefined,
       limit: readWholeNumber(req.query.limit, DEFAULT_PAGE_SIZE, 1, MAX_PAGE_SIZE),
       offset: readWholeNumber(req.query.offset, 0, 0, Number.MAX_SAFE_INTEGER),
     });
     res.json({ ...result, schoolYear: year });
+  });
+
+  // The classes to choose from in the filter, for the current school year unless another is
+  // asked for (query: schoolYear). Pass a class id to GET /catalog/subjects as classId.
+  router.get('/classes', requireRole('student', 'parent'), async (req, res) => {
+    const { schoolYear } = req.query;
+    const year =
+      schoolYear === undefined
+        ? currentSchoolYear()
+        : readWholeNumber(schoolYear, MIN_YEAR, MIN_YEAR, MAX_YEAR);
+
+    res.json({
+      classes: await listCatalogClasses(pool, {
+        schoolId: getUser(req).schoolId,
+        schoolYear: year,
+      }),
+      schoolYear: year,
+    });
   });
 
   return router;

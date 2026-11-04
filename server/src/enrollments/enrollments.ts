@@ -133,6 +133,8 @@ export interface SearchCatalogOptions {
   schoolId: string;
   studentId: string;
   schoolYear: number;
+  // Only the subjects of this class.
+  classId?: string;
   // Matches part of the subject, class or teacher name, ignoring letter case.
   search?: string;
   limit: number;
@@ -152,6 +154,10 @@ export async function searchCatalog(
     't.deactivated_at IS NULL',
     't.deleted_at IS NULL',
   ];
+  if (options.classId) {
+    params.push(options.classId);
+    conditions.push(`s.class_id = $${params.length}`);
+  }
   if (options.search) {
     params.push(options.search);
     // position() instead of LIKE, so "%" and "_" in the search are just characters.
@@ -340,4 +346,41 @@ export async function listEnrollments(
   );
 
   return { enrollments: rows.map(toEnrollment), total: Number(counted[0].total) };
+}
+
+export interface CatalogClass {
+  id: string;
+  name: string;
+  schoolYear: number;
+  // How many subjects of this class can be asked for.
+  subjectCount: number;
+}
+
+// The classes a child can pick in the filter: classes of the school and school year that have
+// at least one subject with an active teacher. Empty classes are left out.
+export async function listCatalogClasses(
+  pool: Queryable,
+  { schoolId, schoolYear }: { schoolId: string; schoolYear: number },
+): Promise<CatalogClass[]> {
+  const { rows } = await pool.query<{
+    id: string;
+    name: string;
+    school_year: number;
+    subject_count: number;
+  }>(
+    `SELECT c.id, c.name, c.school_year, count(s.id)::int AS subject_count
+     FROM classes c
+     JOIN subjects s ON s.class_id = c.id
+     JOIN users t ON t.id = s.teacher_id AND t.deactivated_at IS NULL AND t.deleted_at IS NULL
+     WHERE c.school_id = $1 AND c.school_year = $2
+     GROUP BY c.id
+     ORDER BY lower(c.name), c.id`,
+    [schoolId, schoolYear],
+  );
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    schoolYear: row.school_year,
+    subjectCount: row.subject_count,
+  }));
 }
