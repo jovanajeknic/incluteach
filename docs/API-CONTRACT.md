@@ -495,6 +495,27 @@ A lesson belongs to a subject and holds the text of the teacher, as written. See
 - **Errors**: `404 not_found`, `409 wrong_state` (not published).
 - **Used by (frontend)**: teacher button "Vrati u nacrt".
 
+### POST /lessons/{id}/quiz/attempts
+
+- **Status**: implemented
+- **Purpose**: the student starts the quiz of a lesson, or continues the try that is still open. One try is one go through the **whole** quiz.
+- **Who may call it**: `student` who joined the subject. The lesson must be published and have an approved quiz that fits the text.
+- **Request**: none.
+- **Success response**: `201 { attempt }` for a new try, `200 { attempt }` when an open one is continued (a child who closed the page can go on). `attempt` is `{ id, status: "in_progress", startedAt, completedAt, allCorrect, questions }`. `questions` are in a **new random order for each try**, each `{ id, position, kind, prompt, options: [{ id, text }], answer }`; the answers of a choice question are shuffled too, and a true/false question always shows Tačno before Netačno. `answer` is `null` until the child answers, then `{ optionId, correct, correctOptionId, explanation }` (so a resumed try shows what was already answered). The right answer and the explanation are never sent before the child answers.
+- **Errors**: `403 forbidden` (not a student), `404 not_found` (no such lesson or quiz, or not visible to this student), `409 retry_later` (see Notes).
+- **Notes**: the quiz is practice. **There is no score**, only whether each answer was right. After a try the child waits **10 minutes** before the next one (so the mistakes are read and learned, not clicked through). The wait counts from the last answer of the previous try, also when that try was left unfinished; a try with no answers causes no wait. `retry_later` has `error.details.nextAttemptAt` (an ISO time): show a countdown and a message like "Pročitaj lekciju još jednom, pa probaj opet". A try left open for more than 2 hours, or one made for a quiz the teacher has since changed, is closed and the next start gives a new one.
+- **Used by (frontend)**: the "Kviz" button on the student's lesson screen.
+
+### POST /lessons/{id}/quiz/attempts/{attemptId}/answers
+
+- **Status**: implemented
+- **Purpose**: the student answers one question of a try and is told at once if it was right.
+- **Who may call it**: `student`, only in their own try.
+- **Request**: body `{ questionId, optionId }`.
+- **Success response**: `200 { answer, attempt }`. `answer` is `{ questionId, optionId, correct, correctOptionId, explanation }`; `explanation` can be `null`. `attempt` is `{ id, status, answered, total, allCorrect }`: `status` becomes `completed` with the last answer, and then `allCorrect` is `true` or `false` (it is `null` before). A question can be answered **once** per try, so there is no changing an answer.
+- **Errors**: `400 invalid_question` / `400 invalid_option` (not part of this try), `403 forbidden`, `404 not_found`, `409 already_answered`, `409 attempt_finished` (the try is completed or closed), `409 quiz_changed` (the teacher changed the quiz after the try began; start again with `POST /lessons/{id}/quiz/attempts`).
+- **Used by (frontend)**: the question screen: after a tap, show green or red, the right answer and the explanation, then a "Dalje" button. After the last answer: all correct means the "Završi lekciju" button (it comes with the next step), otherwise a message that the quiz can be tried again after the wait.
+
 ## Not defined yet
 
-The quiz for students (answering, feedback, attempts), comments, stars, progress, removing a student from a subject at the end of the year, copying classes and subjects to a new school year, changing one's own password, the school request form of the landing page.
+Finishing a lesson and the progress of a student, the quiz history for parents and teachers, comments, stars, removing a student from a subject at the end of the year, copying classes and subjects to a new school year, changing one's own password, the school request form of the landing page.

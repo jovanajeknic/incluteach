@@ -15,6 +15,7 @@ import { catalogRouter, enrollmentsRouter } from './routes/enrollments.ts';
 import { BackgroundJobs } from './lessons/jobs.ts';
 import { healthRouter } from './routes/health.ts';
 import { lessonsRouter } from './routes/lessons.ts';
+import { quizRouter } from './routes/quiz.ts';
 import { parentLinksRouter } from './routes/parentLinks.ts';
 import { subjectsRouter } from './routes/subjects.ts';
 import { usersRouter } from './routes/users.ts';
@@ -68,6 +69,7 @@ export function createApp({
   app.use('/catalog', catalogRouter(pool));
   app.use('/enrollments', enrollmentsRouter(pool));
   app.use('/lessons', lessonsRouter(pool, { ai, jobs, timeoutMs: aiTimeoutMs }));
+  app.use('/lessons', quizRouter(pool));
 
   app.use(notFoundHandler);
   app.use(errorHandler);
