@@ -60,8 +60,8 @@ The database refuses invalid data on its own. The API must still check **who is 
 Steps, each with tests:
 
 1. Sign-in tables (done).
-2. Express app skeleton and `/health`.
-3. Password hashing (Node's built-in `crypto.scrypt`; minimum 7 characters).
+2. Express app skeleton and `/health` (done).
+3. Password hashing (done): Node's built-in `crypto.scrypt`, minimum 7 and maximum 128 characters, letters typed in different ways (such as "č") count as the same password.
 4. Login, logout, "who am I" and the `requireRole` middleware, with a login attempt limit.
 5. Activation: an admin issues a QR for a user of their school; scanning it sets the password and email.
 6. An admin creates accounts and the username is generated (`ime_prezime`, with a number when taken).
