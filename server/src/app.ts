@@ -6,6 +6,7 @@ import type { Queryable } from './db/pool.ts';
 import { errorHandler, notFoundHandler } from './http/errors.ts';
 import { authRouter } from './routes/auth.ts';
 import { classesRouter } from './routes/classes.ts';
+import { catalogRouter, enrollmentsRouter } from './routes/enrollments.ts';
 import { healthRouter } from './routes/health.ts';
 import { parentLinksRouter } from './routes/parentLinks.ts';
 import { subjectsRouter } from './routes/subjects.ts';
@@ -40,6 +41,8 @@ export function createApp({
   app.use('/classes', classesRouter(pool));
   app.use('/subjects', subjectsRouter(pool));
   app.use('/parent-students', parentLinksRouter(pool));
+  app.use('/catalog', catalogRouter(pool));
+  app.use('/enrollments', enrollmentsRouter(pool));
 
   app.use(notFoundHandler);
   app.use(errorHandler);
