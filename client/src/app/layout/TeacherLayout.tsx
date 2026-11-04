@@ -54,7 +54,7 @@ const navItems: NavItem[] = [
 ];
 
 /**
- * One navigation element for every screen size: a dark green sidebar from the `md`
+ * One navigation element for every screen size: a light mint sidebar from the `md`
  * breakpoint up, and a disclosure menu under a top bar on phones. The current page is
  * joined to the content by a curved tab, so the sidebar and the page read as one surface.
  */
@@ -74,20 +74,20 @@ export function TeacherLayout() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="teacher-theme min-h-screen bg-forest-deep md:flex">
+      <div className="teacher-theme min-h-screen bg-mint md:flex">
         <SkipLink />
 
-        <aside className="text-paper [--logo-knockout:var(--brand-forest-deep)] md:sticky md:top-0 md:flex md:h-screen md:w-68 md:shrink-0 md:flex-col">
+        <aside className="text-ink md:sticky md:top-0 md:flex md:h-screen md:w-68 md:shrink-0 md:flex-col">
           <div className="flex items-center justify-between gap-3 px-4 py-3 md:px-7 md:pt-8 md:pb-9">
             <Link to="/" aria-label={text.app.homeLinkLabel} className="inline-flex rounded-md">
-              <Logo tone="inverse" />
+              <Logo />
             </Link>
             <button
               type="button"
               aria-expanded={menuOpen}
               aria-controls={navId}
               onClick={() => setMenuOpen((open) => !open)}
-              className="inline-flex size-11 items-center justify-center rounded-full text-paper hover:bg-white/10 md:hidden"
+              className="inline-flex size-11 items-center justify-center rounded-full text-ink hover:bg-white/60 md:hidden"
             >
               {menuOpen ? (
                 <XIcon aria-hidden="true" weight="bold" className="size-6" />
@@ -113,7 +113,7 @@ export function TeacherLayout() {
                       className={({ isActive }) =>
                         cn(
                           'teacher-nav-link group flex items-center gap-3.5 rounded-3xl px-3 py-2.5 font-display text-[1.05rem] font-medium transition-colors md:rounded-r-none md:rounded-l-[1.75rem] md:pr-5',
-                          isActive ? 'bg-background text-ink' : 'text-paper/90 hover:bg-white/8',
+                          isActive ? 'bg-background text-ink' : 'text-ink/85 hover:bg-white/55',
                         )
                       }
                     >
@@ -168,13 +168,13 @@ export function TeacherLayout() {
                   <p className="truncate font-display font-medium">
                     {teacher.firstName} {teacher.lastName}
                   </p>
-                  <p className="text-sm text-paper/75">
+                  <p className="text-sm text-ink-soft">
                     {text.demo.profileRole} ·{' '}
-                    <span className="font-semibold text-ochre">{text.demo.profileBadge}</span>
+                    <span className="font-semibold text-butter-ink">{text.demo.profileBadge}</span>
                   </p>
                 </div>
               </div>
-              <p className="mt-4 text-xs leading-relaxed text-paper/70">{text.demo.notice}</p>
+              <p className="mt-4 text-xs leading-relaxed text-ink-soft">{text.demo.notice}</p>
             </div>
           </div>
         </aside>

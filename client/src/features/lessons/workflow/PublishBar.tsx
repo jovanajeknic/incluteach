@@ -29,7 +29,7 @@ export function PublishBar({ lesson }: { lesson: SchoolLesson }) {
     <motion.div
       initial={{ y: 30, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="sticky bottom-4 z-20 mt-10 flex flex-col gap-4 rounded-[1.75rem] bg-forest-deep px-5 py-4 text-paper shadow-lifted sm:flex-row sm:items-center sm:justify-between sm:px-6"
+      className="sticky bottom-4 z-20 mt-10 flex flex-col gap-4 rounded-[1.75rem] border-2 border-mint-deep bg-mint px-5 py-4 text-ink shadow-lifted sm:flex-row sm:items-center sm:justify-between sm:px-6"
     >
       <div className="flex items-center gap-4">
         <ol className="flex -space-x-1.5" aria-hidden="true">
@@ -40,7 +40,7 @@ export function PublishBar({ lesson }: { lesson: SchoolLesson }) {
               <li
                 key={kind}
                 className={cn(
-                  'relative flex size-9 items-center justify-center ring-3 ring-forest-deep transition-opacity',
+                  'relative flex size-9 items-center justify-center ring-3 ring-mint transition-opacity',
                   blobShape,
                   tone,
                   !done && 'opacity-40',
@@ -59,7 +59,7 @@ export function PublishBar({ lesson }: { lesson: SchoolLesson }) {
         </ol>
         <div role="status" className="text-sm">
           <p className="font-display text-base font-semibold">{t.progress(approved, total)}</p>
-          <p className="text-paper/80">
+          <p className="text-ink-soft">
             {published ? t.published(className) : ready ? t.ready(className) : t.needsApproval}
           </p>
         </div>
