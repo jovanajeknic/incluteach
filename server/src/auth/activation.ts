@@ -5,6 +5,11 @@ import { hashToken, type UserRow } from './sessions.ts';
 
 export const ACTIVATION_LIFETIME_DAYS = 7;
 
+// The link a user opens (usually by scanning a QR code) to set their password.
+export function activationUrl(publicUrl: string, token: string): string {
+  return `${publicUrl}/activate?token=${token}`;
+}
+
 export interface IssuedActivation {
   // The plain token exists only here; the database keeps a hash of it.
   token: string;

@@ -51,6 +51,16 @@ The server restarts when files change. It listens on `PORT` from `.env` (default
 
 Every error response has the same shape, which the frontend relies on: `{ "error": { "code": "not_found", "message": "..." } }`.
 
+## Create the first admin of a school
+
+Nobody can create the first admin of a school from the app, so run this once per school:
+
+```sh
+npm run create-admin -- --school "School name" --name "Admin Full Name"
+```
+
+It prints the admin's username and a one-time link (valid 7 days). The admin opens the link and chooses a password and an email. See [docs/DATABASE.md](../docs/DATABASE.md) for how accounts, activation and sign-in work.
+
 ## Migrations
 
 The `dotenv` package is installed only so the migration command can read `DATABASE_URL` from `.env`.

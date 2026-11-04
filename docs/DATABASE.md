@@ -64,8 +64,8 @@ Steps, each with tests:
 3. Password hashing (done): Node's built-in `crypto.scrypt`, minimum 7 and maximum 128 characters, letters typed in different ways (such as "č") count as the same password.
 4. Login, logout, "who am I" and the `requireRole` middleware, with a login attempt limit (done): see "Sign-in API" below.
 5. Activation (done): an admin issues a link for a user of their school; opening it sets the password and email. The QR image is drawn by the frontend from that link.
-6. An admin creates accounts and the username is generated (`ime_prezime`, with a number when taken).
-7. A script for the first admin of a school (`npm run create-admin`).
+6. An admin creates accounts and the username is generated (done): see `POST /users` below.
+7. A script for the first admin of a school (done): `npm run create-admin`, see "First admin of a school" below.
 
 ## Sign-in API
 
@@ -74,6 +74,7 @@ Steps, each with tests:
 | `POST /auth/login`  | Body `{ identifier, password }`. The identifier is an email or a username (told apart by `@`), in any letter case. Returns `{ user }` and sets the `session` cookie |
 | `POST /auth/logout` | Ends the session and clears the cookie; always answers 204                                       |
 | `GET /auth/me`      | Returns `{ user }` for the signed-in user, or 401                                                |
+| `POST /users` | Admin only. Body `{ fullName, role }` with `role` one of `teacher`, `student`, `parent`. Creates the account in the admin's school and returns `{ user }` (status 201) with the generated username (`ime_prezime`, a number is added when it is taken). The account cannot sign in until it is activated. Errors: `invalid_full_name`, `invalid_role` |
 | `POST /users/:id/activation` | Admin only, for a user of the admin's school (otherwise 404). Returns `{ activation: { url, expiresAt } }` with a one-time link valid for 7 days; a new link cancels the previous one, so it also serves as "forgot my password" |
 | `POST /auth/activate` | Public. Body `{ token, password, email }`. Sets the password and email, uses up the link, ends the user's older sessions and signs the user in. Errors: `invalid_activation_link`, `invalid_email`, `password_too_short`, `password_too_long`, `email_taken` (409) |
 
@@ -82,6 +83,18 @@ Steps, each with tests:
 - At most 10 failed attempts per account and address in 15 minutes (then 429 `too_many_attempts`), and at most 100 per address. Counters live in the server's memory, so a restart resets them.
 - On the backend, `requireAuth` answers 401 without a session and `requireRole('admin', ...)` also answers 403 for another role. The signed-in user is available as `req.user`.
 - Every error has the shape `{ "error": { "code", "message" } }`. Messages are for developers; the frontend shows its own Serbian text based on `code`.
+
+Usernames are made from the name: the first and the last word, in lowercase letters without accents (`Đorđe Đurđević` gives `djordje_djurdjevic`, Cyrillic is converted too). When the username already exists anywhere, a number is added: `ana_ivic`, `ana_ivic2`, `ana_ivic3`. A name that gives fewer than two letters or digits (for example one written in Chinese) is refused with `invalid_full_name`.
+
+## First admin of a school
+
+Nobody can create the first admin through the app, so a script does it once per school:
+
+```sh
+npm run create-admin -- --school "School name" --name "Admin Full Name"
+```
+
+It creates the school and the admin, and prints the username and an activation link (valid 7 days). The admin opens the link and chooses a password and email, so no password passes through the terminal. The script always creates a new school. Adding a second admin to an existing school is not possible yet.
 
 The link looks like `PUBLIC_URL/activate?token=...` (`PUBLIC_URL` is set in `server/.env`). A link that was used, cancelled or has expired always gives the same `invalid_activation_link` error. The token is shown only once, when the admin asks for it.
 
