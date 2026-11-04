@@ -7,6 +7,7 @@
     "node": "^20.19.0 || >=22.13.0"
   },
   "scripts": {
+    "dev": "tsx watch src/server.ts",
     "db:check": "tsx src/scripts/checkDb.ts",
     "migrate": "node-pg-migrate -m migrations --envPath .env",
     "migrate:up": "npm run migrate -- up",
@@ -20,17 +21,21 @@
   },
   "dependencies": {
     "dotenv": "^18.0.9",
+    "express": "^5.3.0",
     "node-pg-migrate": "^9.0.0",
     "pg": "^8.23.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/express": "^5.0.6",
     "@types/node": "^22.20.5",
     "@types/pg": "^8.23.1",
+    "@types/supertest": "^7.2.1",
     "eslint": "^10.14.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.14.0",
     "prettier": "^3.9.10",
+    "supertest": "^7.3.1",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.1",

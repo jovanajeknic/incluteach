@@ -13,6 +13,11 @@ export default defineConfig([
       ecmaVersion: 2023,
       globals: globals.node,
     },
+    rules: {
+      // A leading underscore marks a parameter that must exist but is not used,
+      // like the fourth argument that makes Express treat a function as an error handler.
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    },
   },
   // Must stay last: turns off rules that would conflict with Prettier formatting.
   prettier,

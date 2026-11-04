@@ -41,6 +41,16 @@ npm run db:check
 
 `db:check` prints the database, the user and the PostgreSQL version, or a clear error if the connection fails.
 
+## Run the server
+
+```sh
+npm run dev
+```
+
+The server restarts when files change. It listens on `PORT` from `.env` (default 3000). Open <http://localhost:3000/health>: it answers `{"status":"ok"}` when the database can be reached and `503` otherwise.
+
+Every error response has the same shape, which the frontend relies on: `{ "error": { "code": "not_found", "message": "..." } }`.
+
 ## Migrations
 
 The `dotenv` package is installed only so the migration command can read `DATABASE_URL` from `.env`.
