@@ -1,4 +1,4 @@
-import { Eye, EyeOff } from 'lucide-react';
+import { EyeIcon, EyeSlashIcon } from '@phosphor-icons/react';
 import { useState, type ComponentProps } from 'react';
 import { cn } from '@/shared/lib/utils';
 import { Input } from '@/shared/ui/input';
@@ -33,9 +33,9 @@ export function PasswordField({ id, className, ...props }: PasswordFieldProps) {
         className="absolute inset-y-1 right-1 flex w-11 items-center justify-center rounded-lg text-ink-soft transition-colors hover:bg-mint hover:text-ink"
       >
         {visible ? (
-          <EyeOff aria-hidden="true" className="size-5" />
+          <EyeSlashIcon aria-hidden="true" weight="duotone" className="size-5" />
         ) : (
-          <Eye aria-hidden="true" className="size-5" />
+          <EyeIcon aria-hidden="true" weight="duotone" className="size-5" />
         )}
       </button>
     </div>

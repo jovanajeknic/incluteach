@@ -8,9 +8,6 @@ import { text } from '@/text/sr-Latn';
  */
 export const PASSWORD_MIN_LENGTH = 12;
 
-export const REGISTRATION_ROLES = ['teacher', 'parent'] as const;
-export type RegistrationRole = (typeof REGISTRATION_ROLES)[number];
-
 const errors = text.auth.errors;
 
 // Email is trimmed (stray spaces from copying are common); passwords are not.
@@ -20,7 +17,18 @@ const emailField = z
   .min(1, errors.emailRequired)
   .pipe(z.email(errors.emailInvalid));
 
-const requiredName = (message: string) => z.string().trim().min(1, message);
+/**
+ * TEMPORARY code format for invitation and card codes: 8 letters or digits, written in two
+ * groups of four. Spaces, dashes and lower case are accepted and normalized. The backend
+ * decides the real format.
+ */
+const CODE_PATTERN = /^[A-Z0-9]{8}$/;
+
+const codeField = (required: string, invalid: string) =>
+  z
+    .string()
+    .transform((value) => value.replace(/[\s-]/g, '').toUpperCase())
+    .pipe(z.string().min(1, required).regex(CODE_PATTERN, invalid));
 
 export const loginSchema = z.object({
   email: emailField,
@@ -30,12 +38,16 @@ export const loginSchema = z.object({
 export type LoginFormInput = z.input<typeof loginSchema>;
 export type LoginFormValues = z.output<typeof loginSchema>;
 
-export const registerSchema = z
+export const studentLoginSchema = z.object({
+  cardCode: codeField(errors.cardCodeRequired, errors.cardCodeInvalid),
+});
+
+export type StudentLoginFormInput = z.input<typeof studentLoginSchema>;
+export type StudentLoginFormValues = z.output<typeof studentLoginSchema>;
+
+export const activateSchema = z
   .object({
-    role: z.enum(REGISTRATION_ROLES, { error: errors.roleRequired }),
-    firstName: requiredName(errors.firstNameRequired),
-    lastName: requiredName(errors.lastNameRequired),
-    email: emailField,
+    inviteCode: codeField(errors.inviteCodeRequired, errors.inviteCodeInvalid),
     password: z
       .string()
       .min(1, errors.passwordRequired)
@@ -47,5 +59,5 @@ export const registerSchema = z
     error: errors.passwordsDoNotMatch,
   });
 
-export type RegisterFormInput = z.input<typeof registerSchema>;
-export type RegisterFormValues = z.output<typeof registerSchema>;
+export type ActivateFormInput = z.input<typeof activateSchema>;
+export type ActivateFormValues = z.output<typeof activateSchema>;

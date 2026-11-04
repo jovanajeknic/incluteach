@@ -5,7 +5,7 @@ import { renderApp } from '@/test/renderApp';
 const VALID_PASSWORD = 'moja sigurna lozinka';
 
 /** Auth pages are lazy routes, so wait until the page heading is rendered. */
-async function openPage(path: '/login' | '/register') {
+async function openPage(path: string) {
   const result = renderApp({ path });
   await screen.findByRole('heading', { level: 1 });
   return result;
@@ -27,39 +27,45 @@ afterEach(() => {
 });
 
 describe('Auth navigation', () => {
-  it('moves between home, sign-in and registration', async () => {
+  it('moves between home, sign-in and activation; there is no self-registration', async () => {
     const { user, router } = renderApp({ path: '/' });
 
-    // Auth pages are lazy routes: wait for each page before checking the address.
+    expect(screen.queryByRole('link', { name: /Registruj/ })).not.toBeInTheDocument();
     await user.click(within(screen.getByRole('banner')).getByRole('link', { name: 'Prijavi se' }));
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Dobro došli nazad' }),
     ).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/login');
 
-    await user.click(screen.getByRole('link', { name: 'Registrujte se.' }));
+    await user.click(screen.getByRole('link', { name: 'Aktivirajte nalog.' }));
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Dobro došli u IncluTeach' }),
+      await screen.findByRole('heading', { level: 1, name: 'Aktivirajte nalog' }),
     ).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe('/register');
+    expect(router.state.location.pathname).toBe('/activate');
 
     await user.click(screen.getByRole('link', { name: 'Prijavite se.' }));
     await screen.findByRole('heading', { level: 1, name: 'Dobro došli nazad' });
-    expect(router.state.location.pathname).toBe('/login');
 
     await user.click(screen.getAllByRole('link', { name: 'IncluTeach – početna stranica' })[0]!);
     expect(router.state.location.pathname).toBe('/');
   });
 
-  it('labels both pages clearly as a demo', async () => {
+  it('no longer has a registration page', () => {
+    renderApp({ path: '/register' });
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Stranica nije pronađena' }),
+    ).toBeInTheDocument();
+  });
+
+  it('labels the pages clearly as a demo', async () => {
     await openPage('/login');
     expect(screen.getByRole('note')).toHaveTextContent(
-      'Demo prikaz — prijava i kreiranje naloga još nijesu povezani sa serverom.',
+      'Demo prikaz — prijava i aktivacija naloga još nijesu povezani sa serverom.',
     );
   });
 });
 
-describe('Sign-in page', () => {
+describe('Sign-in for teachers and parents', () => {
   it('reports empty fields and focuses the first one', async () => {
     const { user } = await openPage('/login');
 
@@ -120,89 +126,98 @@ describe('Sign-in page', () => {
   });
 });
 
-describe('Registration page', () => {
-  async function fillValidForm(user: ReturnType<typeof renderApp>['user']) {
-    await user.click(screen.getByRole('radio', { name: 'Roditelj' }));
-    await user.type(screen.getByLabelText('Ime'), 'Ana');
-    await user.type(screen.getByLabelText('Prezime'), 'Marković');
-    await user.type(screen.getByLabelText('Email adresa'), 'ana@primjer.me');
-    await user.type(screen.getByLabelText('Lozinka'), VALID_PASSWORD);
+describe('Sign-in for students with a card', () => {
+  it('asks for the card code instead of an email and password', async () => {
+    const { user } = await openPage('/login');
+
+    await user.click(screen.getByRole('tab', { name: 'Učenik' }));
+    expect(screen.queryByLabelText('Email adresa')).not.toBeInTheDocument();
+    expect(screen.getByText(/Pokaži svoju karticu kameri/)).toBeInTheDocument();
+    expect(screen.getByText(/Izgubio si karticu\?/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Prijavi se' }));
+    expect(await screen.findByText('Upiši kod sa kartice.')).toBeInTheDocument();
+    expect(screen.getByLabelText('Kod sa kartice')).toHaveFocus();
+  });
+
+  it('rejects a code that is too short', async () => {
+    const { user } = await openPage('/login');
+    await user.click(screen.getByRole('tab', { name: 'Učenik' }));
+
+    await user.type(screen.getByLabelText('Kod sa kartice'), 'ABC-12');
+    await user.click(screen.getByRole('button', { name: 'Prijavi se' }));
+
+    expect(await screen.findByText(/Kod ima 8 slova i brojeva/)).toBeInTheDocument();
+  });
+
+  it('accepts a code in lower case and with a dash, without network or storage', async () => {
+    const { user } = await openPage('/login');
+    await user.click(screen.getByRole('tab', { name: 'Učenik' }));
+
+    await user.type(screen.getByLabelText('Kod sa kartice'), 'abcd-1234');
+    await user.click(screen.getByRole('button', { name: 'Prijavi se' }));
+
+    expect(await screen.findByText(/Kod je ispravno upisan/)).toBeInTheDocument();
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(setItemSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe('Activating an account from an invitation', () => {
+  async function fillPasswords(user: ReturnType<typeof renderApp>['user']) {
+    await user.type(screen.getByLabelText('Nova lozinka'), VALID_PASSWORD);
     await user.type(screen.getByLabelText('Potvrdite lozinku'), VALID_PASSWORD);
   }
 
-  it('offers only teacher and parent roles', async () => {
-    await openPage('/register');
-
-    const group = screen.getByRole('group', { name: 'Uloga' });
-    const radios = within(group).getAllByRole('radio');
-    expect(radios.map((radio) => radio.getAttribute('value'))).toEqual(['teacher', 'parent']);
-    expect(within(group).getByText(/Učenike u aplikaciju dodaje škola/)).toBeInTheDocument();
+  it('takes the code from the invitation link', async () => {
+    await openPage('/activate?code=K7Q2-M9XA');
+    expect(screen.getByLabelText('Kod iz pozivnice')).toHaveValue('K7Q2-M9XA');
   });
 
-  it('requires every field and focuses the role first', async () => {
-    const { user } = await openPage('/register');
+  it('requires every field and focuses the code first', async () => {
+    const { user } = await openPage('/activate');
 
-    await user.click(screen.getByRole('button', { name: 'Napravi nalog' }));
+    await user.click(screen.getByRole('button', { name: 'Aktiviraj nalog' }));
 
-    expect(await screen.findByText('Izaberite ulogu.')).toBeInTheDocument();
-    for (const message of [
-      'Unesite ime.',
-      'Unesite prezime.',
-      'Unesite email adresu.',
-      'Unesite lozinku.',
-      'Ponovo unesite lozinku.',
-    ]) {
-      expect(screen.getByText(message)).toBeInTheDocument();
-    }
-    expect(screen.getByRole('radio', { name: 'Nastavnik' })).toHaveFocus();
-  });
-
-  it('selects a role', async () => {
-    const { user } = await openPage('/register');
-
-    await user.click(screen.getByRole('radio', { name: 'Nastavnik' }));
-    expect(screen.getByRole('radio', { name: 'Nastavnik' })).toBeChecked();
-
-    await user.click(screen.getByRole('radio', { name: 'Roditelj' }));
-    expect(screen.getByRole('radio', { name: 'Roditelj' })).toBeChecked();
-    expect(screen.getByRole('radio', { name: 'Nastavnik' })).not.toBeChecked();
+    expect(await screen.findByText('Unesite kod iz pozivnice.')).toBeInTheDocument();
+    expect(screen.getByText('Unesite lozinku.')).toBeInTheDocument();
+    expect(screen.getByText('Ponovo unesite lozinku.')).toBeInTheDocument();
+    expect(screen.getByLabelText('Kod iz pozivnice')).toHaveFocus();
   });
 
   it('rejects passwords that do not match', async () => {
-    const { user } = await openPage('/register');
-    await fillValidForm(user);
-    await user.clear(screen.getByLabelText('Potvrdite lozinku'));
-    await user.type(screen.getByLabelText('Potvrdite lozinku'), `${VALID_PASSWORD}!`);
+    const { user } = await openPage('/activate?code=K7Q2M9XA');
+    await fillPasswords(user);
+    await user.type(screen.getByLabelText('Potvrdite lozinku'), '!');
 
-    await user.click(screen.getByRole('button', { name: 'Napravi nalog' }));
+    await user.click(screen.getByRole('button', { name: 'Aktiviraj nalog' }));
 
     expect(await screen.findByText('Lozinke se ne podudaraju.')).toBeInTheDocument();
     expect(screen.getByLabelText('Potvrdite lozinku')).toHaveFocus();
   });
 
   it('rejects a password shorter than 12 characters, explained in the hint', async () => {
-    const { user } = await openPage('/register');
-    await fillValidForm(user);
-    await user.clear(screen.getByLabelText('Lozinka'));
-    await user.type(screen.getByLabelText('Lozinka'), 'kratka');
+    const { user } = await openPage('/activate?code=K7Q2M9XA');
+    await user.type(screen.getByLabelText('Nova lozinka'), 'kratka');
+    await user.type(screen.getByLabelText('Potvrdite lozinku'), 'kratka');
 
-    await user.click(screen.getByRole('button', { name: 'Napravi nalog' }));
+    await user.click(screen.getByRole('button', { name: 'Aktiviraj nalog' }));
 
     expect(await screen.findByText('Lozinka mora imati najmanje 12 znakova.')).toBeInTheDocument();
-    expect(screen.getByLabelText('Lozinka')).toHaveAccessibleDescription(
+    expect(screen.getByLabelText('Nova lozinka')).toHaveAccessibleDescription(
       /Najmanje 12 znakova\. Razmaci su dozvoljeni/,
     );
   });
 
   it('shows a demo result after a valid submission, without network or storage', async () => {
-    const { user } = await openPage('/register');
-    await fillValidForm(user);
+    const { user } = await openPage('/activate?code=K7Q2-M9XA');
+    await fillPasswords(user);
 
-    await user.click(screen.getByRole('button', { name: 'Napravi nalog' }));
+    await user.click(screen.getByRole('button', { name: 'Aktiviraj nalog' }));
 
-    expect(screen.getByRole('button', { name: /Pravljenje naloga/ })).toBeDisabled();
-    expect(await screen.findByText(/nalog nije stvarno napravljen/)).toBeInTheDocument();
-    expect(screen.getByLabelText('Lozinka')).toHaveValue('');
+    expect(screen.getByRole('button', { name: /Aktiviranje/ })).toBeDisabled();
+    expect(await screen.findByText(/nalog nije stvarno aktiviran/)).toBeInTheDocument();
+    expect(screen.getByLabelText('Nova lozinka')).toHaveValue('');
     expect(screen.getByLabelText('Potvrdite lozinku')).toHaveValue('');
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(setItemSpy).not.toHaveBeenCalled();

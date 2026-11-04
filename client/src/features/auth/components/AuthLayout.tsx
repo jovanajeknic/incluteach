@@ -5,12 +5,12 @@ import { MAIN_CONTENT_ID, SkipLink } from '@/shared/components/SkipLink';
 import { text } from '@/text/sr-Latn';
 
 /**
- * Shared frame for sign-in and registration: one calm, centred column with the logo
+ * Shared frame for sign-in and activation: one calm, centred column with the logo
  * above the form card and a few soft pastel shapes in the corners.
  */
 export function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="relative isolate min-h-screen overflow-hidden bg-paper">
+    <div className="area-theme relative isolate min-h-screen overflow-hidden bg-paper">
       <SkipLink />
 
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
@@ -22,7 +22,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
       <main
         id={MAIN_CONTENT_ID}
         tabIndex={-1}
-        className="mx-auto flex min-h-screen w-full max-w-[440px] flex-col justify-center gap-8 px-4 py-10 focus:outline-none"
+        className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col justify-center gap-8 px-4 py-10 focus:outline-none"
       >
         <Link to="/" aria-label={text.app.homeLinkLabel} className="mx-auto w-fit rounded-xl">
           <Logo markClassName="h-11" />

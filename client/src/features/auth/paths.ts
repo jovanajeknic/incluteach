@@ -1,2 +1,3 @@
 export const loginPath = '/login';
-export const registerPath = '/register';
+/** Opened from the school's invitation; the link may carry the code as ?code=. */
+export const activatePath = '/activate';

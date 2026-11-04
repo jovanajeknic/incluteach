@@ -1,7 +1,7 @@
 import { ListIcon, XIcon } from '@phosphor-icons/react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
-import { loginPath, registerPath } from '@/features/auth/paths';
+import { loginPath } from '@/features/auth/paths';
 import { Logo, LogoMark } from '@/shared/brand/Logo';
 import { Button } from '@/shared/ui/button';
 import { text } from '@/text/sr-Latn';
@@ -54,11 +54,8 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-4">
-          <Link to={loginPath} className={`${navLinkClassName} hidden sm:inline-flex`}>
-            {t.login}
-          </Link>
-          <Button asChild className="h-11 px-4 text-[0.95rem] sm:px-5">
-            <Link to={registerPath}>{t.register}</Link>
+          <Button asChild className="h-11 px-5 text-[0.95rem]">
+            <Link to={loginPath}>{t.login}</Link>
           </Button>
           <Button
             ref={menuButtonRef}
@@ -94,15 +91,6 @@ export function SiteHeader() {
                   </a>
                 </li>
               ))}
-              <li className="sm:hidden">
-                <Link
-                  to={loginPath}
-                  onClick={closeMenu}
-                  className="block rounded-2xl px-4 py-3 font-display text-lg text-forest hover:bg-forest/5"
-                >
-                  {t.login}
-                </Link>
-              </li>
             </ul>
           </nav>
         </div>

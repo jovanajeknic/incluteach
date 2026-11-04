@@ -45,18 +45,18 @@ describe('LandingPage', () => {
     }
   });
 
-  it.each([
-    ['Prijavi se', '/login', 'Dobro došli nazad'],
-    ['Registruj se', '/register', 'Dobro došli u IncluTeach'],
-  ])('header "%s" opens the %s page', async (name, path, heading) => {
-    const { user, router } = renderApp({ path: '/' });
+  it.each([['Prijavi se', '/login', 'Dobro došli nazad']])(
+    'header "%s" opens the %s page',
+    async (name, path, heading) => {
+      const { user, router } = renderApp({ path: '/' });
 
-    await user.click(within(screen.getByRole('banner')).getByRole('link', { name }));
+      await user.click(within(screen.getByRole('banner')).getByRole('link', { name }));
 
-    // Auth pages are lazy routes: navigation finishes once the page has loaded.
-    expect(await screen.findByRole('heading', { level: 1, name: heading })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe(path);
-  });
+      // Auth pages are lazy routes: navigation finishes once the page has loaded.
+      expect(await screen.findByRole('heading', { level: 1, name: heading })).toBeInTheDocument();
+      expect(router.state.location.pathname).toBe(path);
+    },
+  );
 
   it('opens the teacher demo from "Istraži IncluTeach"', async () => {
     const { user, router } = renderApp({ path: '/' });
@@ -105,7 +105,10 @@ describe('LandingPage', () => {
       await user.click(getMenuButton());
       expect(getMenuButton()).toHaveAttribute('aria-expanded', 'true');
       expect(within(getMenu()!).getByRole('link', { name: 'O nama' })).toBeInTheDocument();
-      expect(within(getMenu()!).getByRole('link', { name: 'Prijavi se' })).toBeInTheDocument();
+      // Sign-in stays visible in the header itself on every screen size.
+      expect(
+        within(screen.getByRole('banner')).getByRole('link', { name: 'Prijavi se' }),
+      ).toBeVisible();
 
       await user.click(getMenuButton());
       expect(getMenu()).not.toBeInTheDocument();
@@ -139,7 +142,7 @@ describe('LandingPage', () => {
       if (href.startsWith('#')) {
         expect(document.getElementById(href.slice(1)), href).toBeInTheDocument();
       } else {
-        expect(['/', '/teacher', '/student', '/parent', '/login', '/register']).toContain(href);
+        expect(['/', '/teacher', '/student', '/parent', '/login']).toContain(href);
       }
     }
   });

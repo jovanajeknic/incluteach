@@ -1,5 +1,5 @@
 import { type RouteObject } from 'react-router';
-import { loginPath, registerPath } from '@/features/auth/paths';
+import { activatePath, loginPath } from '@/features/auth/paths';
 import { ClassPage } from '@/features/class-overview/pages/ClassPage';
 import { SuggestionsInboxPage } from '@/features/class-overview/pages/SuggestionsInboxPage';
 import { TeacherStudentPage } from '@/features/class-overview/pages/TeacherStudentPage';
@@ -41,9 +41,9 @@ export const routes: RouteObject[] = [
         }),
       },
       {
-        path: registerPath,
+        path: activatePath,
         lazy: async () => ({
-          Component: (await import('@/features/auth/pages/RegisterPage')).RegisterPage,
+          Component: (await import('@/features/auth/pages/ActivatePage')).ActivatePage,
         }),
       },
       {
