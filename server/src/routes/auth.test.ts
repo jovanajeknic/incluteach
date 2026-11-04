@@ -11,6 +11,7 @@ import {
   insertSchool,
   insertUser,
 } from '../db/testUtils.ts';
+import { sessionCookie } from './testHelpers.ts';
 
 const PASSWORD = 'tajna-lozinka';
 
@@ -63,15 +64,6 @@ describe.skipIf(!process.env.DATABASE_URL)('authentication routes', () => {
 
   const login = (app: ReturnType<typeof createApp>, identifier: unknown, password: unknown) =>
     request(app).post('/auth/login').send({ identifier, password });
-
-  function sessionCookie(response: request.Response): string {
-    const cookies = response.headers['set-cookie'] as unknown as string[];
-    const cookie = cookies.find((value) => value.startsWith('session='));
-    if (!cookie) {
-      throw new Error('No session cookie was set.');
-    }
-    return cookie;
-  }
 
   describe('POST /auth/login', () => {
     it('signs in with the username', async () => {

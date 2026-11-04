@@ -1,4 +1,4 @@
-import type { RequestHandler } from 'express';
+import type { Request, RequestHandler } from 'express';
 
 import type { Queryable } from '../db/pool.ts';
 import { HttpError } from '../http/errors.ts';
@@ -54,4 +54,12 @@ export function requireRole(...roles: UserRole[]): RequestHandler {
       next();
     }
   };
+}
+
+// For handlers behind requireAuth or requireRole, where a user is guaranteed to exist.
+export function getUser(req: Request): AuthUser {
+  if (!req.user) {
+    throw new HttpError(401, 'unauthenticated', 'You are not signed in.');
+  }
+  return req.user;
 }

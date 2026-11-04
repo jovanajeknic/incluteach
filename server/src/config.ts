@@ -3,9 +3,13 @@ export interface Config {
   port: number;
   // Cookies marked Secure are sent only over HTTPS, so this is on in production only.
   secureCookies: boolean;
+  // Address of the website, used to build the activation links that admins send out.
+  publicUrl: string;
 }
 
 const DEFAULT_PORT = 3000;
+// Where the Vite development server of the frontend runs.
+const DEFAULT_PUBLIC_URL = 'http://localhost:5173';
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const databaseUrl = env.DATABASE_URL?.trim();
@@ -20,6 +24,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     databaseUrl,
     port: parsePort(env.PORT),
     secureCookies: env.NODE_ENV === 'production',
+    publicUrl: parsePublicUrl(env.PUBLIC_URL),
   };
 }
 
@@ -34,4 +39,23 @@ function parsePort(value: string | undefined): number {
     throw new Error(`PORT must be a whole number between 1 and 65535, got "${text}".`);
   }
   return port;
+}
+
+function parsePublicUrl(value: string | undefined): string {
+  const text = value?.trim() || DEFAULT_PUBLIC_URL;
+
+  let url: URL;
+  try {
+    url = new URL(text);
+  } catch {
+    throw new Error(
+      `PUBLIC_URL must be a full web address like https://example.com, got "${text}".`,
+    );
+  }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    throw new Error(`PUBLIC_URL must start with http:// or https://, got "${text}".`);
+  }
+
+  // Without a trailing slash, so "/activate" can be appended safely.
+  return url.origin + url.pathname.replace(/\/+$/, '');
 }

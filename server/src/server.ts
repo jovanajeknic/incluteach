@@ -6,7 +6,11 @@ import { createPool } from './db/pool.ts';
 
 const config = loadConfig();
 const pool = createPool(config.databaseUrl);
-const server = createApp({ pool, secureCookies: config.secureCookies }).listen(config.port, () => {
+const server = createApp({
+  pool,
+  secureCookies: config.secureCookies,
+  publicUrl: config.publicUrl,
+}).listen(config.port, () => {
   console.log(`IncluTeach server listening on http://localhost:${config.port}`);
 });
 

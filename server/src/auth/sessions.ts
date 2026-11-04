@@ -1,5 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 
+import type { Response } from 'express';
+
 import type { Queryable } from '../db/pool.ts';
 import type { UserRole } from '../roles.ts';
 
@@ -66,4 +68,16 @@ export async function findSessionUser(pool: Queryable, token: string): Promise<A
 
 export async function deleteSession(pool: Queryable, token: string): Promise<void> {
   await pool.query('DELETE FROM sessions WHERE token_hash = $1', [hashToken(token)]);
+}
+
+// The cookie is unreachable from page scripts (httpOnly) and not sent along with requests
+// made by other websites (SameSite=Lax). Secure keeps it off plain HTTP in production.
+export function setSessionCookie(res: Response, token: string, secure: boolean): void {
+  res.cookie(SESSION_COOKIE, token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure,
+    path: '/',
+    maxAge: SESSION_LIFETIME_MS,
+  });
 }

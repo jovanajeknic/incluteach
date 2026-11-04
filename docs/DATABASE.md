@@ -63,7 +63,7 @@ Steps, each with tests:
 2. Express app skeleton and `/health` (done).
 3. Password hashing (done): Node's built-in `crypto.scrypt`, minimum 7 and maximum 128 characters, letters typed in different ways (such as "č") count as the same password.
 4. Login, logout, "who am I" and the `requireRole` middleware, with a login attempt limit (done): see "Sign-in API" below.
-5. Activation: an admin issues a QR for a user of their school; scanning it sets the password and email.
+5. Activation (done): an admin issues a link for a user of their school; opening it sets the password and email. The QR image is drawn by the frontend from that link.
 6. An admin creates accounts and the username is generated (`ime_prezime`, with a number when taken).
 7. A script for the first admin of a school (`npm run create-admin`).
 
@@ -74,11 +74,15 @@ Steps, each with tests:
 | `POST /auth/login`  | Body `{ identifier, password }`. The identifier is an email or a username (told apart by `@`), in any letter case. Returns `{ user }` and sets the `session` cookie |
 | `POST /auth/logout` | Ends the session and clears the cookie; always answers 204                                       |
 | `GET /auth/me`      | Returns `{ user }` for the signed-in user, or 401                                                |
+| `POST /users/:id/activation` | Admin only, for a user of the admin's school (otherwise 404). Returns `{ activation: { url, expiresAt } }` with a one-time link valid for 7 days; a new link cancels the previous one, so it also serves as "forgot my password" |
+| `POST /auth/activate` | Public. Body `{ token, password, email }`. Sets the password and email, uses up the link, ends the user's older sessions and signs the user in. Errors: `invalid_activation_link`, `invalid_email`, `password_too_short`, `password_too_long`, `email_taken` (409) |
 
 - The cookie is `httpOnly`, `SameSite=Lax`, `Secure` in production, and lasts 7 days. Only a hash of its value is stored.
 - A wrong password, an unknown account and an account that is not activated yet all give the same 401 `invalid_credentials`, and take about the same time.
 - At most 10 failed attempts per account and address in 15 minutes (then 429 `too_many_attempts`), and at most 100 per address. Counters live in the server's memory, so a restart resets them.
 - On the backend, `requireAuth` answers 401 without a session and `requireRole('admin', ...)` also answers 403 for another role. The signed-in user is available as `req.user`.
 - Every error has the shape `{ "error": { "code", "message" } }`. Messages are for developers; the frontend shows its own Serbian text based on `code`.
+
+The link looks like `PUBLIC_URL/activate?token=...` (`PUBLIC_URL` is set in `server/.env`). A link that was used, cancelled or has expired always gives the same `invalid_activation_link` error. The token is shown only once, when the admin asks for it.
 
 The frontend sign-in is still a demo: students currently sign in with "the code from the QR card". It will change to username and password when the frontend is connected to the API.

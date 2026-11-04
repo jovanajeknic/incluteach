@@ -3,20 +3,27 @@ import { randomUUID } from 'node:crypto';
 import { Router, type Request } from 'express';
 import { ipKeyGenerator, rateLimit } from 'express-rate-limit';
 
+import { activateAccount, findUserOfLiveToken, isEmailTakenByAnother } from '../auth/activation.ts';
 import { readCookie, requireAuth } from '../auth/currentUser.ts';
-import { hashPassword, MAX_PASSWORD_LENGTH, verifyPassword } from '../auth/password.ts';
+import { isValidEmail, MAX_EMAIL_LENGTH } from '../auth/email.ts';
+import {
+  checkPassword,
+  hashPassword,
+  MAX_PASSWORD_LENGTH,
+  verifyPassword,
+} from '../auth/password.ts';
 import {
   createSession,
   deleteSession,
   SESSION_COOKIE,
-  SESSION_LIFETIME_MS,
+  setSessionCookie,
   toAuthUser,
   type UserRow,
 } from '../auth/sessions.ts';
 import type { Queryable } from '../db/pool.ts';
 import { HttpError, type ApiError } from '../http/errors.ts';
 
-const MAX_IDENTIFIER_LENGTH = 254;
+const MAX_IDENTIFIER_LENGTH = MAX_EMAIL_LENGTH;
 
 // 10 wrong attempts in 15 minutes for one account from one address. Counting the address
 // together with the account keeps a whole class behind one school network from locking
@@ -25,6 +32,9 @@ const ATTEMPT_WINDOW_MS = 15 * 60 * 1000;
 const MAX_FAILED_ATTEMPTS = 10;
 // A looser limit per address alone, against someone trying many different accounts.
 const MAX_FAILED_ATTEMPTS_PER_ADDRESS = 100;
+// Activation links are long random values that cannot be guessed, so this only keeps
+// someone from making the server do password hashing over and over.
+const MAX_FAILED_ACTIVATIONS_PER_ADDRESS = 30;
 
 export interface AuthRouterOptions {
   secureCookies: boolean;
@@ -57,22 +67,55 @@ function readLoginBody(req: Request): { identifier: string; password: string } {
   return { identifier: identifier.trim(), password };
 }
 
+const UNIQUE_VIOLATION = '23505';
+
+function readActivationBody(req: Request): { token: string; password: string; email: string } {
+  const { token, password, email } = (req.body ?? {}) as Record<string, unknown>;
+
+  if (typeof token !== 'string' || typeof password !== 'string' || typeof email !== 'string') {
+    throw new HttpError(400, 'invalid_request', 'The link, the password and the email are needed.');
+  }
+
+  const trimmedEmail = email.trim();
+  if (!isValidEmail(trimmedEmail)) {
+    throw new HttpError(400, 'invalid_email', 'Enter a valid email address.');
+  }
+
+  const problem = checkPassword(password);
+  if (problem) {
+    throw new HttpError(400, `password_${problem}`, 'The password is not allowed.');
+  }
+  return { token, password, email: trimmedEmail };
+}
+
+function invalidActivationLink(): HttpError {
+  return new HttpError(
+    400,
+    'invalid_activation_link',
+    'This link is not valid any more. Ask your school admin for a new one.',
+  );
+}
+
+function emailTaken(): HttpError {
+  return new HttpError(409, 'email_taken', 'This email is already used by another account.');
+}
+
 function tooManyAttempts(): ApiError {
   return {
     error: {
       code: 'too_many_attempts',
-      message: 'Too many failed sign-in attempts. Try again in a few minutes.',
+      message: 'Too many failed attempts. Try again in a few minutes.',
     },
   };
 }
 
-function limitFailedLogins(max: number, keyFor: (req: Request) => string) {
+function limitFailedAttempts(max: number, keyFor: (req: Request) => string) {
   return rateLimit({
     windowMs: ATTEMPT_WINDOW_MS,
     limit: max,
     standardHeaders: 'draft-7',
     legacyHeaders: false,
-    // Only failed sign-ins count, so a correct password never uses up the allowance.
+    // Only failed requests count, so a correct password never uses up the allowance.
     skipSuccessfulRequests: true,
     keyGenerator: keyFor,
     handler: (_req, res) => {
@@ -93,8 +136,8 @@ export function authRouter(pool: Queryable, { secureCookies }: AuthRouterOptions
 
   router.post(
     '/login',
-    limitFailedLogins(MAX_FAILED_ATTEMPTS_PER_ADDRESS, addressKey),
-    limitFailedLogins(MAX_FAILED_ATTEMPTS, accountKey),
+    limitFailedAttempts(MAX_FAILED_ATTEMPTS_PER_ADDRESS, addressKey),
+    limitFailedAttempts(MAX_FAILED_ATTEMPTS, accountKey),
     async (req, res) => {
       const { identifier, password } = readLoginBody(req);
 
@@ -122,14 +165,46 @@ export function authRouter(pool: Queryable, { secureCookies }: AuthRouterOptions
         );
       }
 
-      const token = await createSession(pool, user.id);
-      res.cookie(SESSION_COOKIE, token, {
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: secureCookies,
-        path: '/',
-        maxAge: SESSION_LIFETIME_MS,
-      });
+      setSessionCookie(res, await createSession(pool, user.id), secureCookies);
+      res.set('Cache-Control', 'no-store');
+      res.json({ user: toAuthUser(user) });
+    },
+  );
+
+  router.post(
+    '/activate',
+    limitFailedAttempts(MAX_FAILED_ACTIVATIONS_PER_ADDRESS, addressKey),
+    async (req, res) => {
+      const { token, password, email } = readActivationBody(req);
+
+      const userId = await findUserOfLiveToken(pool, token);
+      if (!userId) {
+        throw invalidActivationLink();
+      }
+      if (await isEmailTakenByAnother(pool, email, userId)) {
+        throw emailTaken();
+      }
+
+      let user: UserRow | null;
+      try {
+        user = await activateAccount(pool, {
+          token,
+          passwordHash: await hashPassword(password),
+          email,
+        });
+      } catch (error) {
+        // Someone took the email between the check above and now.
+        if ((error as { code?: string }).code === UNIQUE_VIOLATION) {
+          throw emailTaken();
+        }
+        throw error;
+      }
+      if (!user) {
+        throw invalidActivationLink();
+      }
+
+      setSessionCookie(res, await createSession(pool, user.id), secureCookies);
+      res.set('Cache-Control', 'no-store');
       res.json({ user: toAuthUser(user) });
     },
   );

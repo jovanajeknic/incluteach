@@ -32,4 +32,34 @@ describe('loadConfig', () => {
       expect(() => loadConfig({ DATABASE_URL, PORT: value })).toThrow(/PORT must be/);
     });
   });
+
+  describe('secureCookies', () => {
+    it('is on only in production', () => {
+      expect(loadConfig({ DATABASE_URL, NODE_ENV: 'production' }).secureCookies).toBe(true);
+      expect(loadConfig({ DATABASE_URL, NODE_ENV: 'development' }).secureCookies).toBe(false);
+      expect(loadConfig({ DATABASE_URL }).secureCookies).toBe(false);
+    });
+  });
+
+  describe('publicUrl', () => {
+    it('defaults to the local frontend', () => {
+      expect(loadConfig({ DATABASE_URL }).publicUrl).toBe('http://localhost:5173');
+    });
+
+    it.each([
+      ['https://skola.example.com', 'https://skola.example.com'],
+      ['https://skola.example.com/', 'https://skola.example.com'],
+      ['  https://skola.example.com///  ', 'https://skola.example.com'],
+      ['https://example.com/app/', 'https://example.com/app'],
+    ])('turns "%s" into "%s"', (value, expected) => {
+      expect(loadConfig({ DATABASE_URL, PUBLIC_URL: value }).publicUrl).toBe(expected);
+    });
+
+    it.each(['skola.example.com', 'ftp://example.com', 'not a url'])(
+      'rejects the invalid PUBLIC_URL "%s"',
+      (value) => {
+        expect(() => loadConfig({ DATABASE_URL, PUBLIC_URL: value })).toThrow(/PUBLIC_URL must/);
+      },
+    );
+  });
 });
