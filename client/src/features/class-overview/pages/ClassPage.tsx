@@ -93,14 +93,14 @@ export function ClassPage() {
               </thead>
               <tbody>
                 {students.map((student, index) => {
-                  const lessons = school.visibleLessonsFor(student.id);
+                  const lessons = school.lessonsVisibleToTeacher(student.id);
                   const completed = lessons.filter(
                     (lesson) => school.progressOf(student.id, lesson.id) === 'completed',
                   ).length;
                   const quizzes = lessons.filter((lesson) =>
                     school.practiceOf(student.id, lesson.id),
                   ).length;
-                  const stars = school.starsOf(student.id);
+                  const stars = completed + quizzes;
                   const name = `${student.firstName} ${student.lastName}`;
                   const newSuggestions = school.data.suggestions.filter(
                     (item) => item.childId === student.id && item.status === 'pending-teacher',

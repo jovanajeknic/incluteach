@@ -4,12 +4,13 @@ import {
   CheckCircleIcon,
   ListChecksIcon,
   SparkleIcon,
+  WarningIcon,
 } from '@phosphor-icons/react';
 import { motion } from 'motion/react';
 import { Tabs } from 'radix-ui';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { findVersion, useSchool } from '@/features/school/schoolContext';
+import { findVersion, isVersionApproved, useSchool } from '@/features/school/schoolContext';
 import { ADAPTED_KINDS, type AdaptedKind, type SchoolLesson } from '@/features/school/types';
 import { AiPulse } from '@/shared/visual/AiPulse';
 import { SubjectBlob } from '@/shared/visual/SubjectBlob';
@@ -57,6 +58,25 @@ export function LessonDetailPage() {
     );
   }
 
+  // Screens follow the same rule as the backend must: only the teacher of this subject in
+  // this class works on the lesson.
+  if (!school.teachesCourse(lesson.subjectId, lesson.classId)) {
+    return (
+      <>
+        <title>{text.app.pageTitle(t.forbiddenTitle)}</title>
+        <MessagePage
+          title={t.forbiddenTitle}
+          description={t.forbiddenDescription}
+          action={
+            <Button asChild variant="outline" size="lg">
+              <Link to={teacherHomePath}>{t.backToSubjects}</Link>
+            </Button>
+          }
+        />
+      </>
+    );
+  }
+
   const subject = school.getSubject(lesson.subjectId);
   const group = school.getClass(lesson.classId);
   const courseLabel = text.lesson.courseLabel(subject?.name ?? '', group?.name ?? '');
@@ -84,6 +104,26 @@ export function LessonDetailPage() {
           </p>
         </div>
       </header>
+
+      {lesson.aiFailed === 'all' && lesson.status !== 'processing' && (
+        <div
+          role="alert"
+          className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-blush px-5 py-4 text-blush-ink"
+        >
+          <p className="flex items-center gap-2 font-medium">
+            <WarningIcon aria-hidden="true" weight="fill" className="size-5 shrink-0" />
+            {t.ai.failed}
+          </p>
+          <Button
+            type="button"
+            onClick={() => void school.generateAll(lesson.id)}
+            className="h-11 px-5"
+          >
+            <ArrowClockwiseIcon aria-hidden="true" weight="bold" />
+            {t.ai.retry}
+          </Button>
+        </div>
+      )}
 
       {lesson.status === 'processing' ? (
         <AiWorkingPanel />
@@ -125,7 +165,9 @@ function DraftPanel({ lesson }: { lesson: SchoolLesson }) {
 
 /** Opens on the first version that still waits for the teacher. */
 function firstOpenTab(lesson: SchoolLesson): Tab {
-  return ADAPTED_KINDS.find((kind) => !findVersion(lesson, kind)?.approvedByTeacher) ?? 'standard';
+  const waiting = ADAPTED_KINDS.find((kind) => !isVersionApproved(lesson, kind));
+  if (waiting) return waiting;
+  return lesson.extrasApproved ? 'standard' : 'extras';
 }
 
 function LessonTabs({ lesson }: { lesson: SchoolLesson }) {
@@ -155,6 +197,7 @@ function LessonTabs({ lesson }: { lesson: SchoolLesson }) {
           </Tabs.Content>
         ))}
         <Tabs.Content value="extras" className="mt-6 grid gap-12 focus-visible:outline-none">
+          <ExtrasApproval lesson={lesson} />
           {/* Editors keep local drafts and reload them only when a new AI result arrives. */}
           <QuizEditor key={`quiz-${aiRun}`} lesson={lesson} />
           <GlossaryEditor key={`glossary-${aiRun}`} lesson={lesson} />
@@ -182,7 +225,11 @@ function TabButton({
   const TabIcon = kindAppearance?.icon ?? ListChecksIcon;
   const tone = kindAppearance?.tone ?? 'bg-mint text-mint-ink';
   const isAiKind = !isExtras && value !== 'standard';
-  const version = isAiKind ? findVersion(lesson, value) : undefined;
+  // Quiz and words are approved as one, like a version.
+  const needsApproval = isAiKind || isExtras;
+  const approved = isExtras
+    ? lesson.extrasApproved === true
+    : isAiKind && isVersionApproved(lesson, value);
   const redoing = isAiKind && (lesson.regenerating?.includes(value) ?? false);
   const label = isExtras ? t.extrasTab : t.kinds[value];
 
@@ -212,20 +259,49 @@ function TabButton({
       {redoing ? (
         <AiPulse size="sm" className="relative size-5" />
       ) : (
-        isAiKind && (
+        needsApproval && (
           <span className="relative">
-            {version?.approvedByTeacher ? (
+            {approved ? (
               <CheckCircleIcon aria-hidden="true" weight="fill" className="size-5 text-mint-ink" />
             ) : (
               <span aria-hidden="true" className="block size-2.5 rounded-full bg-butter-deep" />
             )}
-            <span className="sr-only">
-              {version?.approvedByTeacher ? `, ${t.approved}` : `, ${t.aiSuggestion}`}
-            </span>
+            <span className="sr-only">{approved ? `, ${t.approved}` : `, ${t.aiSuggestion}`}</span>
           </span>
         )
       )}
     </Tabs.Trigger>
+  );
+}
+
+/** The quiz questions and word explanations come from the AI too, so they need a yes. */
+function ExtrasApproval({ lesson }: { lesson: SchoolLesson }) {
+  const t = text.lessonDetail;
+  const { approveExtras } = useSchool();
+
+  if (lesson.extrasApproved) {
+    return (
+      <p className="flex w-fit items-center gap-2 rounded-3xl bg-mint px-5 py-3 font-display font-semibold text-mint-ink">
+        <CheckCircleIcon aria-hidden="true" weight="duotone" className="size-6" />
+        {t.approved}
+      </p>
+    );
+  }
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-butter px-5 py-4">
+      <p className="flex items-center gap-2 text-ink">
+        <SparkleIcon
+          aria-hidden="true"
+          weight="duotone"
+          className="size-5 shrink-0 text-butter-ink"
+        />
+        {t.extrasHint}
+      </p>
+      <Button type="button" onClick={() => approveExtras(lesson.id)} className="h-11 px-5">
+        <CheckCircleIcon aria-hidden="true" weight="bold" />
+        {t.approveExtras}
+      </Button>
+    </div>
   );
 }
 

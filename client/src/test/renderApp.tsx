@@ -4,6 +4,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import { routes } from '@/app/routes';
 import { DemoParentProvider } from '@/features/parent/data/DemoParentProvider';
 import { demoSchoolData, demoStudent } from '@/features/school/demoSchoolData';
+import type { AiService } from '@/features/school/demoAiService';
 import { DemoSchoolProvider } from '@/features/school/DemoSchoolProvider';
 import type { SchoolData } from '@/features/school/types';
 import { DemoStudentProvider } from '@/features/student/data/DemoStudentProvider';
@@ -17,6 +18,8 @@ interface RenderAppOptions {
   studentNeeds?: Partial<SupportProfile>;
   /** The simulated AI answers at once in tests unless a delay is needed. */
   aiDelayMs?: number;
+  /** Replaces the simulated AI, e.g. with one that fails. */
+  aiService?: AiService;
 }
 
 /** Renders the real app routes in memory, starting at `path`. */
@@ -25,6 +28,7 @@ export function renderApp({
   school = demoSchoolData,
   studentNeeds,
   aiDelayMs = 0,
+  aiService,
 }: RenderAppOptions = {}) {
   const data: SchoolData = studentNeeds
     ? {
@@ -39,7 +43,7 @@ export function renderApp({
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   const user = userEvent.setup();
   const result = render(
-    <DemoSchoolProvider initialData={data} aiDelayMs={aiDelayMs}>
+    <DemoSchoolProvider initialData={data} aiDelayMs={aiDelayMs} aiService={aiService}>
       <DemoStudentProvider>
         <DemoParentProvider>
           <RouterProvider router={router} />

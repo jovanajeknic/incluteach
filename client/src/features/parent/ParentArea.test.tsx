@@ -176,3 +176,17 @@ describe('Child page and suggestions overview', () => {
     );
   });
 });
+
+describe('Version profile for parents', () => {
+  it('shows which versions the child receives and invites a suggestion', () => {
+    renderApp({ path: '/parent/children/demo-student-mia' });
+
+    const profile = screen.getByRole('region', { name: 'Koje verzije lekcija dobija' });
+    expect(profile).toHaveTextContent('Skraćena verzija');
+    expect(profile).toHaveTextContent('Bez audio zapisa');
+    expect(within(profile).getByRole('link', { name: 'Predloži promjenu' })).toHaveAttribute(
+      'href',
+      '#suggestions-heading',
+    );
+  });
+});

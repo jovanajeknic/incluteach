@@ -32,6 +32,17 @@ export const ADAPTED_KINDS = [
 ] as const satisfies readonly LessonVersionKind[];
 export type AdaptedKind = (typeof ADAPTED_KINDS)[number];
 
+/** What students and parents see: a copy made when the teacher publishes. */
+export type PublishedContent = Pick<
+  StudentLesson,
+  'versions' | 'glossary' | 'quiz' | 'homeGuidance'
+>;
+
+/**
+ * The fields inherited from StudentLesson are the teacher's working copy. Students never
+ * read them directly: they read `published`, so nothing reaches them before the teacher
+ * has approved it and pressed "Objavi".
+ */
 export interface SchoolLesson extends StudentLesson {
   status: LessonStatus;
   /** A lesson belongs to one subject in one class; publishing sends it to that class. */
@@ -40,6 +51,12 @@ export interface SchoolLesson extends StudentLesson {
   adaptationCount?: number;
   /** Versions the AI is redoing right now after the teacher's feedback. */
   regenerating?: AdaptedKind[];
+  /** The AI also writes quiz questions and word explanations; they need approval too. */
+  extrasApproved?: boolean;
+  /** Set once published; changes to the working copy wait here until published again. */
+  published?: PublishedContent;
+  /** The last AI request failed: for every version, or for one. */
+  aiFailed?: 'all' | AdaptedKind;
 }
 
 export interface ClassGroup {
@@ -47,6 +64,8 @@ export interface ClassGroup {
   name: string;
   grade: number;
   studentIds: string[];
+  /** The class teacher ("razredni starešina"), who keeps the students' version profiles. */
+  classTeacherId?: string;
 }
 
 /** One subject the teacher teaches in one class. A class teacher has several per class. */

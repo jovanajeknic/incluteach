@@ -1,5 +1,8 @@
 import { act, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import type { AiService } from '@/features/school/demoAiService';
+import { demoSchoolData } from '@/features/school/demoSchoolData';
+import { schoolWithLessons, testLessons } from '@/test/lessonFixtures';
 import { renderApp } from '@/test/renderApp';
 
 const DRAFT = '/teacher/lessons/saobracaj';
@@ -30,7 +33,7 @@ describe('Lesson workflow', () => {
     expect(publish).toBeDisabled();
     await user.click(within(panel()).getByRole('button', { name: 'Odobri: Skraćena' }));
     expect(within(panel()).getByText('Odobreno')).toBeInTheDocument();
-    expect(screen.getByText('Odobreno 1 od 5 verzija')).toBeInTheDocument();
+    expect(screen.getByText('Odobreno 1 od 6')).toBeInTheDocument();
 
     // Easier: the teacher edits the AI text by hand before approving.
     await user.click(screen.getByRole('tab', { name: /Niži nivo/ }));
@@ -49,6 +52,12 @@ describe('Lesson workflow', () => {
       await user.click(within(panel()).getByRole('button', { name: `Odobri: ${tab}` }));
     }
     expect(screen.getByRole('tab', { name: /Ilustracije, Odobreno/ })).toBeInTheDocument();
+
+    // The quiz and word explanations also come from the AI: no publishing without a yes.
+    expect(screen.getByRole('button', { name: 'Objavi učenicima' })).toBeDisabled();
+    await user.click(screen.getByRole('tab', { name: /Kviz i riječi/ }));
+    expect(within(panel()).getByDisplayValue('Gdje prelazimo ulicu?')).toBeInTheDocument();
+    await user.click(within(panel()).getByRole('button', { name: 'Odobri kviz i riječi' }));
     expect(screen.getByText(/Sve je odobreno\. Lekcija ide odjeljenju 4-2/)).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Objavi učenicima' }));
@@ -73,7 +82,7 @@ describe('Lesson workflow', () => {
   it('publishes a fully approved lesson and its new versions reach the right students', async () => {
     const { user, router } = renderApp({ path: '/teacher/lessons/godisnja-doba' });
 
-    expect(screen.getByText('Odobreno 5 od 5 verzija')).toBeInTheDocument();
+    expect(screen.getByText('Odobreno 6 od 6')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Objavi učenicima' }));
 
     // Luka gets the easier text; Mia (shortened) sees hers through her parent.
@@ -85,7 +94,7 @@ describe('Lesson workflow', () => {
 
   it('edits quiz questions and harder words, rejecting incomplete rows', async () => {
     const { user } = renderApp({ path: '/teacher/lessons/razlomci-uvod' });
-    await user.click(screen.getByRole('tab', { name: 'Kviz i riječi' }));
+    await user.click(screen.getByRole('tab', { name: /Kviz i riječi/ }));
 
     const glossary = screen.getByRole('region', { name: 'Teže riječi' });
     await user.click(within(glossary).getByRole('button', { name: '+ riječ' }));
@@ -166,5 +175,112 @@ describe('Students and parent suggestions', () => {
 
     await act(() => router.navigate('/parent/children/demo-student-luka'));
     expect(screen.getByText('Nastavnik ga je proslijedio AI-u')).toBeInTheDocument();
+  });
+});
+
+describe('Published lessons change only when the teacher publishes again', () => {
+  it('keeps what students see while the AI redoes every version', async () => {
+    const { user, router } = renderApp({ path: '/teacher/lessons/kruzenje-vode' });
+
+    await user.click(screen.getByRole('tab', { name: /Original/ }));
+    await user.click(screen.getByRole('button', { name: 'Napravi sve verzije ponovo' }));
+    expect(
+      await screen.findByText(/Tvoje izmjene vide tek kad ih odobriš i objaviš/),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Objavi izmjene' })).toBeDisabled();
+
+    // Luka still reads the easier version that was published before.
+    await act(() => router.navigate('/student/lessons/kruzenje-vode'));
+    expect(screen.getByText('Sunce grije vodu.')).toBeInTheDocument();
+  });
+
+  it('sends edits to students only after "Objavi izmjene"', async () => {
+    const { user } = renderApp({ path: '/teacher/lessons/mnozenje' });
+    const panel = () => screen.getByRole('tabpanel');
+
+    await user.click(screen.getByRole('tab', { name: /Niži nivo/ }));
+    await user.click(within(panel()).getByRole('button', { name: 'Uredi tekst: Niži nivo' }));
+    const editor = within(panel()).getByLabelText('Tekst: Niži nivo');
+    await user.clear(editor);
+    await user.type(editor, 'Četiri tanjira, po tri jabuke.');
+    await user.click(within(panel()).getByRole('button', { name: 'Sačuvaj' }));
+    expect(
+      screen.getByText('Izmjene su odobrene. Objavi ih da ih učenici vide.'),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Objavi izmjene' }));
+    expect(screen.getByText(/Objavljeno\. Učenici odjeljenja 4-1 je vide/)).toBeInTheDocument();
+  });
+
+  it('marks the versions as outdated when the teacher changes the original text', async () => {
+    const { user } = renderApp({ path: '/teacher/lessons/godisnja-doba' });
+    expect(screen.getByText('Odobreno 6 od 6')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: /Original/ }));
+    await user.click(screen.getByRole('button', { name: 'Uredi tekst: Original' }));
+    await user.type(screen.getByLabelText('Tekst: Original'), ' Svako doba traje tri mjeseca.');
+    await user.click(screen.getByRole('button', { name: 'Sačuvaj' }));
+
+    expect(screen.getByText('Odobreno 0 od 6')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Objavi učenicima' })).toBeDisabled();
+    await user.click(screen.getByRole('tab', { name: /Skraćena/ }));
+    expect(screen.getByRole('tabpanel')).toHaveTextContent(/Tvoj tekst se promijenio/);
+  });
+});
+
+describe('AI failures and access', () => {
+  const failingAi: AiService = {
+    generate: () => Promise.reject(new Error('AI unavailable')),
+  };
+
+  it('offers to try again when the AI fails, without losing the lesson', async () => {
+    const { user } = renderApp({ path: '/teacher/lessons/saobracaj', aiService: failingAi });
+
+    await user.click(screen.getByRole('button', { name: 'Pokreni AI' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('AI trenutno nije uspio');
+    expect(
+      screen.getAllByRole('button', { name: /Pokušaj ponovo|Pokreni AI/ }).length,
+    ).toBeGreaterThan(0);
+    expect(screen.getByText(/Ulicu prelazimo samo na pješačkom prelazu/)).toBeInTheDocument();
+  });
+
+  it('keeps the previous version when redoing one version fails', async () => {
+    const { user } = renderApp({ path: '/teacher/lessons/razlomci-uvod', aiService: failingAi });
+    const panel = () => screen.getByRole('tabpanel');
+
+    await user.type(within(panel()).getByLabelText('Šta da AI promijeni?'), 'Kraće');
+    await user.click(within(panel()).getByRole('button', { name: 'Prepravi' }));
+    expect(await within(panel()).findByRole('alert')).toHaveTextContent('Prethodna je sačuvana.');
+    expect(panel()).toHaveTextContent('Razlomak je dio cjeline.');
+  });
+
+  it('refuses a lesson of a subject the teacher does not teach in that class', () => {
+    const foreign = { ...testLessons[0]!, id: 'tudja', subjectId: 'priroda', classId: '4-1' };
+    renderApp({ path: '/teacher/lessons/tudja', school: schoolWithLessons([foreign]) });
+    expect(screen.getByRole('heading', { level: 1, name: 'Nemate pristup' })).toBeInTheDocument();
+  });
+});
+
+describe('Class teacher and subject teachers', () => {
+  it('lets only the class teacher change the version profile', () => {
+    renderApp({ path: '/teacher/students/demo-student-ema' });
+
+    expect(screen.getByText(/mijenja razredni starešina/)).toBeInTheDocument();
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Sačuvaj' })).not.toBeInTheDocument();
+  });
+
+  it('shows a subject teacher only the progress in their own subjects', () => {
+    const nature41 = {
+      ...testLessons[1]!,
+      id: 'priroda-4-1',
+      title: 'Tuđa lekcija prirode',
+      classId: '4-1',
+    };
+    const school = schoolWithLessons([...demoSchoolData.lessons, nature41]);
+    renderApp({ path: '/teacher/students/demo-student-ema', school });
+
+    expect(screen.getByRole('link', { name: 'Množenje kao sabiranje' })).toBeInTheDocument();
+    expect(screen.queryByText('Tuđa lekcija prirode')).not.toBeInTheDocument();
   });
 });

@@ -12,6 +12,7 @@ import {
   ADAPTED_KINDS,
   type AdaptedKind,
   type ClassGroup,
+  type PublishedContent,
   type SchoolData,
   type SchoolLesson,
   type Suggestion,
@@ -49,6 +50,15 @@ export interface SchoolStore {
   classOf: (studentId: string) => ClassGroup | undefined;
   /** Whether the teacher teaches this student in any subject. */
   teachesStudent: (studentId: string) => boolean;
+  /** Whether the teacher teaches this subject in this class. */
+  teachesCourse: (subjectId: string, classId: string) => boolean;
+  /** Only the class teacher changes which versions a student receives. */
+  isClassTeacherOf: (studentId: string) => boolean;
+  /**
+   * Published lessons of a student that this teacher may follow: every subject for the
+   * class teacher, otherwise only the subjects this teacher teaches in that class.
+   */
+  lessonsVisibleToTeacher: (studentId: string) => SchoolLesson[];
 
   // Teacher
   /** Saves the teacher's text and starts the AI right away. */
@@ -59,7 +69,12 @@ export interface SchoolStore {
   regenerateVersion: (lessonId: string, kind: AdaptedKind, feedback: string) => Promise<void>;
   updateVersion: (lessonId: string, kind: LessonVersionKind, edits: VersionEdits) => void;
   approveVersion: (lessonId: string, kind: AdaptedKind) => void;
-  /** Sends a fully approved lesson to its class; each student gets their own version. */
+  /** Approves the quiz questions, word explanations and home tips. */
+  approveExtras: (lessonId: string) => void;
+  /**
+   * Sends a fully approved lesson to its class, or replaces what the class sees with the
+   * approved changes. Each student gets their own version.
+   */
   publishLesson: (lessonId: string) => void;
   updateLesson: (lessonId: string, edits: LessonEdits) => void;
   studentsOf: (classId: string) => StudentProfile[];
@@ -105,24 +120,58 @@ export function findVersion(
   return lesson.versions.find((version) => version.kind === kind);
 }
 
-/** AI versions the teacher has approved, out of all the AI prepares. */
+/** An AI version counts as approved only if it was approved for the current teacher text. */
+export function isVersionApproved(lesson: SchoolLesson, kind: LessonVersionKind): boolean {
+  const version = findVersion(lesson, kind);
+  return version !== undefined && version.approvedByTeacher && !version.stale;
+}
+
+/** What the teacher approves before publishing: every AI version plus quiz and words. */
 export function approvalProgress(lesson: SchoolLesson): { approved: number; total: number } {
+  const versions = ADAPTED_KINDS.filter((kind) => isVersionApproved(lesson, kind)).length;
   return {
-    approved: ADAPTED_KINDS.filter((kind) => findVersion(lesson, kind)?.approvedByTeacher).length,
-    total: ADAPTED_KINDS.length,
+    approved: versions + (lesson.extrasApproved ? 1 : 0),
+    total: ADAPTED_KINDS.length + 1,
   };
 }
 
-/** Every AI version exists and is approved, so the lesson may go to students. */
+/** Everything the AI prepared is approved, so the lesson may be published. */
 export function isFullyApproved(lesson: SchoolLesson): boolean {
   const { approved, total } = approvalProgress(lesson);
   return approved === total;
 }
 
-/** The teacher has something to look at: finished AI work that is not approved yet. */
+/** The content as it would be published now. */
+export function publishableContent(lesson: SchoolLesson): PublishedContent {
+  return {
+    versions: lesson.versions.filter(
+      (version) => version.kind === 'standard' || (version.approvedByTeacher && !version.stale),
+    ),
+    glossary: lesson.glossary,
+    quiz: lesson.quiz,
+    homeGuidance: lesson.homeGuidance,
+  };
+}
+
+/** A published lesson whose working copy has changed since it was published. */
+export function hasUnpublishedChanges(lesson: SchoolLesson): boolean {
+  if (!lesson.published) return false;
+  return (
+    JSON.stringify(publishableContent(lesson)) !== JSON.stringify(lesson.published) ||
+    lesson.versions.some((version) => !version.approvedByTeacher || version.stale) ||
+    !lesson.extrasApproved
+  );
+}
+
+/** The lesson as students and parents see it: the published copy, never the working one. */
+export function publishedView(lesson: SchoolLesson): SchoolLesson | undefined {
+  if (lesson.status !== 'assigned' || !lesson.published) return undefined;
+  return { ...lesson, ...lesson.published };
+}
+
+/** The teacher has something to look at: AI work waiting, or changes not yet published. */
 export function needsReview(lesson: SchoolLesson): boolean {
   if (lesson.status === 'processing' || lesson.status === 'draft') return false;
-  return (
-    lesson.status === 'in_review' || lesson.versions.some((version) => !version.approvedByTeacher)
-  );
+  if (lesson.status === 'assigned') return hasUnpublishedChanges(lesson);
+  return !isFullyApproved(lesson) || lesson.status === 'in_review';
 }

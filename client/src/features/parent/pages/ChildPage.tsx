@@ -1,14 +1,20 @@
-import { ArrowLeftIcon, CaretRightIcon, PuzzlePieceIcon } from '@phosphor-icons/react';
+import {
+  ArrowLeftIcon,
+  CaretRightIcon,
+  ChatsCircleIcon,
+  PuzzlePieceIcon,
+} from '@phosphor-icons/react';
 import { motion } from 'motion/react';
 import { Link, useParams } from 'react-router';
 import { LessonStars } from '@/features/student/components/LessonStars';
 import { ProgressBadge } from '@/features/student/components/ProgressBadge';
+import { VersionProfileSummary } from '@/features/student/components/VersionProfileSummary';
 import { initialsOf } from '@/shared/lib/format';
 import { cn } from '@/shared/lib/utils';
 import { SubjectBlob } from '@/shared/visual/SubjectBlob';
 import { blobShape, subjectTheme } from '@/shared/visual/subjectIcons';
 import { text } from '@/text/sr-Latn';
-import { childSummary, childTones } from '../childSummary';
+import { childSummary, childTones, parentVersionLabels } from '../childSummary';
 import { ChildStats } from '../components/ChildStats';
 import { ForbiddenChild } from '../components/ForbiddenChild';
 import { SuggestionsPanel } from '../components/SuggestionsPanel';
@@ -94,6 +100,30 @@ export function ChildPage() {
           </ul>
         </section>
       )}
+
+      <section
+        aria-labelledby="profile-heading"
+        className="mt-6 rounded-[1.75rem] bg-card p-6 shadow-soft"
+      >
+        <h2 id="profile-heading" className="font-display text-xl font-semibold text-ink">
+          {t.profileHeading}
+        </h2>
+        <p className="mt-1 max-w-prose text-ink-soft">{t.profileIntro}</p>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
+          <VersionProfileSummary
+            profile={child.profile.supportProfile}
+            readingLabels={parentVersionLabels.reading}
+            audioLabels={parentVersionLabels.audio}
+          />
+          <a
+            href="#suggestions-heading"
+            className="inline-flex items-center gap-1.5 font-display font-medium text-forest underline-offset-4 hover:underline"
+          >
+            <ChatsCircleIcon aria-hidden="true" weight="duotone" className="size-5" />
+            {t.suggestChange}
+          </a>
+        </div>
+      </section>
 
       <section aria-labelledby="child-lessons-heading" className="mt-10">
         <h2 id="child-lessons-heading" className="font-display text-2xl font-semibold text-ink">

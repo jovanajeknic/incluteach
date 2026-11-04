@@ -46,7 +46,13 @@ export const testLessons: SchoolLesson[] = [
     classId: '4-2',
     status: 'assigned',
     adaptationCount: 1,
+    extrasApproved: true,
     versions: [standard('Sadržaj.'), ...aiVersions(true)],
+    published: {
+      versions: [standard('Sadržaj.'), ...aiVersions(true)],
+      glossary: [],
+      quiz: [],
+    },
   },
   {
     ...base,

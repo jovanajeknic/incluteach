@@ -40,6 +40,8 @@ export interface LessonVersion {
   approvedByTeacher: boolean;
   /** Who wrote it; AI suggestions are labelled until the teacher approves them. */
   source: 'teacher' | 'ai';
+  /** Made from an older teacher text; it needs a new look before it is approved again. */
+  stale?: boolean;
 }
 
 export interface GlossaryEntry {

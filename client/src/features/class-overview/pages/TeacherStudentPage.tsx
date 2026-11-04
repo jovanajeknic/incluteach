@@ -7,6 +7,7 @@ import { versionAppearance } from '@/features/lessons/workflow/versionKinds';
 import { SectionCard, StatusMessage } from '@/features/lessons/workflow/SectionCard';
 import { useSchool } from '@/features/school/schoolContext';
 import { ProgressBadge } from '@/features/student/components/ProgressBadge';
+import { VersionProfileSummary } from '@/features/student/components/VersionProfileSummary';
 import { READING_VERSION_KINDS, type SupportProfile } from '@/features/student/types';
 import { blobShape } from '@/shared/visual/subjectIcons';
 import { MessagePage } from '@/shared/components/MessagePage';
@@ -146,8 +147,15 @@ export function TeacherStudentPage() {
   }
 
   const group = school.classOf(studentId);
-  const lessons = school.visibleLessonsFor(studentId);
-  const stars = school.starsOf(studentId);
+  // A subject teacher follows only their own subjects; the class teacher sees every one.
+  const lessons = school.lessonsVisibleToTeacher(studentId);
+  const stars = lessons.reduce(
+    (sum, lesson) =>
+      sum +
+      (school.progressOf(studentId, lesson.id) === 'completed' ? 1 : 0) +
+      (school.practiceOf(studentId, lesson.id) ? 1 : 0),
+    0,
+  );
   const suggestions = school.data.suggestions.filter((item) => item.childId === studentId);
 
   return (
@@ -186,7 +194,26 @@ export function TeacherStudentPage() {
       </header>
 
       <div className="grid gap-10">
-        <VersionProfileEditor studentId={studentId} profile={student.supportProfile} />
+        {school.isClassTeacherOf(studentId) ? (
+          <VersionProfileEditor studentId={studentId} profile={student.supportProfile} />
+        ) : (
+          <section
+            aria-labelledby="profile-heading"
+            className="rounded-[1.75rem] bg-card p-6 shadow-soft sm:p-8"
+          >
+            <h2 id="profile-heading" className="font-display text-2xl font-semibold text-ink">
+              {t.profileHeading}
+            </h2>
+            <p className="mt-2 max-w-prose text-ink-soft">{t.profileReadOnly}</p>
+            <div className="mt-5">
+              <VersionProfileSummary
+                profile={student.supportProfile}
+                readingLabels={t.readingOptions}
+                audioLabels={{ yes: t.audioLabel, no: t.audioNo }}
+              />
+            </div>
+          </section>
+        )}
 
         <SectionCard id="student-lessons-heading" title={t.progressHeading}>
           {lessons.length === 0 ? (

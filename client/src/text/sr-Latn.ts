@@ -292,6 +292,12 @@ export const text = {
       toRepeatIntro: 'Na ovim pitanjima prvi odgovor nije bio tačan:',
       lessonsHeading: 'Lekcije po predmetima',
       quizDone: 'kviz urađen',
+      profileHeading: 'Koje verzije lekcija dobija',
+      profileIntro:
+        'Ovo je dogovoreno sa razrednim starešinom. Dijete ovo ne vidi. Ako mislite da nešto treba promijeniti, pošaljite prijedlog.',
+      audioYes: 'Dobija i audio zapis',
+      audioNo: 'Bez audio zapisa',
+      suggestChange: 'Predloži promjenu',
       noLessons: 'U ovom predmetu još nema lekcija.',
       forbiddenTitle: 'Nemate pristup',
       forbiddenDescription: 'Ovo dijete nije povezano sa vašim nalogom.',
@@ -438,6 +444,8 @@ export const text = {
     notFoundDescription:
       'Ove lekcije nema. Možda je adresa pogrešna, ili je lekcija napravljena prije osvježavanja stranice pa se izgubila.',
     backToSubjects: 'Moji predmeti',
+    forbiddenTitle: 'Nemate pristup',
+    forbiddenDescription: 'Ova lekcija pripada predmetu ili odjeljenju kojem ne predaješ.',
     ai: {
       working: 'AI priprema verzije…',
       workingHint: 'Za koji trenutak sve će biti spremno za tvoj pregled.',
@@ -449,7 +457,13 @@ export const text = {
       againHint: 'Ako promijeniš tekst, AI može ponovo napraviti sve verzije.',
       suggestionsIntro: 'AI uzima u obzir i prijedloge roditelja:',
       demoNote: 'U demou je AI simuliran i ništa ne odlazi na internet.',
+      failed: 'AI trenutno nije uspio da pripremi verzije. Ništa nije izgubljeno.',
+      failedVersion: 'AI nije uspio da prepravi ovu verziju. Prethodna je sačuvana.',
+      retry: 'Pokušaj ponovo',
     },
+    stale: 'Tvoj tekst se promijenio poslije ove verzije. Pogledaj je, prepravi ili odobri ponovo.',
+    extrasHint: 'AI je predložio pitanja za kviz i objašnjenja riječi. I njih odobri prije objave.',
+    approveExtras: 'Odobri kviz i riječi',
     tabsLabel: 'Verzije lekcije',
     kinds: {
       standard: 'Original',
@@ -493,12 +507,16 @@ export const text = {
     stopListening: 'Zaustavi',
     noVoice: 'Ovaj uređaj ne može da čita naglas, ali učenici ga mogu slušati na svojim uređajima.',
     publish: {
-      progress: (approved: number, total: number) => `Odobreno ${approved} od ${total} verzija`,
+      progress: (approved: number, total: number) => `Odobreno ${approved} od ${total}`,
       button: 'Objavi učenicima',
       needsApproval: 'Odobri sve verzije, pa objavi.',
       published: (className: string) =>
         `Objavljeno. Učenici odjeljenja ${className} je vide, svako u verziji koja mu je namijenjena.`,
       ready: (className: string) => `Sve je odobreno. Lekcija ide odjeljenju ${className}.`,
+      changesWaiting:
+        'Učenici vide objavljenu lekciju. Tvoje izmjene vide tek kad ih odobriš i objaviš.',
+      changesReady: 'Izmjene su odobrene. Objavi ih da ih učenici vide.',
+      republish: 'Objavi izmjene',
     },
     saveSection: 'Sačuvaj',
     sectionSaved: 'Sačuvano.',
@@ -562,6 +580,9 @@ export const text = {
       dyslexia: 'Lakše čitanje',
     },
     audioLabel: 'Dobija i audio zapis',
+    audioNo: 'Bez audio zapisa',
+    profileReadOnly:
+      'Ove verzije mijenja razredni starešina odjeljenja, u dogovoru sa roditeljima.',
     saveProfile: 'Sačuvaj',
     profileSaved: 'Sačuvano. Važi od sljedećeg otvaranja lekcije.',
     progressHeading: 'Lekcije i kvizovi',

@@ -1,21 +1,22 @@
-import { CheckIcon, PaperPlaneTiltIcon } from '@phosphor-icons/react';
+import { CheckIcon, ListChecksIcon, PaperPlaneTiltIcon } from '@phosphor-icons/react';
 import { motion } from 'motion/react';
 import {
   approvalProgress,
-  findVersion,
+  hasUnpublishedChanges,
   isFullyApproved,
+  isVersionApproved,
   useSchool,
 } from '@/features/school/schoolContext';
 import { ADAPTED_KINDS, type SchoolLesson } from '@/features/school/types';
-import { blobShape } from '@/shared/visual/subjectIcons';
 import { cn } from '@/shared/lib/utils';
 import { Button } from '@/shared/ui/button';
+import { blobShape } from '@/shared/visual/subjectIcons';
 import { text } from '@/text/sr-Latn';
 import { versionAppearance } from './versionKinds';
 
 /**
- * Sticks to the bottom of the screen: how many versions are approved, and the button that
- * sends the lesson to the class once all of them are.
+ * Sticks to the bottom of the screen: what is approved, and the button that sends the
+ * lesson, or later changes to it, to the class once everything is approved.
  */
 export function PublishBar({ lesson }: { lesson: SchoolLesson }) {
   const t = text.lessonDetail.publish;
@@ -23,7 +24,32 @@ export function PublishBar({ lesson }: { lesson: SchoolLesson }) {
   const { approved, total } = approvalProgress(lesson);
   const className = school.getClass(lesson.classId)?.name ?? lesson.classId;
   const published = lesson.status === 'assigned';
+  const changes = published && hasUnpublishedChanges(lesson);
   const ready = isFullyApproved(lesson);
+  const items = [
+    ...ADAPTED_KINDS.map((kind) => ({
+      key: kind,
+      done: isVersionApproved(lesson, kind),
+      ...versionAppearance[kind],
+    })),
+    {
+      key: 'extras',
+      done: lesson.extrasApproved === true,
+      icon: ListChecksIcon,
+      tone: 'bg-mint text-mint-ink',
+    },
+  ];
+
+  const message = !published
+    ? ready
+      ? t.ready(className)
+      : t.needsApproval
+    : !changes
+      ? t.published(className)
+      : ready
+        ? t.changesReady
+        : t.changesWaiting;
+  const showButton = !published || changes;
 
   return (
     <motion.div
@@ -33,38 +59,32 @@ export function PublishBar({ lesson }: { lesson: SchoolLesson }) {
     >
       <div className="flex items-center gap-4">
         <ol className="flex -space-x-1.5" aria-hidden="true">
-          {ADAPTED_KINDS.map((kind) => {
-            const done = findVersion(lesson, kind)?.approvedByTeacher;
-            const { icon: KindIcon, tone } = versionAppearance[kind];
-            return (
-              <li
-                key={kind}
-                className={cn(
-                  'relative flex size-9 items-center justify-center ring-3 ring-mint transition-opacity',
-                  blobShape,
-                  tone,
-                  !done && 'opacity-40',
-                )}
-              >
-                <KindIcon weight="duotone" className="size-4.5" />
-                {done && (
-                  <CheckIcon
-                    weight="bold"
-                    className="absolute -right-1 -bottom-1 size-4 rounded-full bg-ochre p-0.5 text-ink"
-                  />
-                )}
-              </li>
-            );
-          })}
+          {items.map(({ key, done, icon: ItemIcon, tone }) => (
+            <li
+              key={key}
+              className={cn(
+                'relative flex size-9 items-center justify-center ring-3 ring-mint transition-opacity',
+                blobShape,
+                tone,
+                !done && 'opacity-40',
+              )}
+            >
+              <ItemIcon weight="duotone" className="size-4.5" />
+              {done && (
+                <CheckIcon
+                  weight="bold"
+                  className="absolute -right-1 -bottom-1 size-4 rounded-full bg-ochre p-0.5 text-ink"
+                />
+              )}
+            </li>
+          ))}
         </ol>
         <div role="status" className="text-sm">
           <p className="font-display text-base font-semibold">{t.progress(approved, total)}</p>
-          <p className="text-ink-soft">
-            {published ? t.published(className) : ready ? t.ready(className) : t.needsApproval}
-          </p>
+          <p className="text-ink-soft">{message}</p>
         </div>
       </div>
-      {!published && (
+      {showButton && (
         <Button
           type="button"
           disabled={!ready}
@@ -72,7 +92,7 @@ export function PublishBar({ lesson }: { lesson: SchoolLesson }) {
           className="h-12 shrink-0 bg-ochre px-6 text-base text-ink shadow-[0_4px_0_#c9973a] hover:bg-butter-deep disabled:opacity-60"
         >
           <PaperPlaneTiltIcon aria-hidden="true" weight="duotone" />
-          {t.button}
+          {published ? t.republish : t.button}
         </Button>
       )}
     </motion.div>

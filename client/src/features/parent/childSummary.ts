@@ -1,4 +1,5 @@
 import type { QuizQuestion, StudentLesson } from '@/features/student/types';
+import { text } from '@/text/sr-Latn';
 import type { ChildData } from './types';
 
 export interface QuestionToRepeat {
@@ -26,3 +27,14 @@ export const childTones = [
   'bg-blush text-blush-ink',
   'bg-pistachio text-pistachio-ink',
 ];
+
+/** Labels for the parent's view, which uses the version names parents agreed to. */
+export const parentVersionLabels = {
+  reading: {
+    standard: text.parent.lesson.versionNames.standard,
+    shortened: text.parent.lesson.versionNames.shortened,
+    easier: text.parent.lesson.versionNames.easier,
+    dyslexia: text.parent.lesson.versionNames.dyslexia,
+  },
+  audio: { yes: text.parent.child.audioYes, no: text.parent.child.audioNo },
+};

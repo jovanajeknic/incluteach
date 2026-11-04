@@ -6,12 +6,13 @@ import {
   SparkleIcon,
   StopIcon,
   UsersThreeIcon,
+  WarningIcon,
 } from '@phosphor-icons/react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useId, useMemo, useState, type FormEvent } from 'react';
 import { LessonContent } from '@/features/lesson-content/LessonContent';
 import { lessonSentences } from '@/features/lesson-content/sentences';
-import { findVersion, useSchool } from '@/features/school/schoolContext';
+import { findVersion, isVersionApproved, useSchool } from '@/features/school/schoolContext';
 import type { AdaptedKind, SchoolLesson } from '@/features/school/types';
 import { useLessonSpeech } from '@/features/student/audio/useLessonSpeech';
 import type { LessonIllustration, LessonVersion } from '@/features/student/types';
@@ -43,6 +44,26 @@ export function VersionPanel({ lesson, kind }: { lesson: SchoolLesson; kind: Ada
             {t.audience(audience)}
           </p>
         </div>
+
+        {version?.stale && (
+          <p className="mt-4 flex items-start gap-2 rounded-2xl bg-butter px-4 py-3 text-ink">
+            <WarningIcon
+              aria-hidden="true"
+              weight="duotone"
+              className="mt-0.5 size-5 shrink-0 text-butter-ink"
+            />
+            {t.stale}
+          </p>
+        )}
+        {lesson.aiFailed === kind && (
+          <p
+            role="alert"
+            className="mt-4 flex items-start gap-2 rounded-2xl bg-blush px-4 py-3 text-blush-ink"
+          >
+            <WarningIcon aria-hidden="true" weight="fill" className="mt-0.5 size-5 shrink-0" />
+            {t.ai.failedVersion}
+          </p>
+        )}
 
         <div className="mt-6">
           {version ? (
@@ -82,7 +103,7 @@ export function VersionPanel({ lesson, kind }: { lesson: SchoolLesson; kind: Ada
 
       {version && (
         <aside className="grid content-start gap-6">
-          <ApproveBox lesson={lesson} version={version} kind={kind} disabled={redoing} />
+          <ApproveBox lesson={lesson} kind={kind} disabled={redoing} />
           <FeedbackForm lesson={lesson} kind={kind} disabled={redoing} />
         </aside>
       )}
@@ -92,19 +113,17 @@ export function VersionPanel({ lesson, kind }: { lesson: SchoolLesson; kind: Ada
 
 function ApproveBox({
   lesson,
-  version,
   kind,
   disabled,
 }: {
   lesson: SchoolLesson;
-  version: LessonVersion;
   kind: AdaptedKind;
   disabled: boolean;
 }) {
   const t = text.lessonDetail;
   const { approveVersion } = useSchool();
 
-  if (version.approvedByTeacher) {
+  if (isVersionApproved(lesson, kind)) {
     return (
       <p className="flex items-center gap-2 rounded-3xl bg-mint px-5 py-4 font-display text-lg font-semibold text-mint-ink">
         <CheckCircleIcon aria-hidden="true" weight="duotone" className="size-7" />

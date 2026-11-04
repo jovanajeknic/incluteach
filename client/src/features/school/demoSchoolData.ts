@@ -6,6 +6,7 @@ import type {
 } from '@/features/student/types';
 import { demoIllustrationsFor } from './demoIllustrations';
 import { demoStudent, demoStudentLessons, demoSubjects } from './demoLessonContent';
+import { publishableContent } from './schoolContext';
 import type { AdaptedKind, SchoolData, SchoolLesson } from './types';
 
 export { demoStudent, demoSubjects };
@@ -72,20 +73,26 @@ export function narrationScript(title: string, content: string): string {
  */
 const publishedToClass42 = (lesson: (typeof demoStudentLessons)[number]): SchoolLesson => {
   const standard = lesson.versions.find((version) => version.kind === 'standard');
-  return {
+  return published({
     ...lesson,
     classId: CLASS_4_2,
     status: 'assigned',
     adaptationCount: 1,
+    extrasApproved: true,
     versions: [
       ...lesson.versions,
       aiText('audio', narrationScript(lesson.title, standard?.content ?? ''), true),
       aiIllustrations(lesson, true),
     ],
-  };
+  });
 };
 
-const multiplication: SchoolLesson = {
+/** Adds the copy students see, as if the teacher had just pressed "Objavi". */
+function published(lesson: SchoolLesson): SchoolLesson {
+  return { ...lesson, published: publishableContent(lesson) };
+}
+
+const multiplication: SchoolLesson = published({
   id: 'mnozenje',
   subjectId: 'matematika',
   grade: 4,
@@ -93,6 +100,7 @@ const multiplication: SchoolLesson = {
   title: 'Množenje kao sabiranje',
   status: 'assigned',
   adaptationCount: 1,
+  extrasApproved: true,
   versions: [
     teacherText(
       'Množenje je kraći zapis sabiranja istih brojeva. Umjesto 3 + 3 + 3 + 3 pišemo 4 · 3.\n\nPrvi broj kaže koliko puta sabiramo, a drugi koji broj sabiramo. Zato je 4 · 3 = 12.',
@@ -132,7 +140,7 @@ const multiplication: SchoolLesson = {
       explanation: '2 · 5 znači da broj 5 saberemo dva puta: 5 + 5 = 10.',
     },
   ],
-};
+});
 
 /** Waiting for the teacher: every AI version is ready but none is approved yet. */
 const fractionsInReview: SchoolLesson = {
@@ -197,6 +205,7 @@ const seasonsApproved: SchoolLesson = {
   title: 'Godišnja doba',
   status: 'approved',
   adaptationCount: 1,
+  extrasApproved: true,
   versions: [
     teacherText(
       'Godina ima četiri godišnja doba: proljeće, ljeto, jesen i zimu.\n\nU proljeće priroda se budi, a ljeti su dani najduži i najtopliji. U jesen lišće žuti i opada, a zimi je hladno i ponekad pada snijeg.',
@@ -319,12 +328,15 @@ export const demoSchoolData: SchoolData = {
     {
       id: CLASS_4_2,
       name: '4-2',
+      classTeacherId: 'demo-teacher-ana',
       grade: 4,
       studentIds: class42Students.map((item) => item.id),
     },
     {
       id: CLASS_4_1,
       name: '4-1',
+      // Ana teaches mathematics here; another (fictional) teacher is the class teacher.
+      classTeacherId: 'demo-teacher-milan',
       grade: 4,
       studentIds: class41Students.map((item) => item.id),
     },

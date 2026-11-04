@@ -1,10 +1,11 @@
 import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
-import { pickLessonVersion } from '@/features/student/lessonVersion';
 import type { LessonVersionKind, StudentProfile, SupportProfile } from '@/features/student/types';
-import { createDemoAiService } from './demoAiService';
+import { createDemoAiService, type AiService } from './demoAiService';
 import { demoSchoolData, demoSubjects } from './demoSchoolData';
 import {
   isFullyApproved,
+  publishableContent,
+  publishedView,
   SchoolContext,
   type LessonEdits,
   type NewLessonInput,
@@ -43,6 +44,8 @@ interface DemoSchoolProviderProps {
   /** Lets tests start from known data. */
   initialData?: SchoolData;
   aiDelayMs?: number;
+  /** Lets tests replace the simulated AI, e.g. with one that fails. */
+  aiService?: AiService;
 }
 
 /**
@@ -53,9 +56,13 @@ export function DemoSchoolProvider({
   children,
   initialData = demoSchoolData,
   aiDelayMs = DEFAULT_AI_DELAY_MS,
+  aiService: aiServiceOverride,
 }: DemoSchoolProviderProps) {
   const [data, setData] = useState<SchoolData>(initialData);
-  const aiService = useMemo(() => createDemoAiService(aiDelayMs), [aiDelayMs]);
+  const aiService = useMemo(
+    () => aiServiceOverride ?? createDemoAiService(aiDelayMs),
+    [aiServiceOverride, aiDelayMs],
+  );
   // Redo requests per lesson and version, so each redo can give a different result.
   const attempts = useRef(new Map<string, number>());
 
@@ -103,13 +110,29 @@ export function DemoSchoolProvider({
       if (lesson.status === 'processing') return;
       const previousStatus = lesson.status;
       const suggestions = suggestionsForAdaptation(lesson).map((item) => item.text);
-      updateLessonById(lesson.id, (current) => ({ ...current, status: 'processing' }));
+      updateLessonById(lesson.id, (current) => ({
+        ...current,
+        status: 'processing',
+        aiFailed: undefined,
+      }));
 
-      const result = await aiService.generate({ lesson, kinds: ADAPTED_KINDS, suggestions });
+      let result: Awaited<ReturnType<AiService['generate']>>;
+      try {
+        result = await aiService.generate({ lesson, kinds: ADAPTED_KINDS, suggestions });
+      } catch {
+        // Nothing is lost: the lesson goes back to where it was, with a way to try again.
+        updateLessonById(lesson.id, (current) => ({
+          ...current,
+          status: previousStatus,
+          aiFailed: 'all',
+        }));
+        return;
+      }
 
       updateLessonById(lesson.id, (current) => ({
         ...current,
-        // New results replace older AI versions; the teacher's text stays.
+        // New results replace the working AI versions; the teacher's text stays, and a
+        // published lesson keeps showing its published copy until the teacher publishes again.
         versions: [
           ...current.versions.filter((version) => version.kind === 'standard'),
           ...result.versions,
@@ -121,6 +144,7 @@ export function DemoSchoolProvider({
           ),
         ],
         quiz: current.quiz.length > 0 ? current.quiz : result.quiz,
+        extrasApproved: false,
         adaptationCount: (current.adaptationCount ?? 0) + 1,
         // A published lesson stays visible with its approved versions while new ones wait.
         status: previousStatus === 'assigned' ? 'assigned' : 'in_review',
@@ -148,15 +172,26 @@ export function DemoSchoolProvider({
       updateLessonById(lessonId, (current) => ({
         ...current,
         regenerating: [...(current.regenerating ?? []), kind],
+        aiFailed: undefined,
       }));
 
-      const result = await aiService.generate({
-        lesson,
-        kinds: [kind],
-        suggestions,
-        feedback,
-        attempt,
-      });
+      let result: Awaited<ReturnType<AiService['generate']>>;
+      try {
+        result = await aiService.generate({
+          lesson,
+          kinds: [kind],
+          suggestions,
+          feedback,
+          attempt,
+        });
+      } catch {
+        updateLessonById(lessonId, (current) => ({
+          ...current,
+          regenerating: (current.regenerating ?? []).filter((item) => item !== kind),
+          aiFailed: kind,
+        }));
+        return;
+      }
 
       updateLessonById(lessonId, (current) => ({
         ...current,
@@ -198,12 +233,21 @@ export function DemoSchoolProvider({
 
   const updateVersion = useCallback(
     (lessonId: string, kind: LessonVersionKind, edits: VersionEdits) =>
-      updateLessonById(lessonId, (lesson) => ({
-        ...lesson,
-        versions: lesson.versions.map((version) =>
-          version.kind === kind ? { ...version, ...edits } : version,
-        ),
-      })),
+      updateLessonById(lessonId, (lesson) => {
+        const before = lesson.versions.find((version) => version.kind === kind);
+        const textChanged =
+          kind === 'standard' && edits.content !== undefined && edits.content !== before?.content;
+        return {
+          ...lesson,
+          versions: lesson.versions.map((version) => {
+            if (version.kind === kind) return { ...version, ...edits };
+            // Versions made from the old teacher text must be looked at again.
+            return textChanged ? { ...version, stale: true } : version;
+          }),
+          extrasApproved: textChanged ? false : lesson.extrasApproved,
+          status: textChanged && lesson.status === 'approved' ? 'in_review' : lesson.status,
+        };
+      }),
     [updateLessonById],
   );
 
@@ -213,9 +257,20 @@ export function DemoSchoolProvider({
         const next: SchoolLesson = {
           ...lesson,
           versions: lesson.versions.map((version) =>
-            version.kind === kind ? { ...version, approvedByTeacher: true } : version,
+            version.kind === kind ? { ...version, approvedByTeacher: true, stale: false } : version,
           ),
         };
+        return lesson.status === 'in_review' && isFullyApproved(next)
+          ? { ...next, status: 'approved' }
+          : next;
+      }),
+    [updateLessonById],
+  );
+
+  const approveExtras = useCallback(
+    (lessonId: string) =>
+      updateLessonById(lessonId, (lesson) => {
+        const next: SchoolLesson = { ...lesson, extrasApproved: true };
         return lesson.status === 'in_review' && isFullyApproved(next)
           ? { ...next, status: 'approved' }
           : next;
@@ -227,7 +282,9 @@ export function DemoSchoolProvider({
     (lessonId: string) =>
       updateLessonById(lessonId, (lesson) =>
         // Only fully approved content can be published; the UI also prevents it.
-        isFullyApproved(lesson) ? { ...lesson, status: 'assigned' } : lesson,
+        isFullyApproved(lesson)
+          ? { ...lesson, status: 'assigned', published: publishableContent(lesson) }
+          : lesson,
       ),
     [updateLessonById],
   );
@@ -325,17 +382,20 @@ export function DemoSchoolProvider({
   const store = useMemo<SchoolStore>(() => {
     const getStudent = (id: string) => data.students.find((student) => student.id === id);
     const ownClassIds = teacherClassIds(data.teacher);
-    const visibleLessonsFor = (studentId: string) => {
-      const student = getStudent(studentId);
+    // Students and parents only ever get the published copy of a lesson.
+    const visibleLessonsFor = (studentId: string): SchoolLesson[] => {
       const group = classOf(studentId);
-      if (!student || !group) return [];
-      return data.lessons.filter(
-        (lesson) =>
-          lesson.status === 'assigned' &&
-          lesson.classId === group.id &&
-          pickLessonVersion(lesson, student.supportProfile) !== undefined,
-      );
+      if (!getStudent(studentId) || !group) return [];
+      return data.lessons
+        .filter((lesson) => lesson.classId === group.id)
+        .flatMap((lesson) => publishedView(lesson) ?? []);
     };
+    const teachesCourse = (subjectId: string, classId: string) =>
+      data.teacher.teaching.some(
+        (item) => item.subjectId === subjectId && item.classId === classId,
+      );
+    const isClassTeacherOf = (studentId: string) =>
+      classOf(studentId)?.classTeacherId === data.teacher.id;
     return {
       data,
       subjects: demoSubjects,
@@ -348,11 +408,19 @@ export function DemoSchoolProvider({
         const group = classOf(studentId);
         return group !== undefined && ownClassIds.includes(group.id);
       },
+      teachesCourse,
+      isClassTeacherOf,
+      lessonsVisibleToTeacher: (studentId) =>
+        visibleLessonsFor(studentId).filter(
+          (lesson) =>
+            isClassTeacherOf(studentId) || teachesCourse(lesson.subjectId, lesson.classId),
+        ),
       createLesson,
       generateAll,
       regenerateVersion,
       updateVersion,
       approveVersion,
+      approveExtras,
       publishLesson,
       updateLesson,
       studentsOf,
@@ -392,6 +460,7 @@ export function DemoSchoolProvider({
     regenerateVersion,
     updateVersion,
     approveVersion,
+    approveExtras,
     publishLesson,
     updateLesson,
     studentsOf,

@@ -43,14 +43,14 @@ describe('Adding a lesson', () => {
       'Lakše čitanje, AI prijedlog',
       'Audio, AI prijedlog',
       'Ilustracije, AI prijedlog',
-      'Kviz i riječi',
+      'Kviz i riječi, AI prijedlog',
     ]);
     // Opens on the first version waiting for review.
     expect(within(tabs).getByRole('tab', { name: /Skraćena/ })).toHaveAttribute(
       'aria-selected',
       'true',
     );
-    expect(screen.getByText('Odobreno 0 od 5 verzija')).toBeInTheDocument();
+    expect(screen.getByText('Odobreno 0 od 6')).toBeInTheDocument();
 
     await user.click(screen.getByRole('link', { name: 'Priroda i društvo · 4-2' }));
     expect(screen.getByRole('link', { name: /Planete Sunčevog sistema/ })).toHaveTextContent(
