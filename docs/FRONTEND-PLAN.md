@@ -64,7 +64,7 @@ Differences from this plan, all intentional for this step:
 
 ## Backend API and frontend work
 
-A living list. Whenever a backend endpoint is added, it is added here with what the frontend needs to do for it. The exact behaviour of each endpoint is in [DATABASE.md](DATABASE.md) ("Sign-in API"); this section only says what the screens must do. Status: **ready** means the endpoint exists and is tested; **planned** means it is agreed but not built.
+A living list. Whenever a backend endpoint is added, it is added here with what the frontend needs to do for it. The exact requests, answers and errors of every endpoint are in [API-CONTRACT.md](API-CONTRACT.md) (status `proposed` until the frontend developer has reviewed them); the rules and reasons behind them are in [DATABASE.md](DATABASE.md). This section only says what the screens must do. Status: **ready** means the endpoint exists and is tested; **planned** means it is agreed but not built.
 
 ### Terminology
 
@@ -550,7 +550,7 @@ Every task also follows the verification rules in [AGENTS.md](../AGENTS.md#4-ver
 
 ### For the backend developer
 
-1. **API contract**: format (for example OpenAPI), base URL, error format, and who maintains it.
+1. **API contract**: format (for example OpenAPI), base URL, error format, and who maintains it. **Proposed** in [API-CONTRACT.md](API-CONTRACT.md): Markdown for now, one address for frontend and API (Vite proxy in development), error format `{ error: { code, message } }`.
 2. **Authentication**: mechanism (for example httpOnly cookie session or tokens), session lifetime, and what the frontend receives about the signed-in user and role. The owner chose QR cards for students and school-created accounts for teachers and parents (see "Accounts and sign-in" above): how a card is issued, what it encodes, and how a lost card is revoked. **Answered (2026-11-04)**: cookie session of 7 days; no student cards for sign-in, only a one-time activation link per account that the admin hands out. See "Backend API and frontend work".
 3. **School import**: the format of the class-list import (columns, encoding) and whether eDnevnik export can be used.
 4. **Lesson model**: what a "version" is (per student, per group or per adaptation profile), status values, and how an approved version is assigned.
@@ -568,7 +568,7 @@ Every task also follows the verification rules in [AGENTS.md](../AGENTS.md#4-ver
 
 | Document                                    | When                                                                                     |
 | ------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `docs/API-CONTRACT.md` (or an OpenAPI file) | With the backend developer, before FE-04 schemas stop being provisional and before FE-17 |
+| `docs/API-CONTRACT.md` (or an OpenAPI file) | **Written**, status `proposed`: [API-CONTRACT.md](API-CONTRACT.md) covers every endpoint of the backend so far. Review it with the backend developer before FE-04 schemas stop being provisional and before FE-17 |
 | `docs/ARCHITECTURE.md`                      | When backend technologies and authentication are decided                                 |
 | Accessibility checklist                     | During FE-02/FE-03, as a short reusable checklist for UI tasks                           |
 

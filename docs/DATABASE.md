@@ -73,6 +73,8 @@ Steps, each with tests:
 
 ## Sign-in API
 
+The exact requests, answers and errors of every endpoint are in [API-CONTRACT.md](API-CONTRACT.md); the tables below are a summary with the reasons.
+
 | Endpoint            | What it does                                                                                     |
 | ------------------- | ------------------------------------------------------------------------------------------------ |
 | `POST /auth/login`  | Body `{ identifier, password }`. The identifier is an email or a username (told apart by `@`), in any letter case. Returns `{ user }` and sets the `session` cookie |
