@@ -68,7 +68,7 @@ export function SchoolRequestPage() {
   return (
     <AuthLayout>
       <title>{text.app.pageTitle(t.pageTitle)}</title>
-      <div className="rounded-[2rem] bg-card p-6 shadow-lifted sm:p-8">
+      <div>
         <div className="flex items-center gap-4">
           <span
             aria-hidden="true"
@@ -79,7 +79,7 @@ export function SchoolRequestPage() {
           >
             <BuildingsIcon weight="duotone" className="size-8" />
           </span>
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">
+          <h1 className="font-display text-4xl font-semibold tracking-tight text-ink">
             {t.heading}
           </h1>
         </div>

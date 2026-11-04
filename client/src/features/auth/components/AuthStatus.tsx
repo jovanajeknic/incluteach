@@ -2,13 +2,11 @@ import { CheckCircleIcon, CircleNotchIcon, InfoIcon, WarningIcon } from '@phosph
 import { Button } from '@/shared/ui/button';
 import { text } from '@/text/sr-Latn';
 
+/** A quiet line, not a banner: the forms are a demo and connect to nothing. */
 export function DemoNotice() {
   return (
-    <p
-      role="note"
-      className="flex items-start gap-2 rounded-2xl bg-lilac px-4 py-3 text-sm font-medium text-lilac-ink"
-    >
-      <InfoIcon aria-hidden="true" weight="duotone" className="mt-0.5 size-5 shrink-0" />
+    <p role="note" className="flex items-start gap-2 text-sm text-ink-soft">
+      <InfoIcon aria-hidden="true" weight="duotone" className="mt-0.5 size-4 shrink-0" />
       {text.auth.demoNotice}
     </p>
   );

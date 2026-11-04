@@ -32,9 +32,7 @@ describe('Auth navigation', () => {
 
     expect(screen.queryByRole('link', { name: /Registruj/ })).not.toBeInTheDocument();
     await user.click(within(screen.getByRole('banner')).getByRole('link', { name: 'Prijavi se' }));
-    expect(
-      await screen.findByRole('heading', { level: 1, name: 'Dobro došli nazad' }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Prijava' })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/login');
 
     await user.click(screen.getByRole('link', { name: 'Aktivirajte nalog.' }));
@@ -44,7 +42,7 @@ describe('Auth navigation', () => {
     expect(router.state.location.pathname).toBe('/activate');
 
     await user.click(screen.getByRole('link', { name: 'Prijavite se.' }));
-    await screen.findByRole('heading', { level: 1, name: 'Dobro došli nazad' });
+    await screen.findByRole('heading', { level: 1, name: 'Prijava' });
 
     await user.click(screen.getAllByRole('link', { name: 'IncluTeach – početna stranica' })[0]!);
     expect(router.state.location.pathname).toBe('/');
@@ -221,5 +219,33 @@ describe('Activating an account from an invitation', () => {
     expect(screen.getByLabelText('Potvrdite lozinku')).toHaveValue('');
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(setItemSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe('Choosing who signs in', () => {
+  it('offers teacher, parent and student separately', async () => {
+    await openPage('/login');
+    const roles = within(screen.getByRole('tablist', { name: 'Prijavljujem se kao' }));
+    expect(roles.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
+      'Nastavnik',
+      'Roditelj',
+      'Učenik',
+    ]);
+    expect(roles.getByRole('tab', { name: 'Nastavnik' })).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it("opens the chosen role's demo after a valid sign-in", async () => {
+    const { user } = await openPage('/login');
+
+    await user.click(screen.getByRole('tab', { name: 'Roditelj' }));
+    expect(screen.getByText(/emailom na koji je stigla pozivnica škole/)).toBeInTheDocument();
+    await user.type(screen.getByLabelText('Email adresa'), 'jelena@primjer.me');
+    await user.type(screen.getByLabelText('Lozinka'), VALID_PASSWORD);
+    await user.click(screen.getByRole('button', { name: 'Prijavi se' }));
+
+    expect(await screen.findByRole('link', { name: /Otvori roditeljski demo/ })).toHaveAttribute(
+      'href',
+      '/parent',
+    );
   });
 });

@@ -9,17 +9,21 @@ interface AuthCardProps {
   children: ReactNode;
 }
 
-/** Heading, demo notice, the form and the links under it. */
+/** Heading, the form, the links under it and a quiet demo note at the end. */
 export function AuthCard({ title, description, footer, children }: AuthCardProps) {
   return (
-    <div className="rounded-[2rem] bg-card p-6 shadow-lifted sm:p-8">
-      <h1 className="font-display text-3xl font-semibold tracking-tight text-ink">{title}</h1>
+    <div>
+      <h1 className="font-display text-4xl font-semibold tracking-tight text-ink">{title}</h1>
       {description && <p className="mt-2 text-ink-soft">{description}</p>}
-      <div className="mt-6">
+      <div className="mt-8">{children}</div>
+      {footer && (
+        <div className="mt-8 grid gap-2 border-t border-border pt-6 text-center text-ink-soft">
+          {footer}
+        </div>
+      )}
+      <div className="mt-8">
         <DemoNotice />
       </div>
-      <div className="mt-6">{children}</div>
-      {footer && <div className="mt-6 grid gap-2 text-center text-ink-soft">{footer}</div>}
     </div>
   );
 }

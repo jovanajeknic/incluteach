@@ -45,7 +45,7 @@ describe('LandingPage', () => {
     }
   });
 
-  it.each([['Prijavi se', '/login', 'Dobro došli nazad']])(
+  it.each([['Prijavi se', '/login', 'Prijava']])(
     'header "%s" opens the %s page',
     async (name, path, heading) => {
       const { user, router } = renderApp({ path: '/' });

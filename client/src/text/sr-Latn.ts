@@ -90,6 +90,7 @@ export const text = {
       passwordHint: (minLength: number) =>
         `Najmanje ${minLength} znakova. Razmaci su dozvoljeni, a lozinku možete zalijepiti iz menadžera lozinki.`,
     },
+    backHome: 'Početna',
     showPassword: 'Prikaži lozinku',
     hidePassword: 'Sakrij lozinku',
     errors: {
@@ -107,15 +108,27 @@ export const text = {
     },
     login: {
       pageTitle: 'Prijava',
-      heading: 'Dobro došli nazad',
-      tabsLabel: 'Ko se prijavljuje',
-      adultTab: 'Nastavnik ili roditelj',
-      studentTab: 'Učenik',
+      heading: 'Prijava',
+      rolesLabel: 'Prijavljujem se kao',
+      roles: {
+        teacher: 'Nastavnik',
+        parent: 'Roditelj',
+        student: 'Učenik',
+      },
+      roleIntro: {
+        teacher: 'Prijavite se emailom škole na koji je stigla pozivnica.',
+        parent: 'Prijavite se emailom na koji je stigla pozivnica škole.',
+        student: 'Pokaži svoju karticu kameri ili upiši kod koji piše na njoj.',
+      },
+      openDemo: {
+        teacher: 'Otvori nastavnički demo',
+        parent: 'Otvori roditeljski demo',
+        student: 'Otvori učenički demo',
+      },
       submit: 'Prijavi se',
       submitting: 'Prijavljivanje…',
       demoSuccess:
         'Forma je uspješno provjerena. Ovo je demo prikaz: prijava nije stvarno izvršena.',
-      studentIntro: 'Pokaži svoju karticu kameri ili upiši kod koji piše na njoj.',
       studentScanNote: 'Skeniranje kamerom dolazi uz pravu prijavu. U demou upiši kod.',
       studentDemoSuccess:
         'Kod je ispravno upisan. Ovo je demo prikaz: prijava nije stvarno izvršena.',

@@ -220,6 +220,14 @@
     font-family: var(--app-font-sans);
   }
 
+  .area-theme input:-webkit-autofill,
+  .area-theme input:-webkit-autofill:hover,
+  .area-theme input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--brand-ink);
+    box-shadow: 0 0 0 1000px var(--brand-card) inset;
+    transition: background-color 9999s;
+  }
+
   /*
    * The current teacher page is a tab cut out of the sidebar: two concave corners
    * above and below the link flow into the page background.
