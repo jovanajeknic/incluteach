@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="38 20 420 335">
+  <title>IncluTeach</title>
+  <g fill="#6fa8dc"><circle cx="88.5" cy="101" r="28.5"/><rect x="53" y="140" width="71" height="120" rx="35.5"/></g>
+  <g fill="#5d9a82"><circle cx="168" cy="75" r="28"/><rect x="133" y="114" width="71" height="146" rx="35.5"/></g>
+  <g fill="#f78c61"><circle cx="247.5" cy="54" r="28"/><rect x="212" y="93.5" width="72" height="144.5" rx="36"/></g>
+  <g fill="#f6c25b"><circle cx="327" cy="75" r="28"/><rect x="292" y="114" width="71" height="146" rx="35.5"/></g>
+  <g fill="#a58bd6"><circle cx="407" cy="101" r="28.5"/><rect x="372" y="140" width="71" height="120" rx="35.5"/></g>
+  <path d="M43 212C75 194 160 190 237 240V349C200 318 120 300 43 320Z" fill="#1b5244"/>
+  <path d="M452 212C420 194 335 190 258 240V349C295 318 375 300 452 320Z" fill="#2a6b59"/>
+</svg>

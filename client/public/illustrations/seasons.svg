@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <defs><rect id="trunk" x="-6" y="0" width="12" height="40" rx="5" fill="#8a6440"/></defs>
+  <rect width="400" height="300" rx="24" fill="#fdf6ec"/>
+  <rect x="12" y="12" width="182" height="132" rx="16" fill="#e3efd2"/>
+  <rect x="206" y="12" width="182" height="132" rx="16" fill="#fbecc0"/>
+  <rect x="12" y="156" width="182" height="132" rx="16" fill="#f8dbd5"/>
+  <rect x="206" y="156" width="182" height="132" rx="16" fill="#d8e8f6"/>
+  <use href="#trunk" x="103" y="88"/><circle cx="103" cy="72" r="34" fill="#76b38f"/>
+  <g fill="#f8a5c2"><circle cx="88" cy="62" r="6"/><circle cx="112" cy="58" r="6"/><circle cx="104" cy="84" r="6"/></g>
+  <use href="#trunk" x="297" y="88"/><circle cx="297" cy="70" r="38" fill="#3f7a3a"/>
+  <circle cx="356" cy="40" r="16" fill="#f6c25b"/>
+  <use href="#trunk" x="103" y="232"/><circle cx="103" cy="216" r="34" fill="#f78c61"/>
+  <g fill="#e07a3c"><circle cx="60" cy="268" r="6"/><circle cx="148" cy="262" r="6"/></g>
+  <use href="#trunk" x="297" y="232"/>
+  <path d="M297 180l-30 52h60z" fill="#fff" stroke="#93bfe6" stroke-width="3"/>
+  <g fill="#fff"><circle cx="232" cy="190" r="4"/><circle cx="360" cy="206" r="4"/><circle cx="246" cy="250" r="4"/><circle cx="350" cy="262" r="4"/></g>
+</svg>

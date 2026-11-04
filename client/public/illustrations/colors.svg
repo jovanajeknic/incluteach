@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <rect width="400" height="300" rx="24" fill="#fdf6ec"/>
+  <g fill="none" stroke-width="22" stroke-linecap="round">
+    <path d="M60 220a140 140 0 0 1 280 0" stroke="#e85d4a"/>
+    <path d="M86 220a114 114 0 0 1 228 0" stroke="#f6c25b"/>
+    <path d="M112 220a88 88 0 0 1 176 0" stroke="#5d9a82"/>
+    <path d="M138 220a62 62 0 0 1 124 0" stroke="#6fa8dc"/>
+  </g>
+  <g font-family="Fredoka, Arial, sans-serif" font-weight="700" font-size="22" text-anchor="middle">
+    <text x="60" y="268" fill="#9a3b2c">red</text>
+    <text x="150" y="268" fill="#6e5100">yellow</text>
+    <text x="250" y="268" fill="#1f5a52">green</text>
+    <text x="340" y="268" fill="#22578a">blue</text>
+  </g>
+</svg>

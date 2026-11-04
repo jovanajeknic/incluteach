@@ -1,0 +1,428 @@
+@import 'tailwindcss';
+/* Self-hosted fonts: no third-party requests, and the latin-ext subset covers č ć đ š ž. */
+@import '@fontsource-variable/lexend';
+@import '@fontsource-variable/atkinson-hyperlegible-next';
+/* Teacher area: rounded, lively headings (Fredoka) over a warm, readable text face (Nunito). */
+@import '@fontsource-variable/fredoka';
+@import '@fontsource-variable/nunito';
+/* Smooth scrolling in the teacher area; the library expects its small stylesheet. */
+@import 'lenis/dist/lenis.css';
+/* Optional dyslexia-friendly reading font; the browser downloads it only when a lesson uses it. */
+@import '@fontsource/opendyslexic/400.css';
+/* Handwriting for small margin notes only, never for lesson text. */
+@import '@fontsource/caveat/500.css';
+@import '@fontsource/caveat/600.css';
+
+/*
+ * Design tokens. See docs/DESIGN.md for the reasoning and usage rules.
+ * Brand tokens hold the raw palette; the shadcn/ui-named tokens below map it to roles,
+ * so every component and screen inherits the identity from one place.
+ * All text pairings were checked for WCAG AA (normal text >= 4.5:1, UI parts >= 3:1).
+ */
+:root {
+  /* Base */
+  --brand-paper: #fdf6ec;
+  --brand-card: #ffffff;
+  --brand-ink: #112b28;
+  --brand-ink-soft: #4a5654;
+  --brand-forest: #1b5244;
+  --brand-forest-deep: #123a30;
+  /* Landing page accents taken from the owner's design: sage, ochre and a fine sage line. */
+  --brand-sage: #869e75;
+  --brand-ochre: #fdc76b;
+  --brand-line: #b5bda6;
+
+  /*
+   * Six pastels. The owner chose mint and blush as the base; the other four widen the
+   * palette for a child-friendly, varied look. Each has three forms:
+   *   pastel  - surfaces (sections, cards)
+   *   -deep   - shapes and illustration (never text)
+   *   -ink    - text on light surfaces
+   */
+  --brand-mint: #d6e6e4;
+  --brand-mint-deep: #8fc4bc;
+  --brand-mint-ink: #1f5a52;
+  --brand-blush: #f8dbd5;
+  --brand-blush-deep: #f0a597;
+  --brand-blush-ink: #9a3b2c;
+  --brand-butter: #fbecc0;
+  --brand-butter-deep: #f3cd6a;
+  --brand-butter-ink: #6e5100;
+  --brand-lilac: #e4ddf4;
+  --brand-lilac-deep: #b5a5e3;
+  --brand-lilac-ink: #55409a;
+  --brand-sky: #d8e8f6;
+  --brand-sky-deep: #93bfe6;
+  --brand-sky-ink: #22578a;
+  --brand-pistachio: #e3efd2;
+  --brand-pistachio-deep: #b3d48e;
+  --brand-pistachio-ink: #3f5f1c;
+
+  /* Logo: five learners in soft but clear colours over a forest-green book. */
+  --logo-figure-1: #6fa8dc;
+  --logo-figure-2: #5d9a82;
+  --logo-figure-3: #f78c61;
+  --logo-figure-4: #f6c25b;
+  --logo-figure-5: #a58bd6;
+  --logo-page-left: #1b5244;
+  --logo-page-right: #2a6b59;
+
+  /* Roles (shadcn/ui names) */
+  --radius: 1.5rem;
+
+  --background: var(--brand-paper);
+  --foreground: var(--brand-ink);
+
+  --card: var(--brand-card);
+  --card-foreground: var(--brand-ink);
+  --popover: var(--brand-card);
+  --popover-foreground: var(--brand-ink);
+
+  --primary: var(--brand-forest);
+  --primary-foreground: #ffffff;
+  /* Darker on hover; white text stays above 12:1. */
+  --primary-hover: var(--brand-forest-deep);
+  /* The "pressed" edge under chunky buttons. */
+  --primary-edge: var(--brand-forest-deep);
+  --secondary: var(--brand-mint);
+  --secondary-foreground: var(--brand-mint-ink);
+
+  --muted: var(--brand-mint);
+  --muted-foreground: var(--brand-ink-soft);
+  --accent: var(--brand-mint);
+  --accent-foreground: var(--brand-mint-ink);
+
+  --destructive: #b42318;
+  --destructive-foreground: #ffffff;
+
+  --border: #e6dccb;
+  --input: #7d8a90;
+  --ring: var(--brand-forest);
+
+  /* Elevation: soft, low-contrast shadows tinted with the ink colour. */
+  --shadow-soft: 0 1px 2px rgb(34 49 58 / 0.05), 0 6px 18px rgb(34 49 58 / 0.07);
+  --shadow-lifted: 0 2px 4px rgb(34 49 58 / 0.05), 0 16px 40px rgb(34 49 58 / 0.1);
+
+  /*
+   * Fonts are indirect so one area (the teacher area) can switch faces with a class,
+   * without touching every component.
+   */
+  --app-font-sans:
+    'Atkinson Hyperlegible Next Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+  --app-font-display: 'Lexend Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+
+  /* Motion */
+  --ease-out-soft: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@theme inline {
+  --font-sans: var(--app-font-sans);
+  --font-display: var(--app-font-display);
+  --font-hand: 'Caveat', 'Segoe Print', 'Comic Sans MS', cursive;
+  --font-dyslexic: 'OpenDyslexic', 'Atkinson Hyperlegible Next Variable', system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 14px);
+  --radius-md: calc(var(--radius) - 10px);
+  --radius-lg: calc(var(--radius) - 6px);
+  --radius-xl: var(--radius);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 16px);
+
+  --shadow-soft: var(--shadow-soft);
+  --shadow-lifted: var(--shadow-lifted);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-edge: var(--primary-edge);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-paper: var(--brand-paper);
+  --color-ink: var(--brand-ink);
+  --color-ink-soft: var(--brand-ink-soft);
+  --color-forest: var(--brand-forest);
+  --color-forest-deep: var(--brand-forest-deep);
+  --color-sage: var(--brand-sage);
+  --color-ochre: var(--brand-ochre);
+  --color-line: var(--brand-line);
+  --color-mint: var(--brand-mint);
+  --color-mint-deep: var(--brand-mint-deep);
+  --color-mint-ink: var(--brand-mint-ink);
+  --color-blush: var(--brand-blush);
+  --color-blush-deep: var(--brand-blush-deep);
+  --color-blush-ink: var(--brand-blush-ink);
+  --color-butter: var(--brand-butter);
+  --color-butter-deep: var(--brand-butter-deep);
+  --color-butter-ink: var(--brand-butter-ink);
+  --color-lilac: var(--brand-lilac);
+  --color-lilac-deep: var(--brand-lilac-deep);
+  --color-lilac-ink: var(--brand-lilac-ink);
+  --color-sky: var(--brand-sky);
+  --color-sky-deep: var(--brand-sky-deep);
+  --color-sky-ink: var(--brand-sky-ink);
+  --color-pistachio: var(--brand-pistachio);
+  --color-pistachio-deep: var(--brand-pistachio-deep);
+  --color-pistachio-ink: var(--brand-pistachio-ink);
+
+  --ease-out-soft: var(--ease-out-soft);
+  --ease-bounce: var(--ease-bounce);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    line-height: 1.6;
+  }
+
+  /* Anchor targets must not hide under the sticky site header. */
+  [id] {
+    scroll-margin-top: 6rem;
+  }
+
+  /* A strong, consistent focus indicator for everything, including plain links. */
+  :focus-visible {
+    outline: 3px solid var(--ring);
+    outline-offset: 3px;
+  }
+}
+
+@layer components {
+  /* Type for the signed-in areas: see docs/DESIGN.md, "Teacher, student and parent areas". */
+  .area-theme {
+    --app-font-sans: 'Nunito Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+    --app-font-display: 'Fredoka Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+    font-family: var(--app-font-sans);
+  }
+
+  .area-theme input:-webkit-autofill,
+  .area-theme input:-webkit-autofill:hover,
+  .area-theme input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--brand-ink);
+    box-shadow: 0 0 0 1000px var(--brand-card) inset;
+    transition: background-color 9999s;
+  }
+
+  /*
+   * The current teacher page is a tab cut out of the sidebar: two concave corners
+   * above and below the link flow into the page background.
+   */
+  @media (min-width: 768px) {
+    .sidebar-nav-link[aria-current='page'] {
+      position: relative;
+    }
+
+    .sidebar-nav-link[aria-current='page']::before,
+    .sidebar-nav-link[aria-current='page']::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      width: 1.5rem;
+      height: 1.5rem;
+      pointer-events: none;
+    }
+
+    .sidebar-nav-link[aria-current='page']::before {
+      top: -1.5rem;
+      background: radial-gradient(
+        circle at 0 0,
+        transparent 1.5rem,
+        var(--background) calc(1.5rem + 0.5px)
+      );
+    }
+
+    .sidebar-nav-link[aria-current='page']::after {
+      bottom: -1.5rem;
+      background: radial-gradient(
+        circle at 0 100%,
+        transparent 1.5rem,
+        var(--background) calc(1.5rem + 0.5px)
+      );
+    }
+  }
+
+  /*
+   * Reveal on scroll. The `js-reveal` class is added to <html> by useScrollReveal only when
+   * motion is allowed, so without JavaScript or with reduced motion everything is visible.
+   */
+  .js-reveal [data-reveal] {
+    opacity: 0;
+    transform: translateY(28px);
+    transition:
+      opacity 700ms var(--ease-out-soft),
+      transform 700ms var(--ease-out-soft);
+    transition-delay: calc(var(--reveal-order, 0) * 90ms);
+  }
+
+  .js-reveal [data-reveal='left'] {
+    transform: translateX(-36px);
+  }
+
+  .js-reveal [data-reveal='right'] {
+    transform: translateX(36px);
+  }
+
+  .js-reveal [data-reveal='pop'] {
+    transform: scale(0.9);
+  }
+
+  .js-reveal [data-reveal].is-revealed {
+    opacity: 1;
+    transform: none;
+  }
+
+  /*
+   * Hero background photo: it covers the whole hero like wallpaper. A light blur and
+   * softened colours that lean towards the cream and sage palette keep it in the
+   * background; the slight scale hides the blurred edges.
+   */
+  .hero-photo {
+    filter: blur(3px) saturate(0.7) sepia(0.15) brightness(1.05) contrast(0.92);
+    transform: scale(1.04);
+  }
+
+  /*
+   * Cream veil over the photo: strongest behind the text on the left, lighter on the right
+   * where the people are; on phones it is even, because the text spans the full width.
+   * The bottom fades into the page.
+   */
+  .hero-veil {
+    background:
+      linear-gradient(to bottom, transparent 70%, var(--brand-paper) 100%),
+      linear-gradient(
+        to right,
+        rgb(253 246 236 / 0.92) 0%,
+        rgb(253 246 236 / 0.7) 45%,
+        rgb(253 246 236 / 0.25) 100%
+      );
+  }
+
+  @media (max-width: 1023px) {
+    .hero-veil {
+      background:
+        linear-gradient(to bottom, transparent 70%, var(--brand-paper) 100%),
+        rgb(253 246 236 / 0.78);
+    }
+  }
+
+  /*
+   * Notebook look for lessons. A sheet of paper with a red margin line, sitting on two
+   * slightly crooked sheets underneath, the way a real exercise book lies on a desk.
+   */
+  .paper-stack {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .paper-stack::before,
+  .paper-stack::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: var(--brand-card);
+  }
+
+  .paper-stack::before {
+    transform: translate(6px, 7px) rotate(0.7deg);
+  }
+
+  .paper-stack::after {
+    transform: translate(-4px, 11px) rotate(-0.6deg);
+    opacity: 0.7;
+  }
+
+  .paper-sheet {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    box-shadow:
+      0 1px 2px rgb(34 49 58 / 0.06),
+      0 10px 24px -12px rgb(34 49 58 / 0.18);
+    /* The margin line; content is padded to sit to its right. */
+    background-image: linear-gradient(
+      to right,
+      transparent 1.6rem,
+      rgb(240 165 151 / 0.75) 1.6rem,
+      rgb(240 165 151 / 0.75) calc(1.6rem + 2px),
+      transparent calc(1.6rem + 2px)
+    );
+    padding-left: 2.75rem;
+  }
+
+  @media (min-width: 640px) {
+    .paper-sheet {
+      background-image: linear-gradient(
+        to right,
+        transparent 3rem,
+        rgb(240 165 151 / 0.75) 3rem,
+        rgb(240 165 151 / 0.75) calc(3rem + 2px),
+        transparent calc(3rem + 2px)
+      );
+      padding-left: 4.5rem;
+    }
+  }
+
+  /* A handwritten note: slightly tilted, like it was jotted down later. */
+  .hand-note {
+    font-family: var(--font-hand);
+    font-size: 1.35rem;
+    line-height: 1.15;
+    display: inline-block;
+    transform: rotate(-1.5deg);
+  }
+
+  /* A small, friendly hop on hover for illustrations and cards. */
+  @media (prefers-reduced-motion: no-preference) {
+    .hover-hop {
+      transition: transform 250ms var(--ease-bounce);
+    }
+
+    .hover-hop:hover {
+      transform: translateY(-6px) rotate(-1deg);
+    }
+  }
+}
+
+/* Respect users who ask the operating system for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

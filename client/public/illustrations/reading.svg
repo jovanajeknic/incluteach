@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <rect width="400" height="300" rx="24" fill="#e4ddf4"/>
+  <path d="M60 90c40-20 100-20 140 10v150c-40-26-100-28-140-10z" fill="#fff"/>
+  <path d="M340 90c-40-20-100-20-140 10v150c40-26 100-28 140-10z" fill="#fdf6ec"/>
+  <path d="M200 100v150" stroke="#b5a5e3" stroke-width="4"/>
+  <g stroke="#b5a5e3" stroke-width="6" stroke-linecap="round">
+    <path d="M84 126h90M84 152h80M84 178h90M226 126h90M226 152h70M226 178h90"/>
+  </g>
+  <g font-family="Fredoka, Arial, sans-serif" font-weight="700">
+    <text x="70" y="70" font-size="44" fill="#f78c61">A</text>
+    <text x="300" y="66" font-size="40" fill="#5d9a82">b</text>
+    <text x="180" y="58" font-size="36" fill="#6fa8dc">Č</text>
+  </g>
+</svg>
