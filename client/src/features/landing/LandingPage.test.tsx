@@ -142,7 +142,9 @@ describe('LandingPage', () => {
       if (href.startsWith('#')) {
         expect(document.getElementById(href.slice(1)), href).toBeInTheDocument();
       } else {
-        expect(['/', '/teacher', '/student', '/parent', '/login']).toContain(href);
+        expect(['/', '/teacher', '/student', '/parent', '/login', '/school-request']).toContain(
+          href,
+        );
       }
     }
   });

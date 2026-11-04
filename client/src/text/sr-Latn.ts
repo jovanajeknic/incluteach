@@ -30,6 +30,7 @@ export const text = {
       label: 'Glavna navigacija',
       about: 'O nama',
       audiences: 'Za koga je',
+      schools: 'Za škole',
       login: 'Prijavi se',
       menu: 'Meni',
     },
@@ -60,6 +61,11 @@ export const text = {
         title: 'Za roditelje',
         description: 'Sigurnost da dijete dobija podršku koja mu je potrebna.',
       },
+    },
+    schools: {
+      title: 'Vaša škola u IncluTeach-u',
+      text: 'Škola se priključuje jednom. Mi provjerimo zahtjev, potpišemo ugovor o zaštiti podataka i otvorimo nalog vašem administratoru.',
+      cta: 'Prijavite školu',
     },
     about: {
       title: 'Naša priča',
@@ -129,6 +135,53 @@ export const text = {
       switchPrompt: 'Već ste aktivirali nalog?',
       switchLink: 'Prijavite se.',
     },
+  },
+
+  schoolRequest: {
+    pageTitle: 'Prijava škole',
+    heading: 'Prijavite školu',
+    description:
+      'Ovo je zahtjev, ne nalog. IncluTeach tim provjerava školu i javlja se na službeni email.',
+    demoNotice: 'Demo prikaz — zahtjev se ne šalje i ništa se ne čuva.',
+    steps: [
+      'Pošaljete zahtjev.',
+      'Provjerimo školu i potpišemo ugovor o zaštiti podataka.',
+      'Administrator škole dobija pozivnicu i aktivira nalog.',
+    ],
+    stepsLabel: 'Šta slijedi',
+    fields: {
+      schoolName: 'Naziv škole',
+      municipality: 'Opština',
+      contactName: 'Ime i prezime',
+      contactRole: 'Funkcija u školi',
+      contactRolePlaceholder: 'Izaberite',
+      roles: {
+        principal: 'Direktor/ka',
+        deputy: 'Pomoćnik/ca direktora',
+        pedagogue: 'Pedagog',
+        psychologist: 'Psiholog',
+        secretary: 'Sekretar/ka',
+        other: 'Drugo',
+      },
+      email: 'Službeni email škole',
+      emailHint: 'Adresa škole, ne lična. Na nju šaljemo odgovor i kasnije pozivnicu.',
+      phone: 'Telefon (nije obavezno)',
+      message: 'Poruka (nije obavezno)',
+      consent: 'Slažem se da me IncluTeach kontaktira u vezi s ovim zahtjevom.',
+    },
+    errors: {
+      schoolNameRequired: 'Unesite naziv škole.',
+      municipalityRequired: 'Unesite opštinu.',
+      contactNameRequired: 'Unesite ime i prezime.',
+      contactRoleRequired: 'Izaberite funkciju.',
+      consentRequired: 'Potrebna je saglasnost da bismo vas kontaktirali.',
+      messageTooLong: (max: number) => `Poruka može imati najviše ${max} znakova.`,
+    },
+    submit: 'Pošalji zahtjev',
+    submitting: 'Slanje…',
+    demoSuccess:
+      'Zahtjev je ispravno popunjen. Ovo je demo prikaz: ništa nije poslato. U pravoj verziji javljamo se na službeni email škole.',
+    backHome: 'Nazad na početnu',
   },
 
   student: {

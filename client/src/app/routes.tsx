@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import { type RouteObject } from 'react-router';
 import { activatePath, loginPath } from '@/features/auth/paths';
+import { schoolRequestPath } from '@/features/school-request/paths';
 import { LandingPage } from '@/features/landing/LandingPage';
 import { teacherHomePath } from '@/features/lessons/paths';
 import { parentHomePath } from '@/features/parent/paths';
@@ -38,6 +39,13 @@ export const routes: RouteObject[] = [
         path: activatePath,
         lazy: async () => ({
           Component: (await import('@/features/auth/pages/ActivatePage')).ActivatePage,
+        }),
+      },
+      {
+        path: schoolRequestPath,
+        lazy: async () => ({
+          Component: (await import('@/features/school-request/SchoolRequestPage'))
+            .SchoolRequestPage,
         }),
       },
       {

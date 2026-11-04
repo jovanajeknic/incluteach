@@ -5,6 +5,7 @@ import { text } from '@/text/sr-Latn';
 import { AboutSection } from './components/AboutSection';
 import { AudiencesSection } from './components/AudiencesSection';
 import { HeroSection } from './components/HeroSection';
+import { SchoolsSection } from './components/SchoolsSection';
 import { SiteFooter } from './components/SiteFooter';
 import { SiteHeader } from './components/SiteHeader';
 import { useScrollReveal } from './useScrollReveal';
@@ -23,6 +24,7 @@ export function LandingPage() {
       <main id={MAIN_CONTENT_ID} tabIndex={-1} className="flex-1 focus:outline-none">
         <HeroSection />
         <AudiencesSection />
+        <SchoolsSection />
         <AboutSection />
       </main>
       <SiteFooter />
