@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import type pg from 'pg';
 
 import type { UserRole } from '../roles.ts';
@@ -26,14 +28,21 @@ export async function insertSchool(client: pg.PoolClient, name = 'Test School'):
   return rows[0].id;
 }
 
+// Usernames are unique across all schools, so each call gets a random one by default.
+export function randomUsername(): string {
+  return `user_${randomUUID().slice(0, 8)}`;
+}
+
 export async function insertUser(
   client: pg.PoolClient,
   schoolId: string,
   role: UserRole,
+  username: string = randomUsername(),
 ): Promise<string> {
   const { rows } = await client.query<{ id: string }>(
-    `INSERT INTO users (full_name, role, school_id) VALUES ('Test User', $1, $2) RETURNING id`,
-    [role, schoolId],
+    `INSERT INTO users (full_name, role, school_id, username)
+     VALUES ('Test User', $1, $2, $3) RETURNING id`,
+    [role, schoolId, username],
   );
   return rows[0].id;
 }

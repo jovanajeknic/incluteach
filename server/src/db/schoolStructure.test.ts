@@ -8,6 +8,7 @@ import {
   insertSchool,
   insertSubject,
   insertUser,
+  randomUsername,
 } from './testUtils.ts';
 
 // These tests talk to the real local database, so they run only when DATABASE_URL is set.
@@ -28,7 +29,11 @@ describe.skipIf(!process.env.DATABASE_URL)('schools, classes and subjects', () =
     it('require a school', async () => {
       await inTransaction(async (client) => {
         await expect(
-          client.query(`INSERT INTO users (full_name, role) VALUES ('Test User', 'teacher')`),
+          client.query(
+            `INSERT INTO users (full_name, role, username)
+             VALUES ('Test User', 'teacher', $1)`,
+            [randomUsername()],
+          ),
         ).rejects.toThrow(/null value in column "school_id"/);
       });
     });
