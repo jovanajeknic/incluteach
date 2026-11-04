@@ -75,11 +75,16 @@ export interface SchoolStore {
   progressOf: (studentId: string, lessonId: string) => LessonProgress;
   practiceOf: (studentId: string, lessonId: string) => PracticeRecord | undefined;
   markStarted: (studentId: string, lessonId: string) => void;
-  markCompleted: (
+  /** The student marks the lesson as read through. */
+  markLessonDone: (studentId: string, lessonId: string) => void;
+  /** The student finished the lesson quiz. */
+  recordPractice: (
     studentId: string,
     lessonId: string,
     difficultQuestionIds: readonly string[],
   ) => void;
+  /** One star for each lesson marked as done and one for each finished quiz. */
+  starsOf: (studentId: string) => number;
   addSuggestion: (suggestion: NewSuggestion) => void;
 }
 

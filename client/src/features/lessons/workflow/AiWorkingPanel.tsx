@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import { ADAPTED_KINDS } from '@/features/school/types';
-import { AiPulse } from '@/features/teacher-ui/AiPulse';
-import { blobShape } from '@/features/teacher-ui/subjectIcons';
+import { AiPulse } from '@/shared/visual/AiPulse';
+import { blobShape } from '@/shared/visual/subjectIcons';
 import { cn } from '@/shared/lib/utils';
 import { text } from '@/text/sr-Latn';
 import { versionAppearance } from './versionKinds';

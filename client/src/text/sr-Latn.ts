@@ -7,6 +7,14 @@ function studentsWord(count: number): string {
   return count % 10 === 1 && count % 100 !== 11 ? 'učenik' : 'učenika';
 }
 
+/** "1 zvjezdica", "2 zvjezdice", "5 zvjezdica". */
+function starsWord(count: number): string {
+  const last = count % 10;
+  const lastTwo = count % 100;
+  if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) return 'zvjezdice';
+  return 'zvjezdica';
+}
+
 export const text = {
   app: {
     name: 'IncluTeach',
@@ -139,12 +147,14 @@ export const text = {
     nav: {
       label: 'Učenička navigacija',
       subjects: 'Moji predmeti',
+      stars: 'Moje zvjezdice',
     },
     home: {
       pageTitle: 'Moji predmeti',
       greeting: (name: string) => `Zdravo, ${name}!`,
-      intro: 'Izaberi predmet i nastavi da učiš.',
+      heading: 'Moji predmeti',
       subjectsHeading: 'Predmeti',
+      doneCount: (done: number, total: number) => `pređeno ${done} od ${total}`,
       lessonCount: (count: number) => {
         if (count === 0) return 'Još nema lekcija';
         if (count === 1) return '1 lekcija';
@@ -152,7 +162,6 @@ export const text = {
         return `${count} lekcija`;
       },
       starsLabel: 'Zvjezdice za trud',
-      starsHint: 'Zvjezdicu dobijaš kad završiš vježbu uz lekciju.',
     },
     subject: {
       backToSubjects: 'Nazad na predmete',
@@ -161,8 +170,9 @@ export const text = {
       status: {
         new: 'Nova',
         started: 'Započeta',
-        completed: 'Završena',
+        completed: 'Pređena',
       },
+      starsEarned: (count: number) => `${count} od 2 zvjezdice`,
       notFoundTitle: 'Predmet nije pronađen',
       notFoundDescription: 'Ovaj predmet ne postoji ili ti nije dodijeljen.',
     },
@@ -173,9 +183,15 @@ export const text = {
       stepProgress: (step: number, total: number) => `Korak ${step} od ${total}`,
       previousStep: 'Prethodni korak',
       nextStep: 'Sljedeći korak',
-      glossaryHint: 'podvučene riječi kriju objašnjenje — dodirni ih',
-      startQuiz: 'Hajde na vježbu',
-      quizNote: 'kad pročitaš',
+      glossaryHint: 'Podvučene riječi kriju objašnjenje — dodirni ih.',
+      picturesLabel: 'Slike uz lekciju',
+      finishHeading: 'Kad završiš',
+      markDone: 'Označi kao pređeno',
+      markedDone: 'Lekcija je pređena. Zvjezdica je tvoja!',
+      startQuiz: 'Hajde na kviz',
+      quizAgain: 'Uradi kviz ponovo',
+      quizDone: 'Kviz je urađen. Zvjezdica je tvoja!',
+      plusStar: '+1 zvjezdica',
       notFoundTitle: 'Lekcija nije pronađena',
       notFoundDescription: 'Ova lekcija ne postoji ili ti još nije dodijeljena.',
     },
@@ -220,21 +236,32 @@ export const text = {
       closeHint: 'Dodirni riječ ponovo da zatvoriš objašnjenje.',
     },
     quiz: {
-      pageTitle: (lesson: string) => `Vježba: ${lesson}`,
-      heading: 'Vježba',
-      intro: 'Ovo je vježba, ne ocjena. Polako, imaš vremena.',
+      pageTitle: (lesson: string) => `Kviz: ${lesson}`,
+      heading: 'Kviz',
+      intro: 'Ovo je kviz za vježbu, ne ocjena. Polako, imaš vremena.',
       progress: (current: number, total: number) => `Pitanje ${current} od ${total}`,
       answersLabel: 'Odgovori',
       correct: 'Tačno!',
       incorrect: 'Nije baš tako.',
       correctAnswerIs: (answer: string) => `Tačan odgovor: ${answer}`,
       next: 'Sljedeće pitanje',
-      finish: 'Završi vježbu',
-      doneTitle: 'Bravo! Vježba je završena.',
-      doneText: 'Zvjezdica za trud je tvoja.',
-      again: 'Ponovi vježbu',
+      finish: 'Završi kviz',
+      doneTitle: 'Bravo! Kviz je završen.',
+      doneText: 'Zvjezdica za kviz je tvoja.',
+      again: 'Ponovi kviz',
       backToLesson: 'Nazad na lekciju',
       backToSubjects: 'Moji predmeti',
+    },
+    stars: {
+      pageTitle: 'Moje zvjezdice',
+      heading: 'Moje zvjezdice',
+      total: (count: number) => `${count} ${starsWord(count)}`,
+      howTo:
+        'Jednu zvjezdicu dobijaš kad označiš lekciju kao pređenu, a još jednu kad uradiš kviz.',
+      lessonStar: 'Lekcija pređena',
+      quizStar: 'Kviz urađen',
+      missing: 'još nije',
+      empty: 'Još nemaš lekcija. Kad ti nastavnik pošalje prvu, ovdje ćeš skupljati zvjezdice.',
     },
   },
 
@@ -504,7 +531,7 @@ export const text = {
       stars: 'Zvjezdice',
     },
     ofTotal: (done: number, total: number) => `${done} od ${total}`,
-    starsCount: (count: number) => `${count} zvjezdica`,
+    starsCount: (count: number) => `${count} ${starsWord(count)}`,
     pendingSuggestions: (count: number) => `Novi prijedlozi roditelja: ${count}`,
   },
 

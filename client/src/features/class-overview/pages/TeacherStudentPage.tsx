@@ -8,7 +8,7 @@ import { SectionCard, StatusMessage } from '@/features/lessons/workflow/SectionC
 import { useSchool } from '@/features/school/schoolContext';
 import { ProgressBadge } from '@/features/student/components/ProgressBadge';
 import { READING_VERSION_KINDS, type SupportProfile } from '@/features/student/types';
-import { blobShape } from '@/features/teacher-ui/subjectIcons';
+import { blobShape } from '@/shared/visual/subjectIcons';
 import { MessagePage } from '@/shared/components/MessagePage';
 import { formatDate, initialsOf } from '@/shared/lib/format';
 import { cn } from '@/shared/lib/utils';
@@ -147,9 +147,7 @@ export function TeacherStudentPage() {
 
   const group = school.classOf(studentId);
   const lessons = school.visibleLessonsFor(studentId);
-  const stars = lessons.filter(
-    (lesson) => school.progressOf(studentId, lesson.id) === 'completed',
-  ).length;
+  const stars = school.starsOf(studentId);
   const suggestions = school.data.suggestions.filter((item) => item.childId === studentId);
 
   return (

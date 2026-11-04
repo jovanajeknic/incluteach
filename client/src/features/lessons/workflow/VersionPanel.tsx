@@ -15,7 +15,7 @@ import { findVersion, useSchool } from '@/features/school/schoolContext';
 import type { AdaptedKind, SchoolLesson } from '@/features/school/types';
 import { useLessonSpeech } from '@/features/student/audio/useLessonSpeech';
 import type { LessonIllustration, LessonVersion } from '@/features/student/types';
-import { AiPulse } from '@/features/teacher-ui/AiPulse';
+import { AiPulse } from '@/shared/visual/AiPulse';
 import { cn } from '@/shared/lib/utils';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';

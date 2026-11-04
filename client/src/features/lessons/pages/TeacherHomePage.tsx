@@ -1,12 +1,13 @@
 import { ArrowRightIcon, EyeIcon, PlusIcon } from '@phosphor-icons/react';
 import { motion } from 'motion/react';
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router';
 import { needsReview, useSchool } from '@/features/school/schoolContext';
 import { teacherClassIds, type SchoolLesson } from '@/features/school/types';
 import type { Subject } from '@/features/student/types';
-import { SubjectBlob } from '@/features/teacher-ui/SubjectBlob';
-import { subjectTheme } from '@/features/teacher-ui/subjectIcons';
+import { itemMotion, listMotion } from '@/shared/motion/listMotion';
+import { SubjectCard } from '@/shared/visual/SubjectCard';
+import { subjectTheme } from '@/shared/visual/subjectIcons';
 import { cn } from '@/shared/lib/utils';
 import { Button } from '@/shared/ui/button';
 import { text } from '@/text/sr-Latn';
@@ -23,16 +24,6 @@ function readSavedView(): View {
     return 'subject';
   }
 }
-
-/** Cards rise in one after another. */
-const listMotion = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.06 } },
-};
-const itemMotion = {
-  hidden: { opacity: 0, y: 18 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.2, 0.7, 0.3, 1] as const } },
-};
 
 export function TeacherHomePage() {
   const t = text.home;
@@ -237,33 +228,6 @@ function ByClass({ lessonsOf }: { lessonsOf: LessonsOf }) {
           </section>
         );
       })}
-    </div>
-  );
-}
-
-/** A subject on its own colour, with a large icon tucked into the corner. */
-function SubjectCard({ subject, children }: { subject: Subject; children: ReactNode }) {
-  const theme = subjectTheme[subject.color];
-  return (
-    <div
-      className={cn(
-        'group relative h-full overflow-hidden rounded-[2rem] p-6 transition-transform duration-300 ease-bounce hover:-translate-y-1',
-        theme.surface,
-      )}
-    >
-      {/* A big soft circle in the subject's deeper colour gives each card some depth. */}
-      <span
-        aria-hidden="true"
-        className={cn(
-          'absolute -top-10 -right-10 size-36 rounded-full opacity-50 transition-transform duration-500 group-hover:scale-110',
-          theme.deep,
-        )}
-      />
-      <div className="relative flex items-center gap-4">
-        <SubjectBlob subject={subject} size="lg" className="bg-card" />
-        <h3 className="font-display text-xl font-semibold text-ink">{subject.name}</h3>
-      </div>
-      <div className="relative">{children}</div>
     </div>
   );
 }

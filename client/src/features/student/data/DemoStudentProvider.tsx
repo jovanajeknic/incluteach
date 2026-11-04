@@ -35,9 +35,14 @@ export function DemoStudentProvider({
       progressOf: (lessonId) => school.progressOf(studentId, lessonId),
       practiceOf: (lessonId) => school.practiceOf(studentId, lessonId),
       markStarted: (lessonId) => school.markStarted(studentId, lessonId),
-      markCompleted: (lessonId, difficult) => school.markCompleted(studentId, lessonId, difficult),
-      stars: lessons.filter((lesson) => school.progressOf(studentId, lesson.id) === 'completed')
-        .length,
+      markLessonDone: (lessonId) => school.markLessonDone(studentId, lessonId),
+      recordPractice: (lessonId, difficult) =>
+        school.recordPractice(studentId, lessonId, difficult),
+      stars: school.starsOf(studentId),
+      starsFor: (lessonId) => ({
+        lesson: school.progressOf(studentId, lessonId) === 'completed',
+        quiz: school.practiceOf(studentId, lessonId) !== undefined,
+      }),
     };
   }, [school, studentId, profile]);
 

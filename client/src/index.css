@@ -213,8 +213,8 @@
 }
 
 @layer components {
-  /* The teacher area's own type: see docs/DESIGN.md, "Teacher area". */
-  .teacher-theme {
+  /* Type for the teacher and student areas: see docs/DESIGN.md, "Teacher and student areas". */
+  .area-theme {
     --app-font-sans: 'Nunito Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
     --app-font-display: 'Fredoka Variable', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
     font-family: var(--app-font-sans);
@@ -225,12 +225,12 @@
    * above and below the link flow into the page background.
    */
   @media (min-width: 768px) {
-    .teacher-nav-link[aria-current='page'] {
+    .sidebar-nav-link[aria-current='page'] {
       position: relative;
     }
 
-    .teacher-nav-link[aria-current='page']::before,
-    .teacher-nav-link[aria-current='page']::after {
+    .sidebar-nav-link[aria-current='page']::before,
+    .sidebar-nav-link[aria-current='page']::after {
       content: '';
       position: absolute;
       right: 0;
@@ -239,7 +239,7 @@
       pointer-events: none;
     }
 
-    .teacher-nav-link[aria-current='page']::before {
+    .sidebar-nav-link[aria-current='page']::before {
       top: -1.5rem;
       background: radial-gradient(
         circle at 0 0,
@@ -248,7 +248,7 @@
       );
     }
 
-    .teacher-nav-link[aria-current='page']::after {
+    .sidebar-nav-link[aria-current='page']::after {
       bottom: -1.5rem;
       background: radial-gradient(
         circle at 0 100%,

@@ -284,13 +284,27 @@ export function DemoSchoolProvider({
     });
   }, []);
 
-  const markCompleted = useCallback(
+  const markLessonDone = useCallback((studentId: string, lessonId: string) => {
+    setData((current) => ({
+      ...current,
+      progress: {
+        ...current.progress,
+        [studentId]: { ...current.progress[studentId], [lessonId]: 'completed' },
+      },
+    }));
+  }, []);
+
+  const recordPractice = useCallback(
     (studentId: string, lessonId: string, difficultQuestionIds: readonly string[]) => {
       setData((current) => ({
         ...current,
+        // Doing the quiz means the lesson was at least opened.
         progress: {
           ...current.progress,
-          [studentId]: { ...current.progress[studentId], [lessonId]: 'completed' },
+          [studentId]: {
+            ...current.progress[studentId],
+            [lessonId]: current.progress[studentId]?.[lessonId] ?? 'started',
+          },
         },
         // Only the latest practice is kept: it shows where help is useful now.
         practice: {
@@ -311,6 +325,17 @@ export function DemoSchoolProvider({
   const store = useMemo<SchoolStore>(() => {
     const getStudent = (id: string) => data.students.find((student) => student.id === id);
     const ownClassIds = teacherClassIds(data.teacher);
+    const visibleLessonsFor = (studentId: string) => {
+      const student = getStudent(studentId);
+      const group = classOf(studentId);
+      if (!student || !group) return [];
+      return data.lessons.filter(
+        (lesson) =>
+          lesson.status === 'assigned' &&
+          lesson.classId === group.id &&
+          pickLessonVersion(lesson, student.supportProfile) !== undefined,
+      );
+    };
     return {
       data,
       subjects: demoSubjects,
@@ -343,21 +368,20 @@ export function DemoSchoolProvider({
       suggestionsForAdaptation,
       setStudentSupport,
       setSuggestionStatus,
-      visibleLessonsFor: (studentId) => {
-        const student = getStudent(studentId);
-        const group = classOf(studentId);
-        if (!student || !group) return [];
-        return data.lessons.filter(
-          (lesson) =>
-            lesson.status === 'assigned' &&
-            lesson.classId === group.id &&
-            pickLessonVersion(lesson, student.supportProfile) !== undefined,
-        );
-      },
+      visibleLessonsFor,
       progressOf: (studentId, lessonId) => data.progress[studentId]?.[lessonId] ?? 'new',
       practiceOf: (studentId, lessonId) => data.practice[studentId]?.[lessonId],
       markStarted,
-      markCompleted,
+      markLessonDone,
+      recordPractice,
+      starsOf: (studentId) =>
+        visibleLessonsFor(studentId).reduce(
+          (sum, lesson) =>
+            sum +
+            (data.progress[studentId]?.[lesson.id] === 'completed' ? 1 : 0) +
+            (data.practice[studentId]?.[lesson.id] ? 1 : 0),
+          0,
+        ),
       addSuggestion,
     };
   }, [
@@ -375,7 +399,8 @@ export function DemoSchoolProvider({
     setStudentSupport,
     setSuggestionStatus,
     markStarted,
-    markCompleted,
+    markLessonDone,
+    recordPractice,
     addSuggestion,
   ]);
 

@@ -338,10 +338,12 @@ export const demoSchoolData: SchoolData = {
     trafficDraft,
   ],
   progress: {
+    [demoStudent.id]: { sabiranje: 'completed', biljke: 'started' },
     'demo-student-mia': { 'kruzenje-vode': 'completed', sabiranje: 'started' },
     'demo-student-sara': { 'kruzenje-vode': 'completed', imenice: 'started' },
     'demo-student-nikola': { sabiranje: 'completed' },
-    'demo-student-ema': { mnozenje: 'completed' },
+    // Did the quiz but has not marked the lesson as done yet.
+    'demo-student-ema': { mnozenje: 'started' },
     'demo-student-tara': { mnozenje: 'started' },
   },
   practice: {

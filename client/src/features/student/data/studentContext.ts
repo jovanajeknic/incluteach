@@ -22,9 +22,12 @@ export interface StudentStore {
   progressOf: (lessonId: string) => LessonProgress;
   markStarted: (lessonId: string) => void;
   practiceOf: (lessonId: string) => PracticeRecord | undefined;
-  markCompleted: (lessonId: string, difficultQuestionIds: readonly string[]) => void;
-  /** One star per lesson whose practice was finished; there is no score or ranking. */
+  /** The student says they have gone through the lesson. */
+  markLessonDone: (lessonId: string) => void;
+  recordPractice: (lessonId: string, difficultQuestionIds: readonly string[]) => void;
+  /** Stars for effort: one for a lesson marked as done, one for its finished quiz. No score. */
   stars: number;
+  starsFor: (lessonId: string) => { lesson: boolean; quiz: boolean };
 }
 
 export const StudentContext = createContext<StudentStore | null>(null);

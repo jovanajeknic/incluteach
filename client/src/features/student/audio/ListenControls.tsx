@@ -1,4 +1,4 @@
-import { Pause, Play, Square, VolumeX } from 'lucide-react';
+import { PauseIcon, PlayIcon, SpeakerSlashIcon, StopIcon } from '@phosphor-icons/react';
 import { useId } from 'react';
 import { Button } from '@/shared/ui/button';
 import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select';
@@ -34,7 +34,7 @@ export function ListenControls({
     // Honest message instead of a button that would do nothing.
     return (
       <p className="flex items-center gap-2 rounded-full bg-card px-4 py-2 text-sm text-ink-soft">
-        <VolumeX aria-hidden="true" className="size-4 shrink-0" />
+        <SpeakerSlashIcon aria-hidden="true" weight="duotone" className="size-5 shrink-0" />
         {availability === 'unsupported' ? t.unsupported : t.noVoice}
       </p>
     );
@@ -44,25 +44,25 @@ export function ListenControls({
     <div className="flex flex-wrap items-center gap-2">
       {status === 'idle' && (
         <Button type="button" onClick={onPlay} className="h-11 px-5">
-          <Play aria-hidden="true" />
+          <PlayIcon aria-hidden="true" weight="fill" />
           {t.listen}
         </Button>
       )}
       {status === 'playing' && (
         <Button type="button" onClick={onPause} className="h-11 px-5">
-          <Pause aria-hidden="true" />
+          <PauseIcon aria-hidden="true" weight="fill" />
           {t.pause}
         </Button>
       )}
       {status === 'paused' && (
         <Button type="button" onClick={onResume} className="h-11 px-5">
-          <Play aria-hidden="true" />
+          <PlayIcon aria-hidden="true" weight="fill" />
           {t.resume}
         </Button>
       )}
       {status !== 'idle' && (
         <Button type="button" variant="outline" onClick={onStop} className="h-11 px-4">
-          <Square aria-hidden="true" />
+          <StopIcon aria-hidden="true" weight="fill" />
           {t.stop}
         </Button>
       )}

@@ -49,7 +49,7 @@ describe('Child lessons', () => {
       screen.getByRole('heading', { level: 3, name: 'Priroda i društvo' }),
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Kruženje vode u prirodi/ })).toHaveTextContent(
-      'Završena',
+      'Pređena',
     );
     expect(screen.getByRole('link', { name: /Sabiranje do 100/ })).toHaveTextContent('Započeta');
   });
@@ -78,7 +78,7 @@ describe('Child lessons', () => {
     await user.click(screen.getByRole('button', { name: 'Od sitnih kapljica vode' }));
     await user.click(screen.getByRole('button', { name: /Sljedeće pitanje/ }));
     await user.click(screen.getByRole('button', { name: 'Snijeg' }));
-    await user.click(screen.getByRole('button', { name: /Završi vježbu/ }));
+    await user.click(screen.getByRole('button', { name: /Završi kviz/ }));
 
     await act(() => router.navigate('/parent/children/demo-student-luka/lessons/kruzenje-vode'));
 

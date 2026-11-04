@@ -7,7 +7,7 @@ import {
   useSchool,
 } from '@/features/school/schoolContext';
 import { ADAPTED_KINDS, type SchoolLesson } from '@/features/school/types';
-import { blobShape } from '@/features/teacher-ui/subjectIcons';
+import { blobShape } from '@/shared/visual/subjectIcons';
 import { cn } from '@/shared/lib/utils';
 import { Button } from '@/shared/ui/button';
 import { text } from '@/text/sr-Latn';

@@ -1,9 +1,18 @@
-import { ArrowLeft, ArrowRight, CheckCircle2, RotateCcw, Star, XCircle } from 'lucide-react';
+import {
+  ArrowClockwiseIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  CheckCircleIcon,
+  StarIcon,
+  XCircleIcon,
+} from '@phosphor-icons/react';
+import { motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { MessagePage } from '@/shared/components/MessagePage';
 import { cn } from '@/shared/lib/utils';
 import { Button } from '@/shared/ui/button';
+import { blobShape } from '@/shared/visual/subjectIcons';
 import { text } from '@/text/sr-Latn';
 import { useStudent } from '../data/studentContext';
 import { studentHomePath, studentLessonPath } from '../paths';
@@ -41,7 +50,7 @@ export function StudentQuizPage() {
  */
 function Quiz({ lesson }: { lesson: StudentLesson }) {
   const t = text.student.quiz;
-  const { markCompleted } = useStudent();
+  const { recordPractice } = useStudent();
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [finished, setFinished] = useState(false);
@@ -67,7 +76,7 @@ function Quiz({ lesson }: { lesson: StudentLesson }) {
 
   function next() {
     if (isLast) {
-      markCompleted(lesson.id, difficult);
+      recordPractice(lesson.id, difficult);
       setFinished(true);
       return;
     }
@@ -93,18 +102,38 @@ function Quiz({ lesson }: { lesson: StudentLesson }) {
     return (
       <>
         <title>{text.app.pageTitle(t.pageTitle(lesson.title))}</title>
-        <div className="mx-auto max-w-xl rounded-[2rem] bg-butter p-8 text-center sm:p-12">
+        <div className="relative mx-auto max-w-xl overflow-hidden rounded-[2.25rem] bg-butter p-8 text-center sm:p-12">
           <span
             aria-hidden="true"
-            className="mx-auto flex size-20 items-center justify-center rounded-full bg-card shadow-soft"
+            className="absolute -top-16 -left-12 size-48 rounded-full bg-butter-deep opacity-40"
+          />
+          {/* Two small stars burst out once; with reduced motion they simply appear. */}
+          {[-1, 1].map((side) => (
+            <motion.span
+              key={side}
+              aria-hidden="true"
+              initial={{ opacity: 0, x: 0, y: 0, scale: 0.4 }}
+              animate={{ opacity: 1, x: side * 70, y: -30, scale: 1 }}
+              transition={{ delay: 0.25, type: 'spring', stiffness: 160, damping: 12 }}
+              className="absolute top-14 left-1/2 -ml-3"
+            >
+              <StarIcon weight="fill" className="size-6 text-blush-deep" />
+            </motion.span>
+          ))}
+          <motion.span
+            aria-hidden="true"
+            initial={{ scale: 0.3, rotate: -40 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 11 }}
+            className="relative mx-auto flex size-24 items-center justify-center rounded-full bg-card shadow-soft"
           >
-            <Star className="size-11 fill-butter-deep text-butter-ink" />
-          </span>
-          <h1 className="mt-6 font-display text-3xl font-bold tracking-tight text-ink">
+            <StarIcon weight="fill" className="size-14 text-butter-deep" />
+          </motion.span>
+          <h1 className="relative mt-6 font-display text-3xl font-semibold tracking-tight text-ink">
             {t.doneTitle}
           </h1>
-          <p className="mt-3 text-lg text-ink">{t.doneText}</p>
-          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <p className="relative mt-3 text-lg text-ink">{t.doneText}</p>
+          <div className="relative mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Button asChild size="lg" className="h-12 px-6 text-base">
               <Link to={studentHomePath}>{t.backToSubjects}</Link>
             </Button>
@@ -115,7 +144,7 @@ function Quiz({ lesson }: { lesson: StudentLesson }) {
               onClick={restart}
               className="h-12 px-6 text-base"
             >
-              <RotateCcw aria-hidden="true" />
+              <ArrowClockwiseIcon aria-hidden="true" weight="bold" />
               {t.again}
             </Button>
           </div>
@@ -129,9 +158,9 @@ function Quiz({ lesson }: { lesson: StudentLesson }) {
       <title>{text.app.pageTitle(t.pageTitle(lesson.title))}</title>
       <Link
         to={studentLessonPath(lesson.id)}
-        className="inline-flex items-center gap-2 rounded-full font-display font-medium text-forest hover:underline"
+        className="inline-flex items-center gap-1.5 rounded-full font-display font-medium text-ink-soft hover:text-forest"
       >
-        <ArrowLeft aria-hidden="true" className="size-5" />
+        <ArrowLeftIcon aria-hidden="true" weight="bold" className="size-4" />
         {t.backToLesson}
       </Link>
 
@@ -141,14 +170,20 @@ function Quiz({ lesson }: { lesson: StudentLesson }) {
         </p>
         <p className="mt-1 text-ink-soft">{t.intro}</p>
 
-        <div className="mt-6 rounded-[2rem] border border-border bg-card p-6 shadow-soft sm:p-8">
+        <motion.div
+          key={index}
+          initial={{ opacity: 0, x: 24 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.35, ease: [0.2, 0.7, 0.3, 1] }}
+          className="mt-6 rounded-[2rem] bg-card p-6 shadow-soft sm:p-8"
+        >
           <p className="font-display text-sm font-medium text-lilac-ink">
             {t.progress(index + 1, lesson.quiz.length)}
           </p>
           <h1
             ref={headingRef}
             tabIndex={-1}
-            className="mt-2 font-display text-2xl font-bold text-ink focus:outline-none sm:text-3xl"
+            className="mt-2 font-display text-2xl font-semibold text-ink focus:outline-none sm:text-3xl"
           >
             {question.question}
           </h1>
@@ -165,17 +200,34 @@ function Quiz({ lesson }: { lesson: StudentLesson }) {
                     aria-pressed={isSelected}
                     onClick={() => choose(optionIndex)}
                     className={cn(
-                      'flex w-full items-center justify-between gap-3 rounded-2xl border-2 border-border bg-card px-5 py-4 text-left font-display text-lg text-ink transition-colors enabled:hover:border-forest/50 enabled:hover:bg-mint/40',
+                      'flex w-full items-center gap-4 rounded-3xl border-2 border-border bg-paper px-4 py-3 text-left font-display text-lg text-ink transition-[background-color,border-color,transform] duration-200 enabled:hover:-translate-y-0.5 enabled:hover:border-forest/50 enabled:hover:bg-mint/40',
                       answered && isCorrectOption && 'border-forest bg-mint',
                       answered && isSelected && !isCorrectOption && 'border-blush-ink bg-blush',
                     )}
                   >
-                    {option}
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        'flex size-10 shrink-0 items-center justify-center bg-card font-semibold text-forest',
+                        blobShape,
+                      )}
+                    >
+                      {String.fromCharCode(65 + optionIndex)}
+                    </span>
+                    <span className="flex-1">{option}</span>
                     {answered && isCorrectOption && (
-                      <CheckCircle2 aria-hidden="true" className="size-6 shrink-0 text-mint-ink" />
+                      <CheckCircleIcon
+                        aria-hidden="true"
+                        weight="fill"
+                        className="size-7 shrink-0 text-mint-ink"
+                      />
                     )}
                     {answered && isSelected && !isCorrectOption && (
-                      <XCircle aria-hidden="true" className="size-6 shrink-0 text-blush-ink" />
+                      <XCircleIcon
+                        aria-hidden="true"
+                        weight="fill"
+                        className="size-7 shrink-0 text-blush-ink"
+                      />
                     )}
                   </button>
                 </li>
@@ -188,7 +240,7 @@ function Quiz({ lesson }: { lesson: StudentLesson }) {
             {answered && (
               <div
                 className={cn(
-                  'rounded-2xl px-5 py-4',
+                  'rounded-3xl px-5 py-4',
                   correct ? 'bg-mint text-mint-ink' : 'bg-blush text-blush-ink',
                 )}
               >
@@ -215,11 +267,11 @@ function Quiz({ lesson }: { lesson: StudentLesson }) {
                 className="h-12 px-6 text-base"
               >
                 {isLast ? t.finish : t.next}
-                <ArrowRight aria-hidden="true" />
+                <ArrowRightIcon aria-hidden="true" weight="bold" />
               </Button>
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
     </>
   );

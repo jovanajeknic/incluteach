@@ -113,15 +113,16 @@ The owner wants the app to feel made by a creative person, not generated. Lesson
 - **Copy**: short and natural; say it once. Footnotes for side remarks (for example that the AI is simulated) instead of repeated notices.
 - **Fewer badges and icon bubbles**: use plain text or a handwritten tick where a pill or a coloured icon circle is not needed.
 
-## Teacher area ("profesorski kutak")
+## Teacher and student areas ("profesorski" and "učenički kutak")
 
-The owner asked for a livelier, more professional teacher area than the rest of the site. It has its own type, icons and motion; the student, parent and public pages keep theirs until the owner decides to carry the style over.
+The owner asked for a livelier, more professional look. The teacher area got it first and the student area follows the same design; the parent and public pages keep theirs until the owner decides to carry the style over.
 
-- **Type**: **Fredoka** (variable) for headings, navigation and buttons, **Nunito** (variable) for text. Both are self-hosted (`@fontsource-variable`), latin-ext included. They apply through the `.teacher-theme` class on the teacher layout, which swaps the `--app-font-display` and `--app-font-sans` variables; components keep using `font-display` and `font-sans`.
-- **Icons**: [Phosphor](https://phosphoricons.com) in the **duotone** weight (`@phosphor-icons/react`), usually on a pastel "blob" (`blobShape`: an organic outline, not a circle, pill or square). Subject icons and colours are in `features/teacher-ui/subjectIcons.ts`.
-- **Navigation**: a light mint sidebar with the full-colour logo, as on the rest of the site, and a coloured blob per item. The owner asked for light pastels, not dark green surfaces. The current page is a tab cut out of the sidebar: two concave corners join it to the page (`.teacher-nav-link`). The main area has a rounded left edge. On phones the same navigation opens under a top bar.
+- **Type**: **Fredoka** (variable) for headings, navigation and buttons, **Nunito** (variable) for text. Both are self-hosted (`@fontsource-variable`), latin-ext included. They apply through the `.area-theme` class on the shared `SidebarLayout`, which swaps the `--app-font-display` and `--app-font-sans` variables; components keep using `font-display` and `font-sans`.
+- **Icons**: [Phosphor](https://phosphoricons.com) in the **duotone** weight (`@phosphor-icons/react`), usually on a pastel "blob" (`blobShape`: an organic outline, not a circle, pill or square). Subject icons, colours, `SubjectBlob`, `SubjectCard` and `AiPulse` are in `client/src/shared/visual/`.
+- **Navigation**: a light mint sidebar with the full-colour logo, as on the rest of the site, and a coloured blob per item. The owner asked for light pastels, not dark green surfaces. The current page is a tab cut out of the sidebar: two concave corners join it to the page (`.sidebar-nav-link`). The main area has a rounded left edge. On phones the same navigation opens under a top bar.
 - **Cards**: subject cards use the subject's pastel with a large soft circle in its deeper colour; lists are white rounded rows with a soft shadow. Status is an icon and a word in the status colour, without a box.
 - **Choices** (view switch, filters, class tabs): words with a sliding ochre bar under the chosen one, not pills.
+- **Student lesson page**: the tools (Slova i boje, Korak po korak, Poslušaj) sit in one bar above a white rounded sheet; the sheet takes the student's chosen background. Under it, "Kad završiš" has two cards: "Označi kao pređeno" and the quiz, each worth one star, with a small spring animation when the star is earned.
 - **AI at work**: `AiPulse`, a sparkle that breathes with rings fading outwards, always paired with the same state in words.
 - **Illustrations**: lesson drawings that the demo AI "generates" are simple flat SVGs in the palette (`client/public/illustrations/`). Each has a Serbian description (`alt`) and a caption the teacher can edit.
 
@@ -135,7 +136,7 @@ The owner asked for a livelier, more professional teacher area than the rest of 
 Rules:
 
 - The public pages use plain CSS and the IntersectionObserver browser API.
-- The teacher area uses **Motion** (`motion`) for page transitions, cards that rise in one after another, sliding markers and the AI pulse, and **Lenis** (`lenis`) for eased page scrolling. `MotionConfig reducedMotion="user"` and `useReducedMotion` keep everything still, and Lenis is not started, when the system asks for less motion.
+- The teacher and student areas use **Motion** (`motion`) for page transitions, cards that rise in one after another, sliding markers and the AI pulse, and **Lenis** (`lenis`) for eased page scrolling. `MotionConfig reducedMotion="user"` and `useReducedMotion` keep everything still, and Lenis is not started, when the system asks for less motion.
 - No intro or splash animation: the page appears at once (the owner found a logo intro unnatural).
 - With `prefers-reduced-motion: reduce`, there is no reveal; content is simply there.
 - Content never depends on motion: without JavaScript, every block is visible.

@@ -1,4 +1,4 @@
-import { RotateCcw } from 'lucide-react';
+import { ArrowCounterClockwiseIcon } from '@phosphor-icons/react';
 import { useId } from 'react';
 import { cn } from '@/shared/lib/utils';
 import { Button } from '@/shared/ui/button';
@@ -153,7 +153,7 @@ export function ReadingPreferencesPanel({
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
         <p className="text-sm text-ink-soft">{t.savedNote}</p>
         <Button type="button" variant="outline" onClick={onReset} className="h-10 px-4">
-          <RotateCcw aria-hidden="true" />
+          <ArrowCounterClockwiseIcon weight="bold" aria-hidden="true" />
           {t.reset}
         </Button>
       </div>

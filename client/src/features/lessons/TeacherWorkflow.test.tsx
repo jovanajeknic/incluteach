@@ -118,7 +118,8 @@ describe('Students and parent suggestions', () => {
     const cells = within(mia).getAllByRole('cell');
     expect(cells[0]).toHaveTextContent('1 od 6');
     expect(cells[1]).toHaveTextContent('1 od 6');
-    expect(cells[2]).toHaveTextContent('1 zvjezdica');
+    // A lesson marked as done and its quiz: two stars.
+    expect(cells[2]).toHaveTextContent('2 zvjezdice');
     expect(document.body.textContent?.toLowerCase()).not.toMatch(/disleksij|adhd|poremećaj/);
 
     await user.click(screen.getByRole('button', { name: 'Odjeljenje 4-1' }));

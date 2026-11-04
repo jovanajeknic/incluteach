@@ -5,7 +5,7 @@ import { Link } from 'react-router';
 import { teacherStudentPath } from '@/features/lessons/paths';
 import { useSchool } from '@/features/school/schoolContext';
 import { teacherClassIds } from '@/features/school/types';
-import { blobShape } from '@/features/teacher-ui/subjectIcons';
+import { blobShape } from '@/shared/visual/subjectIcons';
 import { initialsOf } from '@/shared/lib/format';
 import { cn } from '@/shared/lib/utils';
 import { text } from '@/text/sr-Latn';
@@ -100,6 +100,7 @@ export function ClassPage() {
                   const quizzes = lessons.filter((lesson) =>
                     school.practiceOf(student.id, lesson.id),
                   ).length;
+                  const stars = school.starsOf(student.id);
                   const name = `${student.firstName} ${student.lastName}`;
                   const newSuggestions = school.data.suggestions.filter(
                     (item) => item.childId === student.id && item.status === 'pending-teacher',
@@ -158,8 +159,8 @@ export function ClassPage() {
                             weight="fill"
                             className="size-5 text-butter-deep"
                           />
-                          {completed}
-                          <span className="sr-only">{t.starsCount(completed)}</span>
+                          {stars}
+                          <span className="sr-only">{t.starsCount(stars)}</span>
                         </span>
                       </td>
                       <td className="px-4 py-4">

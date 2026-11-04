@@ -3,7 +3,7 @@ import { useRef, useState, type FormEvent } from 'react';
 import type { NewLessonInput } from '@/features/school/schoolContext';
 import { useSchool } from '@/features/school/schoolContext';
 import type { TeachingAssignment } from '@/features/school/types';
-import { SubjectBlob } from '@/features/teacher-ui/SubjectBlob';
+import { SubjectBlob } from '@/shared/visual/SubjectBlob';
 import { FormField } from '@/shared/components/FormField';
 import { cn } from '@/shared/lib/utils';
 import { Button } from '@/shared/ui/button';
