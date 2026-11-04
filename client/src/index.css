@@ -289,23 +289,37 @@
   }
 
   /*
-   * Hero background photo. It must stay in the background: softened colours that lean
-   * towards the cream and sage palette, lowered opacity, and edges that dissolve into the page.
+   * Hero background photo: it covers the whole hero like wallpaper. A light blur and
+   * softened colours that lean towards the cream and sage palette keep it in the
+   * background; the slight scale hides the blurred edges.
    */
   .hero-photo {
-    opacity: 0.5;
-    filter: saturate(0.65) sepia(0.18) brightness(1.04) contrast(0.92);
-    mask-image:
-      linear-gradient(to right, transparent 0%, #000 45%),
-      linear-gradient(to bottom, transparent 0%, #000 18%, #000 70%, transparent 100%);
-    mask-composite: intersect;
+    filter: blur(3px) saturate(0.7) sepia(0.15) brightness(1.05) contrast(0.92);
+    transform: scale(1.04);
   }
 
-  /* On phones the photo sits below the text, faded on every side. */
-  .hero-photo-mobile {
-    opacity: 0.45;
-    filter: saturate(0.65) sepia(0.18) brightness(1.04) contrast(0.92);
-    mask-image: radial-gradient(ellipse 70% 65% at 50% 50%, #000 40%, transparent 100%);
+  /*
+   * Cream veil over the photo: strongest behind the text on the left, lighter on the right
+   * where the people are; on phones it is even, because the text spans the full width.
+   * The bottom fades into the page.
+   */
+  .hero-veil {
+    background:
+      linear-gradient(to bottom, transparent 70%, var(--brand-paper) 100%),
+      linear-gradient(
+        to right,
+        rgb(253 246 236 / 0.92) 0%,
+        rgb(253 246 236 / 0.7) 45%,
+        rgb(253 246 236 / 0.25) 100%
+      );
+  }
+
+  @media (max-width: 1023px) {
+    .hero-veil {
+      background:
+        linear-gradient(to bottom, transparent 70%, var(--brand-paper) 100%),
+        rgb(253 246 236 / 0.78);
+    }
   }
 
   /*

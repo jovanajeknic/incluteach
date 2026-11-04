@@ -45,7 +45,6 @@ export const text = {
     },
     audiences: {
       title: 'Zajedno stvaramo prostor za svakoga.',
-      comingSoon: 'U pripremi',
       demoLinks: {
         teacher: 'Nastavnički demo',
         student: 'Učenički demo',
@@ -71,7 +70,6 @@ export const text = {
         'Platforma pomaže da se lekcija prilagodi, a nastavnik je pregleda.',
         'Učenik uči na svoj način, a roditelj prati i podržava.',
       ],
-      note: 'Ovo je planirani tok. Demo trenutno prikazuje početni nastavnički dio.',
     },
     about: {
       title: 'Naša priča',

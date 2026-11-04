@@ -93,13 +93,11 @@ Components use role tokens with shadcn/ui names (`--primary`, `--muted`, `--bord
 ## Illustration
 
 - **Hero background photo** (`client/public/images/hero-classroom.jpg`, 1400 × 797, about 170 KB): a teacher and children working together, including a child in a wheelchair, a child with noise-cancelling headphones and a child with a hearing aid. It is cropped to the people.
-- The photo must stay in the background, never the focus:
-  - on desktop it fills the right part of the hero behind the text and dissolves into the cream page on the left, top and bottom (`.hero-photo`: CSS masks);
-  - on phones it sits below the text, faded on every side (`.hero-photo-mobile`);
-  - colours are softened towards the palette with `opacity: 0.5`, lower saturation and a light sepia tint, done in CSS so they are easy to tune.
+- The photo is the **background of the whole hero**, like wallpaper (owner's request): it always covers the section edge to edge (`object-cover`) and is never shrunk into a picture of its own.
+  - It is softened in CSS (`.hero-photo`: a light blur, lower saturation, a slight sepia tint) and sits under a cream veil (`.hero-veil`) that is strongest behind the text on the left and lighter on the right; on phones the veil is even, because the text spans the full width.
+  - The bottom of the hero fades into the cream page.
 - It is decorative: `alt=""` inside an `aria-hidden` wrapper, because the headline already says what the page is about.
 - Keep source photos out of the repository; commit only the web-ready file (JPEG or WebP, under about 250 KB).
-- Illustrations of features that do not exist yet are labelled as illustrative and marked "U pripremi".
 
 ## Notebook style (lesson pages)
 
@@ -115,7 +113,7 @@ The owner wants the app to feel made by a creative person, not generated. Lesson
 
 ## Teacher, student and parent areas
 
-The owner asked for a livelier, more professional look. The teacher area got it first; the student and parent areas follow the same design through the shared `SidebarLayout`. The public pages (landing, sign-in) keep their own look.
+The owner asked for a livelier, more professional look. The teacher area got it first; the student and parent areas follow the same design through the shared `SidebarLayout`. The landing page uses the same fonts, Phosphor icons, pastel cards and smooth scrolling; the sign-in pages keep their own look.
 
 - **Type**: **Fredoka** (variable) for headings, navigation and buttons, **Nunito** (variable) for text. Both are self-hosted (`@fontsource-variable`), latin-ext included. They apply through the `.area-theme` class on the shared `SidebarLayout`, which swaps the `--app-font-display` and `--app-font-sans` variables; components keep using `font-display` and `font-sans`.
 - **Icons**: [Phosphor](https://phosphoricons.com) in the **duotone** weight (`@phosphor-icons/react`), usually on a pastel "blob" (`blobShape`: an organic outline, not a circle, pill or square). Subject icons, colours, `SubjectBlob`, `SubjectCard` and `AiPulse` are in `client/src/shared/visual/`.

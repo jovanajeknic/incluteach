@@ -1,4 +1,4 @@
-import { Menu, X } from 'lucide-react';
+import { ListIcon, XIcon } from '@phosphor-icons/react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { loginPath, registerPath } from '@/features/auth/paths';
@@ -69,7 +69,11 @@ export function SiteHeader() {
             aria-controls={MENU_ID}
             onClick={() => setMenuOpen((open) => !open)}
           >
-            {menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+            {menuOpen ? (
+              <XIcon aria-hidden="true" weight="bold" />
+            ) : (
+              <ListIcon aria-hidden="true" weight="bold" />
+            )}
             {t.menu}
           </Button>
         </div>

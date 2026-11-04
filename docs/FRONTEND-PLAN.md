@@ -515,5 +515,5 @@ Every task also follows the verification rules in [AGENTS.md](../AGENTS.md#4-ver
 ## Next steps noted
 
 - **Bundle size**: the main JavaScript bundle is about 790 KB (240 KB gzipped) since the teacher area added Motion, Phosphor, Lenis and the Radix tabs. Loading the teacher, student and parent areas as lazy routes would keep the landing page light.
-- **Public pages**: the landing and sign-in pages still use their own look; decide with the owner whether they should follow the signed-in areas.
+- **Sign-in pages**: they still use their own look; decide with the owner whether they should follow the rest of the site.
 - **Real backend**: AI adaptation, file upload (PDF/DOCX), authentication, access control and storage all wait for the agreed API contract (FE-17).
