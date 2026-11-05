@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react';
-import { type RouteObject } from 'react-router';
-import { adminHomePath } from '@/features/admin/paths';
+import { Navigate, type RouteObject } from 'react-router';
+import { adminHomePath, adminUsersPath } from '@/features/admin/paths';
 import { RequireRole } from '@/features/auth/components/RequireRole';
 import { activatePath, loginPath } from '@/features/auth/paths';
 import { schoolRequestPath } from '@/features/school-request/paths';
@@ -23,6 +23,7 @@ function fromArea<Area>(load: () => Promise<Area>, pick: (area: Area) => Compone
 const teacherArea = () => import('./areas/teacherArea');
 const studentArea = () => import('./areas/studentArea');
 const parentArea = () => import('./areas/parentArea');
+const adminArea = () => import('./areas/adminArea');
 
 export const routes: RouteObject[] = [
   {
@@ -156,9 +157,12 @@ export const routes: RouteObject[] = [
         children: [
           {
             path: adminHomePath,
-            lazy: async () => ({
-              Component: (await import('@/features/admin/AdminHomePage')).AdminHomePage,
-            }),
+            lazy: fromArea(adminArea, (area) => area.AdminLayout),
+            children: [
+              { index: true, element: <Navigate to={adminUsersPath} replace /> },
+              { path: 'users', lazy: fromArea(adminArea, (area) => area.UsersPage) },
+              { path: '*', element: <NotFoundPage homePath={adminHomePath} /> },
+            ],
           },
         ],
       },

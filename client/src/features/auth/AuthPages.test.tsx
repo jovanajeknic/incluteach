@@ -163,14 +163,17 @@ describe('Sign-in', () => {
 
 describe('Restoring and ending the session', () => {
   it('restores the signed-in user after a reload by asking the server', async () => {
-    server.use(http.get('*/api/auth/me', () => HttpResponse.json({ user: testUsers.admin })));
+    server.use(
+      http.get('*/api/auth/me', () => HttpResponse.json({ user: testUsers.admin })),
+      http.get('*/api/users', () => HttpResponse.json({ users: [], total: 0 })),
+    );
 
     renderApp({ path: '/admin', user: 'ask-server' });
 
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Administracija škole' }),
+      await screen.findByRole('heading', { level: 1, name: 'Korisnici škole' }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Prijavljeni ste kao Marija Demić/)).toBeInTheDocument();
+    expect(screen.getByText('Marija Demić')).toBeInTheDocument();
   });
 
   it('goes to sign-in when the server says nobody is signed in', async () => {

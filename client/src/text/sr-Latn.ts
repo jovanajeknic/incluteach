@@ -148,11 +148,52 @@ export const text = {
   },
 
   admin: {
-    pageTitle: 'Administracija',
-    heading: 'Administracija škole',
-    description:
-      'Ekrani za naloge, odeljenja, predmete i porodice dolaze uskoro. Dotad se možete odjaviti.',
-    signedInAs: (name: string) => `Prijavljeni ste kao ${name}.`,
+    nav: {
+      label: 'Administracija',
+      users: 'Korisnici',
+      classes: 'Odeljenja',
+      subjects: 'Predmeti',
+      families: 'Porodice',
+      role: 'Administrator',
+    },
+    load: { loading: 'Učitavanje…' },
+    // Chosen by the `code` of an API error; `unknown_error` is the fallback for any other.
+    errors: {
+      invalid_request: 'Zahtjev nije ispravan. Osvježi stranicu i pokušaj ponovo.',
+      forbidden: 'Nemaš pravo na ovu radnju.',
+      network_error: 'Server trenutno nije dostupan. Provjeri vezu i pokušaj ponovo.',
+      unknown_error: 'Došlo je do greške. Pokušaj ponovo.',
+    },
+    roles: {
+      admin: 'Administrator',
+      teacher: 'Nastavnik',
+      student: 'Učenik',
+      parent: 'Roditelj',
+    },
+    users: {
+      pageTitle: 'Korisnici',
+      heading: 'Korisnici škole',
+      intro: 'Svi nalozi škole. Ko još nije aktivirao nalog, nema lozinku i ne može da se prijavi.',
+      roleLabel: 'Uloga',
+      roleAll: 'Sve uloge',
+      statusLabel: 'Stanje',
+      status: {
+        active: 'Aktivni',
+        deactivated: 'Deaktivirani',
+        all: 'Svi',
+      },
+      searchLabel: 'Pretraga po imenu ili korisničkom imenu',
+      resultsLabel: 'Lista korisnika',
+      noUsers: 'U školi još nema naloga.',
+      empty: 'Nijedan nalog ne odgovara filteru.',
+      showMore: 'Prikaži još',
+      shown: (shown: number, total: number) => `Prikazano ${shown} od ${total}`,
+      username: (username: string) => `Korisničko ime: ${username}`,
+      noEmail: 'Bez emaila',
+      notActivated: 'Nije aktiviran',
+      deactivated: 'Deaktiviran',
+      createdOn: (date: string) => `Napravljen ${date}`,
+    },
   },
 
   schoolRequest: {
