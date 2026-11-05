@@ -277,7 +277,7 @@ A subject is a name in one class taught by one teacher. The same name can appear
 
 ## Parent-child links (admin)
 
-A parent can have several children and a child several parents (a guardian is a normal parent account). Only an admin makes links, so a parent can never claim somebody else's child. There is no endpoint to remove a link by agreement; links go away only when a person's data is erased. All endpoints in this group are for `admin` only.
+A parent can have several children and a child several parents (a guardian is a normal parent account). Only an admin makes links, so a parent can never claim somebody else's child. There is no endpoint to remove a link by agreement; links go away only when a person's data is erased. All endpoints in this group are for `admin` only, except `GET /children`, which is for a parent.
 
 ### GET /parent-students
 
@@ -296,6 +296,16 @@ A parent can have several children and a child several parents (a guardian is a 
 - **Success response**: `201 { link }`.
 - **Errors**: `400 invalid_parent`, `400 invalid_student` (wrong role, another school, left the school, erased or unknown), `409 link_exists`.
 - **Used by (frontend)**: admin screen "Porodice".
+
+### GET /children
+
+- **Status**: implemented
+- **Purpose**: the children of the signed-in parent. A parent needs it to say which child a request, a question or a message is about (the `studentId` of many other endpoints); `GET /parent-students` is for the admin only.
+- **Who may call it**: `parent`. The admin, teachers and students get `403`.
+- **Request**: none.
+- **Success response**: `200 { children: [{ id, fullName }] }`, sorted by name. Only children who are linked to this parent and still at the school (not deactivated, not erased). Nothing else about a child is given; an empty list means no child is linked.
+- **Errors**: `401`, `403` as above.
+- **Used by (frontend)**: the parent's home page "Moja djeca", and every place where a parent chooses a child.
 
 ## Subject catalog (student and parent)
 

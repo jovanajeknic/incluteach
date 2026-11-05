@@ -18,6 +18,7 @@ import { healthRouter } from './routes/health.ts';
 import { lessonsRouter } from './routes/lessons.ts';
 import { quizRouter } from './routes/quiz.ts';
 import { starsRouter } from './routes/stars.ts';
+import { childrenRouter } from './routes/children.ts';
 import { parentLinksRouter } from './routes/parentLinks.ts';
 import { progressRouter } from './routes/progress.ts';
 import { subjectsRouter } from './routes/subjects.ts';
@@ -71,6 +72,7 @@ export function createApp({
   app.use('/subjects', progressRouter(pool));
   app.use('/subjects', subjectsRouter(pool));
   app.use('/parent-students', parentLinksRouter(pool));
+  app.use('/children', childrenRouter(pool));
   app.use('/catalog', catalogRouter(pool));
   app.use('/enrollments', enrollmentsRouter(pool));
   app.use('/lessons', lessonsRouter(pool, { ai, jobs, timeoutMs: aiTimeoutMs }));

@@ -151,3 +151,26 @@ export async function createParentLink(
   });
   return links[0];
 }
+
+export interface Child {
+  id: string;
+  fullName: string;
+}
+
+// The children linked to one parent who are still at the school (not deactivated, not erased),
+// by name. Only the name: it is all a parent needs to choose a child.
+export async function listChildren(
+  pool: Queryable,
+  { schoolId, parentId }: { schoolId: string; parentId: string },
+): Promise<Child[]> {
+  const { rows } = await pool.query<{ id: string; full_name: string }>(
+    `SELECT s.id, s.full_name
+     FROM parent_students ps
+     JOIN users s ON s.id = ps.student_id
+     WHERE ps.school_id = $1 AND ps.parent_id = $2
+       AND s.deactivated_at IS NULL AND s.deleted_at IS NULL
+     ORDER BY s.full_name, s.id`,
+    [schoolId, parentId],
+  );
+  return rows.map((row) => ({ id: row.id, fullName: row.full_name }));
+}
