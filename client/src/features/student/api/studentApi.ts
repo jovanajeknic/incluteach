@@ -32,6 +32,9 @@ export interface MyProgress {
   } | null;
 }
 
+/** A lesson as a parent gets it: the text, the approved summary and quiz; no progress of their own. */
+export type ChildLesson = Omit<StudentLesson, 'myProgress'> & { myProgress: null };
+
 /** One question of a try: the answer is `null` until the student has answered it. */
 export interface AttemptQuestion extends StudentQuizQuestion {
   answer: {
@@ -69,6 +72,9 @@ export interface AnswerResult {
     allCorrect: boolean | null;
   };
 }
+
+/** What is needed to read a lesson: the text and the approved summary, with its subject. */
+export type ReadableLesson = Pick<StudentLesson, 'id' | 'title' | 'body' | 'summary' | 'subject'>;
 
 /** A published lesson as its student reads it: the text, the approved summary and quiz. */
 export interface StudentLesson {
@@ -146,6 +152,8 @@ export const studentApi = {
       `/subjects/${subjectId}/progress${studentId ? `?${new URLSearchParams({ studentId })}` : ''}`,
     ),
   lesson: (id: string) => apiRequest<{ lesson: StudentLesson }>(`/lessons/${id}`),
+  /** The same lesson for a parent, who has no progress of their own in it. */
+  childLesson: (id: string) => apiRequest<{ lesson: ChildLesson }>(`/lessons/${id}`),
   /** Starts the quiz, or goes on with the try that is still open. */
   startTry: (lessonId: string) =>
     apiRequest<{ attempt: QuizTry }>(`/lessons/${lessonId}/quiz/attempts`, { method: 'POST' }),
@@ -158,7 +166,10 @@ export const studentApi = {
   complete: (lessonId: string) =>
     apiRequest<{ progress: MyProgress }>(`/lessons/${lessonId}/complete`, { method: 'POST' }),
   /** The tries of the signed-in student, newest first, with every question and answer. */
-  history: (lessonId: string) => apiRequest<QuizHistory>(`/lessons/${lessonId}/quiz/attempts`),
+  history: (lessonId: string, studentId?: string) =>
+    apiRequest<QuizHistory>(
+      `/lessons/${lessonId}/quiz/attempts${studentId ? `?${new URLSearchParams({ studentId })}` : ''}`,
+    ),
   lessonsOf: (subjectId: string, studentId?: string) =>
     apiRequest<{ lessons: LessonListItem[]; total: number }>(
       `/lessons?${new URLSearchParams({ subjectId, limit: '200', ...(studentId ? { studentId } : {}) })}`,

@@ -596,6 +596,28 @@ export const text = {
       waiting: (count: number) =>
         count === 1 ? '1 zahtjev čeka tvoj odgovor' : `${count} zahtjeva čeka tvoj odgovor`,
     },
+    requests: {
+      pageTitle: 'Zahtjevi za potvrdu',
+      heading: 'Zahtjevi za potvrdu',
+      intro:
+        'Djeca se prijavljuju na predmete, a prvo to potvrđuje roditelj. Kad potvrdiš, zahtjev ide nastavniku predmeta. Ako je drugi roditelj već odgovorio, vidjećeš da je zahtjev obrađen.',
+      empty: 'Nijedan zahtjev ne čeka tvoj odgovor.',
+      wants: 'želi da bude upisan/a na',
+      askedByStudent: 'Zatražilo dijete',
+      askedByParent: 'Zatražio roditelj',
+      approve: 'Potvrdi',
+      reject: 'Odbij',
+      answering: 'Slanje…',
+      approveFor: (student: string, subject: string) => `Potvrdi: ${student}, ${subject}`,
+      rejectFor: (student: string, subject: string) => `Odbij: ${student}, ${subject}`,
+      rejectTitle: 'Odbiti zahtjev?',
+      rejectText: (student: string) =>
+        `${student} neće biti upisan/a na predmet, ali može ponovo poslati zahtjev.`,
+      rejectYes: 'Da, odbij',
+      cancel: 'Odustani',
+      alreadyAnswered:
+        'Zahtjev je već obrađen, možda ga je drugi roditelj potvrdio. Lista je osvježena.',
+    },
     child: {
       back: 'Moja djeca',
       subjectsHeading: 'Predmeti',
@@ -626,6 +648,33 @@ export const text = {
     },
     stars: {
       empty: 'Dijete još nema zvjezdica.',
+    },
+    lesson: {
+      notFoundTitle: 'Lekcija nije pronađena',
+      notFoundDescription: 'Ove lekcije nema, ili je ne možeš vidjeti.',
+      finishedAt: (date: string) => `Dijete je završilo lekciju ${date}`,
+      notFinished: 'Dijete još nije završilo lekciju.',
+      questionsHeading: 'Pitanja kviza',
+      questionsHint:
+        'Ovo su pitanja koja dijete dobija u kvizu. Tačne odgovore vidiš kod pokušaja djeteta.',
+      showQuestions: 'Pogledaj pitanja',
+      questionNumber: (n: number) => `Pitanje ${n}`,
+      kinds: { choice: 'Izbor odgovora', true_false: 'Tačno ili netačno' },
+    },
+    history: {
+      heading: 'Pokušaji kviza',
+      show: 'Pogledaj pokušaje',
+      hide: 'Sakrij pokušaje',
+      none: 'Dijete još nije pokušalo kviz ove lekcije.',
+      attempt: (n: number) => `Pokušaj ${n}`,
+      allCorrect: 'Svi odgovori tačni',
+      someWrong: (wrong: number, total: number) => `Netačno: ${wrong} od ${total}`,
+      unfinished: 'Nedovršen',
+      chosen: 'Odgovor djeteta',
+      correct: 'Tačan odgovor',
+      explanation: 'Objašnjenje',
+      rightMark: 'tačno',
+      wrongMark: 'netačno',
     },
     subject: {
       back: (name: string) => `Nazad na dijete: ${name}`,

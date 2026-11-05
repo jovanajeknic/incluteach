@@ -8,7 +8,7 @@ import { MessagePage } from '@/shared/components/MessagePage';
 import { Button } from '@/shared/ui/button';
 import { text } from '@/text/sr-Latn';
 import { ChildGate } from '../components/ChildGate';
-import { childPath } from '../paths';
+import { childLessonPath, childPath } from '../paths';
 
 const t = text.guardian.subject;
 
@@ -70,8 +70,7 @@ function Subject({
       <SubjectOverview
         subject={enrollment.subject}
         studentId={childId}
-        // The reading page of a lesson of a child comes with the next step.
-        lessonPath={(lessonId) => `${childPath(childId)}/lessons/${encodeURIComponent(lessonId)}`}
+        lessonPath={(lessonId) => childLessonPath(childId, lessonId)}
       />
     </>
   );

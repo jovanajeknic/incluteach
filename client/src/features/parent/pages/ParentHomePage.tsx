@@ -10,7 +10,7 @@ import { SubjectBlob } from '@/shared/visual/SubjectBlob';
 import { text } from '@/text/sr-Latn';
 import { useChildren } from '../api/queries';
 import type { Child } from '../api/parentApi';
-import { childPath } from '../paths';
+import { childPath, parentRequestsPath } from '../paths';
 
 const t = text.guardian.home;
 
@@ -80,7 +80,14 @@ function ChildCard({ child }: { child: Child }) {
       </div>
 
       {waitingForParent > 0 && (
-        <p className="mt-3 font-medium text-butter-ink">{t.waiting(waitingForParent)}</p>
+        <p className="mt-3">
+          <Link
+            to={parentRequestsPath}
+            className="font-medium text-butter-ink underline underline-offset-4"
+          >
+            {t.waiting(waitingForParent)}
+          </Link>
+        </p>
       )}
 
       <div className="mt-4">

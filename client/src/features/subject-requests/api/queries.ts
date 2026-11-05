@@ -1,11 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { enrollmentsApi } from './enrollmentsApi';
 
-const waitingKey = ['enrollments', 'awaiting_teacher'] as const;
+export type WaitingStatus = 'awaiting_parent' | 'awaiting_teacher';
 
 /** Shared by the list and the number in the menu, so both come from one request. */
-export const useWaitingRequests = () =>
-  useQuery({ queryKey: waitingKey, queryFn: enrollmentsApi.waitingForTeacher });
+export const useWaitingRequests = (status: WaitingStatus) =>
+  useQuery({
+    queryKey: ['enrollments', status],
+    queryFn: () => enrollmentsApi.waiting(status),
+  });
 
 /**
  * An answer changes the list, the number of students of the subject (the subjects list) and
@@ -19,6 +22,8 @@ function useAnswer(call: (id: string) => Promise<unknown>) {
       client.invalidateQueries({ queryKey: ['enrollments'] }),
       client.invalidateQueries({ queryKey: ['subjects'] }),
       client.invalidateQueries({ queryKey: ['students'] }),
+      // The requests and the progress of a child, which a parent also looks at.
+      client.invalidateQueries({ queryKey: ['student'] }),
     ]);
   return useMutation({ mutationFn: call, onSettled: refresh });
 }

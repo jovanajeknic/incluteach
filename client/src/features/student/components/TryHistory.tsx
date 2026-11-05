@@ -8,16 +8,24 @@ import { Button } from '@/shared/ui/button';
 import { text } from '@/text/sr-Latn';
 import { useMyTries } from '../api/queries';
 
-const t = text.pupil.history;
-
 /**
  * "Moji pokušaji": every try at the quiz, with each question, what the student chose, the right
  * answer and the explanation, so the mistakes can be read again. Asked for only when opened.
  */
-export function TryHistory({ lessonId, script }: { lessonId: string; script: Script }) {
+export function TryHistory({
+  lessonId,
+  script,
+  studentId,
+}: {
+  lessonId: string;
+  script: Script;
+  /** A parent looks at the tries of one child. */
+  studentId?: string;
+}) {
+  const t = studentId ? text.guardian.history : text.pupil.history;
   const [open, setOpen] = useState(false);
   const panelId = useId();
-  const tries = useMyTries(lessonId, open);
+  const tries = useMyTries(lessonId, open, studentId);
   const show = (value: string) => displayInScript(value, script);
 
   return (

@@ -23,10 +23,13 @@ export interface Enrollment {
 }
 
 export const enrollmentsApi = {
-  /** The requests the parent has passed on and the teacher has not answered yet. */
-  waitingForTeacher: () =>
+  /**
+   * The requests that wait for this person: a parent answers the ones of their children first
+   * (`awaiting_parent`), then the teacher the ones the parent passed on (`awaiting_teacher`).
+   */
+  waiting: (status: 'awaiting_parent' | 'awaiting_teacher') =>
     apiRequest<{ enrollments: Enrollment[]; total: number }>(
-      `/enrollments?${new URLSearchParams({ status: 'awaiting_teacher', limit: '200' })}`,
+      `/enrollments?${new URLSearchParams({ status, limit: '200' })}`,
     ),
   approve: (id: string) =>
     apiRequest<{ enrollment: Enrollment }>(`/enrollments/${id}/approve`, { method: 'POST' }),

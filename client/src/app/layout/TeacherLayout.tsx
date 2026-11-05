@@ -14,7 +14,7 @@ import { SidebarLayout } from './SidebarLayout';
 export function TeacherLayout() {
   const { user } = useSession();
   // The same request as the page of the requests, so the number and the list always agree.
-  const waitingRequests = useWaitingRequests().data?.total ?? 0;
+  const waitingRequests = useWaitingRequests('awaiting_teacher').data?.total ?? 0;
 
   return (
     <SidebarLayout

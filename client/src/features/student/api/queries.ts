@@ -50,6 +50,14 @@ export const useStudentLesson = (id: string) =>
     select: (answer) => answer.lesson,
   });
 
+/** A lesson of a child, for the parent who reads it. */
+export const useChildLesson = (id: string) =>
+  useQuery({
+    queryKey: key('child-lesson', id),
+    queryFn: () => studentApi.childLesson(id),
+    select: (answer) => answer.lesson,
+  });
+
 export const useSubjectLessons = (subjectId: string, studentId?: string) =>
   useQuery({
     queryKey: key('lessons', subjectId, studentId),
@@ -61,10 +69,10 @@ export const useMyStars = (studentId?: string) =>
   useQuery({ queryKey: key('stars', studentId), queryFn: () => studentApi.stars(studentId) });
 
 /** The tries at the quiz, asked only when the student opens them. */
-export const useMyTries = (lessonId: string, enabled: boolean) =>
+export const useMyTries = (lessonId: string, enabled: boolean, studentId?: string) =>
   useQuery({
-    queryKey: key('tries', lessonId),
-    queryFn: () => studentApi.history(lessonId),
+    queryKey: key('tries', lessonId, studentId),
+    queryFn: () => studentApi.history(lessonId, studentId),
     enabled,
   });
 

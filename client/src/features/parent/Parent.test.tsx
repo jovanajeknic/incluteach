@@ -101,7 +101,8 @@ describe('Moja djeca', () => {
       `/parent/children/${ANA.id}`,
     );
     // Every call is about one child, named in the request.
-    expect(new Set(asked)).toEqual(new Set([ANA.id, LUKA.id]));
+    // (The menu also asks, without a child, for the requests that wait for the parent.)
+    expect(new Set(asked.filter(Boolean))).toEqual(new Set([ANA.id, LUKA.id]));
     expect(new Set(progressAsked)).toEqual(new Set([ANA.id, LUKA.id]));
   });
 
@@ -114,7 +115,7 @@ describe('Moja djeca', () => {
       within(menu)
         .getAllByRole('link')
         .map((link) => link.textContent),
-    ).toEqual(['Moja djeca']);
+    ).toEqual(['Moja djeca', 'Zahtjevi']);
     expect(screen.getByText('Petar Marković')).toBeInTheDocument();
     expect(screen.getByText(/petar_markovic/)).toBeInTheDocument();
   });
