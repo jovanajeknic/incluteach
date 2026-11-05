@@ -339,6 +339,6 @@ describe('Undoing a mistaken tap', () => {
 
   it('offers to sign out on every page', () => {
     renderApp({ path: '/student' });
-    expect(screen.getByRole('link', { name: 'Odjavi se' })).toHaveAttribute('href', '/login');
+    expect(screen.getByRole('button', { name: 'Odjavi se' })).toBeEnabled();
   });
 });

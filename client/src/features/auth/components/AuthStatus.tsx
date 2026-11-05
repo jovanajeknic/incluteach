@@ -1,18 +1,10 @@
-import { CheckCircleIcon, CircleNotchIcon, InfoIcon, WarningIcon } from '@phosphor-icons/react';
+import { CheckCircleIcon, CircleNotchIcon, WarningIcon } from '@phosphor-icons/react';
 import { Button } from '@/shared/ui/button';
 import { text } from '@/text/sr-Latn';
 
-/** A quiet line, not a banner: the forms are a demo and connect to nothing. */
-export function DemoNotice() {
-  return (
-    <p role="note" className="flex items-start gap-2 text-sm text-ink-soft">
-      <InfoIcon aria-hidden="true" weight="duotone" className="mt-0.5 size-4 shrink-0" />
-      {text.auth.demoNotice}
-    </p>
-  );
-}
-
-export type SubmitOutcome = { kind: 'demo-success'; message: string } | { kind: 'error' } | null;
+/** `demo-success` is for the school request form, which is still a demo and sends nothing. */
+export type SubmitOutcome =
+  { kind: 'demo-success'; message: string } | { kind: 'error'; message?: string } | null;
 
 /**
  * Always rendered, so screen readers announce the message when it appears
@@ -30,7 +22,7 @@ export function SubmitOutcomeMessage({ outcome }: { outcome: SubmitOutcome }) {
       {outcome?.kind === 'error' && (
         <p className="flex items-start gap-2 rounded-2xl bg-blush px-4 py-3 font-medium text-blush-ink">
           <WarningIcon aria-hidden="true" weight="fill" className="mt-0.5 size-5 shrink-0" />
-          {text.auth.errors.submitFailed}
+          {outcome.message ?? text.auth.apiErrors.unknown_error}
         </p>
       )}
     </div>

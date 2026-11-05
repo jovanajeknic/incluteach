@@ -1,4 +1,4 @@
-import { act, screen, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderApp } from '@/test/renderApp';
 
@@ -83,7 +83,7 @@ describe('Child lessons', () => {
   });
 
   it('shows practice done live in the student area, including where it was hard', async () => {
-    const { user, router } = renderApp({ path: '/student/lessons/kruzenje-vode/quiz' });
+    const { user, goAs } = renderApp({ path: '/student/lessons/kruzenje-vode/quiz' });
 
     await user.click(screen.getByRole('button', { name: 'Mjesec' }));
     await user.click(screen.getByRole('button', { name: /Sljedeće pitanje/ }));
@@ -92,7 +92,7 @@ describe('Child lessons', () => {
     await user.click(screen.getByRole('button', { name: 'Snijeg' }));
     await user.click(screen.getByRole('button', { name: /Završi kviz/ }));
 
-    await act(() => router.navigate('/parent/children/demo-student-luka/lessons/kruzenje-vode'));
+    await goAs('parent', '/parent/children/demo-student-luka/lessons/kruzenje-vode');
 
     expect(screen.getByText('Verzija nižeg nivoa')).toBeInTheDocument();
     expect(screen.getByText('Još nije označeno kao pređeno')).toBeInTheDocument();
@@ -133,13 +133,13 @@ describe('Suggestions for the teacher', () => {
   });
 
   it('never shows the suggestion to the child', async () => {
-    const { user, router } = renderApp({ path: '/parent/children/demo-student-luka' });
+    const { user, goAs } = renderApp({ path: '/parent/children/demo-student-luka' });
 
     await user.type(screen.getByLabelText('Vaš prijedlog'), 'Treba mu više vremena za čitanje.');
     await user.click(screen.getByRole('button', { name: 'Pošalji nastavniku' }));
     expect(screen.getByText('Treba mu više vremena za čitanje.')).toBeInTheDocument();
 
-    await act(() => router.navigate('/student/lessons/kruzenje-vode'));
+    await goAs('student', '/student/lessons/kruzenje-vode');
     expect(
       screen.getByRole('heading', { level: 1, name: 'Kruženje vode u prirodi' }),
     ).toBeInTheDocument();

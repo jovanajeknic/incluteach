@@ -1,5 +1,7 @@
 import type { ComponentType } from 'react';
 import { type RouteObject } from 'react-router';
+import { adminHomePath } from '@/features/admin/paths';
+import { RequireRole } from '@/features/auth/components/RequireRole';
 import { activatePath, loginPath } from '@/features/auth/paths';
 import { schoolRequestPath } from '@/features/school-request/paths';
 import { LandingPage } from '@/features/landing/LandingPage';
@@ -49,67 +51,93 @@ export const routes: RouteObject[] = [
         }),
       },
       {
-        path: teacherHomePath,
-        lazy: fromArea(teacherArea, (area) => area.TeacherLayout),
+        element: <RequireRole role="teacher" />,
         children: [
-          { index: true, lazy: fromArea(teacherArea, (area) => area.TeacherHomePage) },
           {
-            path: 'subjects/:subjectId/classes/:classId',
-            lazy: fromArea(teacherArea, (area) => area.CoursePage),
+            path: teacherHomePath,
+            lazy: fromArea(teacherArea, (area) => area.TeacherLayout),
+            children: [
+              { index: true, lazy: fromArea(teacherArea, (area) => area.TeacherHomePage) },
+              {
+                path: 'subjects/:subjectId/classes/:classId',
+                lazy: fromArea(teacherArea, (area) => area.CoursePage),
+              },
+              { path: 'lessons/new', lazy: fromArea(teacherArea, (area) => area.NewLessonPage) },
+              {
+                path: 'lessons/:lessonId',
+                lazy: fromArea(teacherArea, (area) => area.LessonDetailPage),
+              },
+              { path: 'class', lazy: fromArea(teacherArea, (area) => area.ClassPage) },
+              {
+                path: 'students/:studentId',
+                lazy: fromArea(teacherArea, (area) => area.TeacherStudentPage),
+              },
+              {
+                path: 'suggestions',
+                lazy: fromArea(teacherArea, (area) => area.SuggestionsInboxPage),
+              },
+              { path: '*', element: <NotFoundPage homePath={teacherHomePath} /> },
+            ],
           },
-          { path: 'lessons/new', lazy: fromArea(teacherArea, (area) => area.NewLessonPage) },
-          {
-            path: 'lessons/:lessonId',
-            lazy: fromArea(teacherArea, (area) => area.LessonDetailPage),
-          },
-          { path: 'class', lazy: fromArea(teacherArea, (area) => area.ClassPage) },
-          {
-            path: 'students/:studentId',
-            lazy: fromArea(teacherArea, (area) => area.TeacherStudentPage),
-          },
-          {
-            path: 'suggestions',
-            lazy: fromArea(teacherArea, (area) => area.SuggestionsInboxPage),
-          },
-          { path: '*', element: <NotFoundPage homePath={teacherHomePath} /> },
         ],
       },
       {
-        path: studentHomePath,
-        lazy: fromArea(studentArea, (area) => area.StudentLayout),
+        element: <RequireRole role="student" />,
         children: [
-          { index: true, lazy: fromArea(studentArea, (area) => area.StudentHomePage) },
           {
-            path: 'subjects/:subjectId',
-            lazy: fromArea(studentArea, (area) => area.SubjectPage),
+            path: studentHomePath,
+            lazy: fromArea(studentArea, (area) => area.StudentLayout),
+            children: [
+              { index: true, lazy: fromArea(studentArea, (area) => area.StudentHomePage) },
+              {
+                path: 'subjects/:subjectId',
+                lazy: fromArea(studentArea, (area) => area.SubjectPage),
+              },
+              { path: 'stars', lazy: fromArea(studentArea, (area) => area.StarsPage) },
+              {
+                path: 'lessons/:lessonId',
+                lazy: fromArea(studentArea, (area) => area.StudentLessonPage),
+              },
+              {
+                path: 'lessons/:lessonId/quiz',
+                lazy: fromArea(studentArea, (area) => area.StudentQuizPage),
+              },
+              { path: '*', element: <NotFoundPage homePath={studentHomePath} /> },
+            ],
           },
-          { path: 'stars', lazy: fromArea(studentArea, (area) => area.StarsPage) },
-          {
-            path: 'lessons/:lessonId',
-            lazy: fromArea(studentArea, (area) => area.StudentLessonPage),
-          },
-          {
-            path: 'lessons/:lessonId/quiz',
-            lazy: fromArea(studentArea, (area) => area.StudentQuizPage),
-          },
-          { path: '*', element: <NotFoundPage homePath={studentHomePath} /> },
         ],
       },
       {
-        path: parentHomePath,
-        lazy: fromArea(parentArea, (area) => area.ParentLayout),
+        element: <RequireRole role="parent" />,
         children: [
-          { index: true, lazy: fromArea(parentArea, (area) => area.ParentHomePage) },
-          { path: 'children/:childId', lazy: fromArea(parentArea, (area) => area.ChildPage) },
           {
-            path: 'suggestions',
-            lazy: fromArea(parentArea, (area) => area.ParentSuggestionsPage),
+            path: parentHomePath,
+            lazy: fromArea(parentArea, (area) => area.ParentLayout),
+            children: [
+              { index: true, lazy: fromArea(parentArea, (area) => area.ParentHomePage) },
+              { path: 'children/:childId', lazy: fromArea(parentArea, (area) => area.ChildPage) },
+              {
+                path: 'suggestions',
+                lazy: fromArea(parentArea, (area) => area.ParentSuggestionsPage),
+              },
+              {
+                path: 'children/:childId/lessons/:lessonId',
+                lazy: fromArea(parentArea, (area) => area.ChildLessonPage),
+              },
+              { path: '*', element: <NotFoundPage homePath={parentHomePath} /> },
+            ],
           },
+        ],
+      },
+      {
+        element: <RequireRole role="admin" />,
+        children: [
           {
-            path: 'children/:childId/lessons/:lessonId',
-            lazy: fromArea(parentArea, (area) => area.ChildLessonPage),
+            path: adminHomePath,
+            lazy: async () => ({
+              Component: (await import('@/features/admin/AdminHomePage')).AdminHomePage,
+            }),
           },
-          { path: '*', element: <NotFoundPage homePath={parentHomePath} /> },
         ],
       },
       {

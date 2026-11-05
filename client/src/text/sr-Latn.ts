@@ -77,16 +77,14 @@ export const text = {
   },
 
   auth: {
-    demoNotice: 'Demo prikaz — prijava i aktivacija naloga još nijesu povezani sa serverom.',
     fields: {
+      identifier: 'Email ili korisničko ime',
+      identifierHint: 'Na primjer ana_markovic ili ana@primjer.me.',
       email: 'Email adresa',
+      emailHint: 'Za prijavu možete koristiti ovu adresu ili svoje korisničko ime.',
       password: 'Lozinka',
       newPassword: 'Nova lozinka',
       confirmPassword: 'Potvrdite lozinku',
-      inviteCode: 'Kod iz pozivnice',
-      inviteCodeHint: 'Nalazi se u pozivnici koju ste dobili od škole, na primjer K7Q2-M9XA.',
-      cardCode: 'Kod sa kartice',
-      cardCodeHint: 'Ispod QR koda na kartici, na primjer ABCD-1234.',
       passwordHint: (minLength: number) =>
         `Najmanje ${minLength} znakova. Razmaci su dozvoljeni, a lozinku možete zalijepiti iz menadžera lozinki.`,
     },
@@ -94,60 +92,67 @@ export const text = {
     showPassword: 'Prikaži lozinku',
     hidePassword: 'Sakrij lozinku',
     errors: {
+      identifierRequired: 'Unesite email ili korisničko ime.',
       emailRequired: 'Unesite email adresu.',
       emailInvalid: 'Unesite ispravnu email adresu, na primjer ime@primjer.me.',
       passwordRequired: 'Unesite lozinku.',
       passwordTooShort: (minLength: number) => `Lozinka mora imati najmanje ${minLength} znakova.`,
+      passwordTooLong: (maxLength: number) => `Lozinka može imati najviše ${maxLength} znakova.`,
       confirmPasswordRequired: 'Ponovo unesite lozinku.',
       passwordsDoNotMatch: 'Lozinke se ne podudaraju.',
-      inviteCodeRequired: 'Unesite kod iz pozivnice.',
-      inviteCodeInvalid: 'Kod ima 8 slova i brojeva, na primjer K7Q2-M9XA.',
-      cardCodeRequired: 'Upiši kod sa kartice.',
-      cardCodeInvalid: 'Kod ima 8 slova i brojeva, na primjer ABCD-1234.',
-      submitFailed: 'Slanje nije uspjelo. Pokušajte ponovo.',
+      emailTaken: 'Ova email adresa se već koristi. Unesite drugu.',
+    },
+    // Chosen by the `code` of an API error; `unknown_error` is the fallback for any other.
+    apiErrors: {
+      invalid_credentials: 'Email, korisničko ime ili lozinka nijesu tačni.',
+      too_many_attempts: 'Previše pokušaja. Sačekajte nekoliko minuta pa pokušajte ponovo.',
+      invalid_activation_link:
+        'Ova veza za aktivaciju je već iskorišćena ili je istekla. Zamolite administratora škole da vam napravi novu.',
+      network_error: 'Server trenutno nije dostupan. Provjerite vezu i pokušajte ponovo.',
+      unknown_error: 'Došlo je do greške. Pokušajte ponovo.',
     },
     login: {
       pageTitle: 'Prijava',
       heading: 'Prijava',
-      rolesLabel: 'Prijavljujem se kao',
-      roles: {
-        teacher: 'Nastavnik',
-        parent: 'Roditelj',
-        student: 'Učenik',
-      },
-      roleIntro: {
-        teacher: 'Prijavite se emailom škole na koji je stigla pozivnica.',
-        parent: 'Prijavite se emailom na koji je stigla pozivnica škole.',
-        student: 'Pokaži svoju karticu kameri ili upiši kod koji piše na njoj.',
-      },
-      openDemo: {
-        teacher: 'Otvori nastavnički demo',
-        parent: 'Otvori roditeljski demo',
-        student: 'Otvori učenički demo',
-      },
+      intro: 'Prijavite se emailom ili korisničkim imenom koje vam je dala škola.',
       submit: 'Prijavi se',
       submitting: 'Prijavljivanje…',
-      demoSuccess:
-        'Forma je uspješno provjerena. Ovo je demo prikaz: prijava nije stvarno izvršena.',
-      studentScanNote: 'Skeniranje kamerom dolazi uz pravu prijavu. U demou upiši kod.',
-      studentDemoSuccess:
-        'Kod je ispravno upisan. Ovo je demo prikaz: prijava nije stvarno izvršena.',
-      lostCard: 'Izgubio si karticu? Javi se svom nastavniku, dobićeš novu.',
-      invitePrompt: 'Dobili ste pozivnicu od škole?',
-      inviteLink: 'Aktivirajte nalog.',
+      activateHint:
+        'Dobili ste vezu ili QR kod za aktivaciju? Otvorite ga i izaberite lozinku, nema potrebe da se prijavljujete ovdje.',
+      forgotPassword: 'Zaboravili ste lozinku? Javite se administratoru škole, dobićete novu vezu.',
     },
     activate: {
       pageTitle: 'Aktivacija naloga',
       heading: 'Aktivirajte nalog',
-      description: 'Nalog vam je otvorila škola. Upišite kod iz pozivnice i izaberite lozinku.',
+      description:
+        'Nalog vam je otvorila škola. Izaberite lozinku i upišite email adresu, pa ćete biti prijavljeni.',
       submit: 'Aktiviraj nalog',
       submitting: 'Aktiviranje…',
-      demoSuccess:
-        'Forma je uspješno provjerena. Ovo je demo prikaz: nalog nije stvarno aktiviran.',
-      noInvite: 'Niste dobili pozivnicu? Javite se školi.',
+      noToken:
+        'Ova adresa nema vezu za aktivaciju. Otvorite vezu ili QR kod koji ste dobili od škole.',
+      noInvite: 'Niste dobili vezu? Javite se administratoru škole.',
       switchPrompt: 'Već ste aktivirali nalog?',
       switchLink: 'Prijavite se.',
     },
+  },
+
+  session: {
+    loading: 'Provjera prijave…',
+    unavailableTitle: 'Server nije dostupan',
+    unavailableDescription: 'Nije moguće provjeriti da li ste prijavljeni. Pokušajte ponovo.',
+    retry: 'Pokušaj ponovo',
+    forbiddenTitle: 'Nemate pristup',
+    forbiddenDescription: 'Ova stranica nije namijenjena vašem nalogu.',
+    forbiddenAction: 'Na vašu početnu stranicu',
+    signOutFailed: 'Odjava nije uspjela. Pokušajte ponovo.',
+  },
+
+  admin: {
+    pageTitle: 'Administracija',
+    heading: 'Administracija škole',
+    description:
+      'Ekrani za naloge, odeljenja, predmete i porodice dolaze uskoro. Dotad se možete odjaviti.',
+    signedInAs: (name: string) => `Prijavljeni ste kao ${name}.`,
   },
 
   schoolRequest: {

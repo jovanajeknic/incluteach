@@ -1,7 +1,8 @@
 import { ListIcon, SignOutIcon, XIcon, type Icon } from '@phosphor-icons/react';
 import { MotionConfig, motion } from 'motion/react';
 import { useId, useState } from 'react';
-import { Link, NavLink, Outlet, ScrollRestoration, useLocation } from 'react-router';
+import { Link, NavLink, Outlet, ScrollRestoration, useLocation, useNavigate } from 'react-router';
+import { useLogout } from '@/features/auth/api/session';
 import { loginPath } from '@/features/auth/paths';
 import { Logo } from '@/shared/brand/Logo';
 import { MAIN_CONTENT_ID, SkipLink } from '@/shared/components/SkipLink';
@@ -48,6 +49,8 @@ export function SidebarLayout({
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const navId = useId();
+  const navigate = useNavigate();
+  const logout = useLogout();
 
   useSmoothScroll();
   // A chosen destination closes the phone menu.
@@ -155,14 +158,23 @@ export function SidebarLayout({
                   </p>
                 </div>
               </div>
-              {/* Demo: there is no session to end yet, so this only returns to sign-in. */}
-              <Link
-                to={loginPath}
-                className="mt-4 inline-flex items-center gap-2 rounded-full px-1 font-display font-medium text-ink hover:text-forest"
+              <button
+                type="button"
+                disabled={logout.isPending}
+                onClick={() =>
+                  // Cached data of this person is cleared by the hook before leaving.
+                  logout.mutate(undefined, { onSuccess: () => void navigate(loginPath) })
+                }
+                className="mt-4 inline-flex items-center gap-2 rounded-full px-1 font-display font-medium text-ink hover:text-forest disabled:opacity-60"
               >
                 <SignOutIcon aria-hidden="true" weight="bold" className="size-5" />
                 {text.nav.signOut}
-              </Link>
+              </button>
+              {logout.isError && (
+                <p role="alert" className="mt-2 text-sm font-medium text-destructive">
+                  {text.session.signOutFailed}
+                </p>
+              )}
               <p className="mt-4 text-xs leading-relaxed text-ink-soft">{demoNotice}</p>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { act, screen, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { createDemoAiService, type AiService } from '@/features/school/demoAiService';
 import { demoSchoolData } from '@/features/school/demoSchoolData';
@@ -9,7 +9,7 @@ const DRAFT = '/teacher/lessons/saobracaj';
 
 describe('Lesson workflow', () => {
   it('generates, reviews with feedback, approves and publishes a lesson to its class', async () => {
-    const { user, router } = renderApp({ path: DRAFT, aiDelayMs: 300 });
+    const { user, goAs } = renderApp({ path: DRAFT, aiDelayMs: 300 });
 
     await user.click(screen.getByRole('button', { name: 'Pokreni AI' }));
     expect(await screen.findByText('AI priprema verzije…')).toBeInTheDocument();
@@ -64,7 +64,7 @@ describe('Lesson workflow', () => {
     expect(screen.getByText(/Objavljeno\. Učenici odjeljenja 4-2 je vide/)).toBeInTheDocument();
 
     // Luka receives the easier version, so he reads the teacher's edited text.
-    await act(() => router.navigate('/student/lessons/saobracaj'));
+    await goAs('student', '/student/lessons/saobracaj');
     expect(
       screen.getByRole('heading', { level: 1, name: 'Bezbjednost u saobraćaju' }),
     ).toBeInTheDocument();
@@ -80,15 +80,15 @@ describe('Lesson workflow', () => {
   });
 
   it('publishes a fully approved lesson and its new versions reach the right students', async () => {
-    const { user, router } = renderApp({ path: '/teacher/lessons/godisnja-doba' });
+    const { user, goAs } = renderApp({ path: '/teacher/lessons/godisnja-doba' });
 
     expect(screen.getByText('Odobreno 6 od 6')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Objavi učenicima' }));
 
     // Luka gets the easier text; Mia (shortened) sees hers through her parent.
-    await act(() => router.navigate('/student/lessons/godisnja-doba'));
+    await goAs('student', '/student/lessons/godisnja-doba');
     expect(screen.getByText('Ljeti je toplo.')).toBeInTheDocument();
-    await act(() => router.navigate('/parent/children/demo-student-mia/lessons/godisnja-doba'));
+    await goAs('parent', '/parent/children/demo-student-mia/lessons/godisnja-doba');
     expect(screen.getByText('Skraćena verzija')).toBeInTheDocument();
   });
 
@@ -137,7 +137,7 @@ describe('Students and parent suggestions', () => {
   });
 
   it('changes which version a student receives, which changes what they read', async () => {
-    const { user, router } = renderApp({ path: '/teacher/students/demo-student-luka' });
+    const { user, goAs } = renderApp({ path: '/teacher/students/demo-student-luka' });
 
     expect(screen.getByRole('radio', { name: 'Niži nivo' })).toBeChecked();
     expect(screen.getByRole('checkbox', { name: 'Dobija i audio zapis' })).toBeChecked();
@@ -145,7 +145,7 @@ describe('Students and parent suggestions', () => {
     await user.click(screen.getByRole('button', { name: 'Sačuvaj' }));
     expect(screen.getByText(/Sačuvano\. Važi od sljedećeg otvaranja lekcije/)).toBeInTheDocument();
 
-    await act(() => router.navigate('/student/lessons/kruzenje-vode'));
+    await goAs('student', '/student/lessons/kruzenje-vode');
     expect(screen.getByText(/Voda u prirodi stalno putuje\./)).toBeInTheDocument();
     expect(screen.queryByText('Sunce grije vodu.')).not.toBeInTheDocument();
   });
@@ -163,7 +163,7 @@ describe('Students and parent suggestions', () => {
         return createDemoAiService(0).generate(request);
       },
     };
-    const { user, router } = renderApp({ path: '/teacher/suggestions', aiService: recordingAi });
+    const { user, goAs } = renderApp({ path: '/teacher/suggestions', aiService: recordingAi });
 
     expect(screen.getByRole('link', { name: /Prijedlozi roditelja/ })).toHaveTextContent('1');
     expect(screen.getByText(/uz tekst ima sliku ili crtež/)).toBeInTheDocument();
@@ -179,12 +179,12 @@ describe('Students and parent suggestions', () => {
     expect(screen.getByText('Nastavnik ga uzima u obzir pri prilagođavanju')).toBeInTheDocument();
     expect(screen.getByText('Uputstvo za AI: „Više slika uz tekst“')).toBeInTheDocument();
 
-    await act(() => router.navigate('/teacher/lessons/saobracaj'));
+    await goAs('teacher', '/teacher/lessons/saobracaj');
     await user.click(screen.getByRole('button', { name: 'Pokreni AI' }));
     await screen.findByRole('tablist', { name: 'Verzije lekcije' });
     expect(seen).toEqual([['Više slika uz tekst']]);
 
-    await act(() => router.navigate('/parent/children/demo-student-luka'));
+    await goAs('parent', '/parent/children/demo-student-luka');
     expect(screen.getByText('Nastavnik ga uzima u obzir pri prilagođavanju')).toBeInTheDocument();
     // The parent sees the status, not the teacher's instruction.
     expect(screen.queryByText(/Više slika uz tekst/)).not.toBeInTheDocument();
@@ -231,7 +231,7 @@ describe('Students and parent suggestions', () => {
 
 describe('Published lessons change only when the teacher publishes again', () => {
   it('keeps what students see while the AI redoes every version', async () => {
-    const { user, router } = renderApp({ path: '/teacher/lessons/kruzenje-vode' });
+    const { user, goAs } = renderApp({ path: '/teacher/lessons/kruzenje-vode' });
 
     await user.click(screen.getByRole('tab', { name: /Original/ }));
     await user.click(screen.getByRole('button', { name: 'Napravi sve verzije ponovo' }));
@@ -241,7 +241,7 @@ describe('Published lessons change only when the teacher publishes again', () =>
     expect(screen.getByRole('button', { name: 'Objavi izmjene' })).toBeDisabled();
 
     // Luka still reads the easier version that was published before.
-    await act(() => router.navigate('/student/lessons/kruzenje-vode'));
+    await goAs('student', '/student/lessons/kruzenje-vode');
     expect(screen.getByText('Sunce grije vodu.')).toBeInTheDocument();
   });
 
@@ -338,7 +338,7 @@ describe('Class teacher and subject teachers', () => {
 
 describe('Withdrawing and deleting lessons', () => {
   it('takes a published lesson back from students after a confirmation', async () => {
-    const { user, router } = renderApp({ path: '/teacher/lessons/kruzenje-vode' });
+    const { user, goAs } = renderApp({ path: '/teacher/lessons/kruzenje-vode' });
 
     await user.click(screen.getByRole('button', { name: 'Povuci od učenika' }));
     await user.click(screen.getByRole('button', { name: 'Odustani' }));
@@ -346,7 +346,7 @@ describe('Withdrawing and deleting lessons', () => {
     await user.click(screen.getByRole('button', { name: 'Da, povuci' }));
     expect(screen.getByText('Lekcija je povučena. Učenici je više ne vide.')).toBeInTheDocument();
 
-    await act(() => router.navigate('/student/lessons/kruzenje-vode'));
+    await goAs('student', '/student/lessons/kruzenje-vode');
     expect(
       screen.getByRole('heading', { level: 1, name: 'Lekcija nije pronađena' }),
     ).toBeInTheDocument();
@@ -364,7 +364,7 @@ describe('Withdrawing and deleting lessons', () => {
 
 describe('Remarks from the AI', () => {
   it('shows the AI remark to the teacher, beside the text and never in it', async () => {
-    const { user, router } = renderApp({ path: '/teacher/lessons/godisnja-doba' });
+    const { user, goAs } = renderApp({ path: '/teacher/lessons/godisnja-doba' });
     const panel = () => screen.getByRole('tabpanel');
 
     await user.click(screen.getByRole('tab', { name: /Niži nivo/ }));
@@ -379,7 +379,7 @@ describe('Remarks from the AI', () => {
 
     await user.click(within(panel()).getByRole('button', { name: 'Odobri: Niži nivo' }));
     await user.click(screen.getByRole('button', { name: 'Objavi učenicima' }));
-    await act(() => router.navigate('/student/lessons/godisnja-doba'));
+    await goAs('student', '/student/lessons/godisnja-doba');
     expect(document.body.textContent).not.toMatch(/Prepravljeno|Demo AI/);
   });
 });

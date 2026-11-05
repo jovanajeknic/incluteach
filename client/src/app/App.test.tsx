@@ -1,9 +1,12 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { DemoParentProvider } from '@/features/parent/data/DemoParentProvider';
 import { DemoSchoolProvider } from '@/features/school/DemoSchoolProvider';
 import { DemoStudentProvider } from '@/features/student/data/DemoStudentProvider';
 import { describe, expect, it } from 'vitest';
+import { createQueryClient, SESSION_QUERY_KEY } from '@/shared/api/queryClient';
+import { testUsers } from '@/test/authFixtures';
 import { renderApp } from '@/test/renderApp';
 import { routes } from './routes';
 
@@ -54,19 +57,23 @@ describe('App routes', () => {
 
 describe('Code splitting', () => {
   it.each([
-    ['/teacher', 'Moji predmeti'],
-    ['/student', 'Moji predmeti'],
-    ['/parent', 'Moja djeca'],
-  ])('loads the %s area on demand', async (path, heading) => {
+    ['/teacher', 'teacher', 'Moji predmeti'],
+    ['/student', 'student', 'Moji predmeti'],
+    ['/parent', 'parent', 'Moja djeca'],
+  ] as const)('loads the %s area on demand', async (path, role, heading) => {
     const router = createMemoryRouter(routes, { initialEntries: [path] });
+    const queryClient = createQueryClient();
+    queryClient.setQueryData(SESSION_QUERY_KEY, testUsers[role]);
     render(
-      <DemoSchoolProvider aiDelayMs={0}>
-        <DemoStudentProvider>
-          <DemoParentProvider>
-            <RouterProvider router={router} />
-          </DemoParentProvider>
-        </DemoStudentProvider>
-      </DemoSchoolProvider>,
+      <QueryClientProvider client={queryClient}>
+        <DemoSchoolProvider aiDelayMs={0}>
+          <DemoStudentProvider>
+            <DemoParentProvider>
+              <RouterProvider router={router} />
+            </DemoParentProvider>
+          </DemoStudentProvider>
+        </DemoSchoolProvider>
+      </QueryClientProvider>,
     );
     expect(await screen.findByRole('heading', { level: 1, name: heading })).toBeInTheDocument();
   });

@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { DemoNotice } from './AuthStatus';
 
 interface AuthCardProps {
   title: string;
@@ -9,7 +8,7 @@ interface AuthCardProps {
   children: ReactNode;
 }
 
-/** Heading, the form, the links under it and a quiet demo note at the end. */
+/** Heading, the form and the links under it. */
 export function AuthCard({ title, description, footer, children }: AuthCardProps) {
   return (
     <div>
@@ -21,9 +20,6 @@ export function AuthCard({ title, description, footer, children }: AuthCardProps
           {footer}
         </div>
       )}
-      <div className="mt-8">
-        <DemoNotice />
-      </div>
     </div>
   );
 }

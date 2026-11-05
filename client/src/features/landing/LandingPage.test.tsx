@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { renderApp } from '@/test/renderApp';
 
@@ -58,12 +58,13 @@ describe('LandingPage', () => {
     },
   );
 
-  it('opens the teacher demo from "Istraži IncluTeach"', async () => {
+  it('leads a visitor who is not signed in from "Istraži IncluTeach" to sign-in', async () => {
     const { user, router } = renderApp({ path: '/' });
 
     await user.click(screen.getByRole('link', { name: 'Istraži IncluTeach' }));
 
-    expect(router.state.location.pathname).toBe('/teacher');
+    // The link opens the teacher area; its guard sends visitors to sign-in.
+    await waitFor(() => expect(router.state.location.pathname).toBe('/login'));
   });
 
   it('points "Naša priča" to the about section', () => {
