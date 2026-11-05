@@ -74,7 +74,7 @@ The status follows the people involved: the student asks (`awaiting_parent`), a 
 - **Purpose**: tells whether the server runs and can reach the database.
 - **Who may call it**: anyone, no sign-in.
 - **Request**: none.
-- **Success response**: `200 { "status": "ok", "ai": "fake" }`. `ai` is the name of the AI service that is set up; `fake` means it makes invented test results, so a screen should show a clear "test AI" label.
+- **Success response**: `200 { "status": "ok", "ai": "fake" }`. `ai` is the name of the AI service that is set up: `fake` makes invented test results, so a screen should show a clear "test AI" label; `groq` is a real AI service (the free level of Groq for now), whose summaries and quizzes are real but must be read and corrected by the teacher, especially in Cyrillic.
 - **Errors**: `503 { "status": "unavailable" }` when the database cannot be reached (no details are given).
 - **Notes**: for monitoring and for checking the connection during setup.
 - **Used by (frontend)**: none.
@@ -433,6 +433,7 @@ A lesson belongs to a subject and holds the text of the teacher, as written. See
 - **Request**: body `{ summary?: boolean, quiz?: boolean }`, both on when left out; at least one must be on.
 - **Success response**: `202 { lesson: Lesson }` with `status: "processing"`. The work goes on in the background. **Ask for the lesson (`GET /lessons/{id}`) every 2 to 3 seconds** until the status changes: `in_review` means the summary and the quiz are ready for the teacher to read, edit and approve; `draft` with a `processingError` means the AI failed (the message says what to do, for example "The text is too short to make a quiz.").
 - **Errors**: `400 invalid_request`, `404 not_found`, `409 lesson_has_no_text`, `409 lesson_busy` (already being processed), `409 lesson_published` (take it back first).
+- **Messages of a failed run** (`processingError`, English, for the developer; the screen shows its own Serbian text and a "Pokušaj ponovo" button): the text is too long for the AI service that is set up (send a shorter part of the lesson), the AI service is busy (try again in a minute), the daily limit of the AI service was reached (try again tomorrow), or a general message. The summary is asked first and the quiz after it, so a run takes the time of both (about 3 to 5 seconds with the Groq free level).
 - **Notes**: what the AI makes starts as a **draft** and nothing reaches students until a teacher approves it. Asking again replaces the summary and/or quiz that were made before, and cancels their approval (the frontend should ask the teacher to confirm, because their manual edits are replaced). While the lesson is `processing` it cannot be changed, deleted or published. A lesson that stays in `processing` after the server stopped is put back to a draft when the server starts again. Until a real AI service is chosen, a **fake** one makes invented but complete results, so the screens can be built; the text `[[ai-fail]]` or `[[ai-bad-output]]` inside a lesson makes it fail on purpose, to test the error screen.
 - **Used by (frontend)**: teacher button "Napravi sažetak i kviz" in the lesson editor, a waiting state while `processing`, then the review of what was made.
 

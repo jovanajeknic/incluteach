@@ -9,6 +9,10 @@ export interface Config {
   publicUrl: string;
   // Which AI service makes summaries and quizzes. "fake" makes invented but complete results.
   aiProvider: AiProviderName;
+  // The key and the model of a real AI service. The key is a secret: it is read here and
+  // handed to the service, and never printed or stored anywhere.
+  aiApiKey: string | undefined;
+  aiModel: string | undefined;
 }
 
 const DEFAULT_PORT = 3000;
@@ -24,12 +28,22 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     );
   }
 
+  const aiProvider = parseAiProvider(env.AI_PROVIDER);
+  const aiApiKey = env.GROQ_API_KEY?.trim() || undefined;
+  if (aiProvider === 'groq' && !aiApiKey) {
+    throw new Error(
+      'AI_PROVIDER is "groq", but GROQ_API_KEY is not set. Add your key to server/.env.',
+    );
+  }
+
   return {
     databaseUrl,
     port: parsePort(env.PORT),
     secureCookies: env.NODE_ENV === 'production',
     publicUrl: parsePublicUrl(env.PUBLIC_URL),
-    aiProvider: parseAiProvider(env.AI_PROVIDER),
+    aiProvider,
+    aiApiKey,
+    aiModel: parseAiModel(env.AI_MODEL),
   };
 }
 
@@ -71,4 +85,19 @@ function parseAiProvider(value: string | undefined): AiProviderName {
     throw new Error(`AI_PROVIDER must be one of: ${AI_PROVIDERS.join(', ')}. Got "${name}".`);
   }
   return name as AiProviderName;
+}
+
+// The name of a model, as the AI service writes it (for example "openai/gpt-oss-120b"). Empty
+// means the default of the service.
+function parseAiModel(value: string | undefined): string | undefined {
+  const name = value?.trim();
+  if (!name) {
+    return undefined;
+  }
+  if (!/^[a-z0-9][a-z0-9._/-]{0,63}$/i.test(name)) {
+    throw new Error(
+      `AI_MODEL must be the name of a model, like openai/gpt-oss-120b. Got "${name}".`,
+    );
+  }
+  return name;
 }

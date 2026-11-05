@@ -343,6 +343,11 @@ describe('the fake AI', () => {
 
 describe('createAiProvider', () => {
   it.each(AI_PROVIDERS)('makes the provider "%s"', (name) => {
-    expect(createAiProvider(name).name).toBe(name);
+    expect(createAiProvider(name, { apiKey: 'test-key-not-real' }).name).toBe(name);
+  });
+
+  it('does not make a real service without its key', () => {
+    expect(() => createAiProvider('groq')).toThrow(/GROQ_API_KEY/);
+    expect(createAiProvider('fake').name).toBe('fake');
   });
 });

@@ -23,7 +23,7 @@ const server = createApp({
   secureCookies: config.secureCookies,
   publicUrl: config.publicUrl,
   logRequests: true,
-  ai: createAiProvider(config.aiProvider),
+  ai: createAiProvider(config.aiProvider, { apiKey: config.aiApiKey, model: config.aiModel }),
   jobs,
 }).listen(config.port, () => {
   console.log(`IncluTeach server listening on http://localhost:${config.port}`);

@@ -121,6 +121,67 @@ describe.skipIf(!process.env.DATABASE_URL)('making a summary and a quiz with the
       });
     });
 
+    it('asks the AI for the summary first and for the quiz only after it has answered', async () => {
+      const events: string[] = [];
+      const fake = createFakeAi();
+      const slow: AiProvider = {
+        name: 'slow',
+        makeSummary: async (input) => {
+          events.push('summary asked');
+          await new Promise((resolve) => setTimeout(resolve, 30));
+          events.push('summary answered');
+          return fake.makeSummary(input);
+        },
+        makeQuiz: async (input) => {
+          events.push('quiz asked');
+          return fake.makeQuiz(input);
+        },
+      };
+
+      await inApi(
+        async (api) => {
+          const w = await setup(api);
+          const id = await lessonIn(api, w);
+
+          const { lesson } = await generate(api, w, id);
+
+          expect(lesson.status).toBe('in_review');
+          expect(events).toEqual(['summary asked', 'summary answered', 'quiz asked']);
+        },
+        { ai: slow },
+      );
+    });
+
+    it('does not ask for the quiz when the summary failed', async () => {
+      const asked: string[] = [];
+      const fake = createFakeAi();
+      const broken: AiProvider = {
+        name: 'broken',
+        makeSummary: async () => {
+          asked.push('summary');
+          throw new Error('The service is down.');
+        },
+        makeQuiz: async (input) => {
+          asked.push('quiz');
+          return fake.makeQuiz(input);
+        },
+      };
+
+      await inApi(
+        async (api) => {
+          const w = await setup(api);
+          const id = await lessonIn(api, w);
+
+          const { lesson } = await generate(api, w, id);
+
+          expect(lesson.status).toBe('draft');
+          expect(lesson.processingError).toBeTruthy();
+          expect(asked).toEqual(['summary']);
+        },
+        { ai: broken },
+      );
+    });
+
     it('leaves the lesson in review with a summary and a quiz that wait for approval', async () => {
       await inApi(async (api) => {
         const w = await setup(api);

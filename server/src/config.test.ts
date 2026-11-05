@@ -72,9 +72,43 @@ describe('loadConfig', () => {
       expect(loadConfig({ DATABASE_URL, AI_PROVIDER: 'fake' }).aiProvider).toBe('fake');
     });
 
+    it('uses groq when it has a key, and asks for the key when it has none', () => {
+      const config = loadConfig({
+        DATABASE_URL,
+        AI_PROVIDER: 'groq',
+        GROQ_API_KEY: '  not-a-real-key  ',
+      });
+
+      expect(config.aiProvider).toBe('groq');
+      expect(config.aiApiKey).toBe('not-a-real-key');
+      expect(() => loadConfig({ DATABASE_URL, AI_PROVIDER: 'groq' })).toThrow(
+        /GROQ_API_KEY is not set/,
+      );
+      expect(() => loadConfig({ DATABASE_URL, AI_PROVIDER: 'groq', GROQ_API_KEY: '   ' })).toThrow(
+        /GROQ_API_KEY is not set/,
+      );
+    });
+
+    it('does not need a key for the fake AI, and leaves an unset key and model empty', () => {
+      const config = loadConfig({ DATABASE_URL });
+
+      expect(config.aiApiKey).toBeUndefined();
+      expect(config.aiModel).toBeUndefined();
+    });
+
+    it('reads the name of the model, and refuses something that is not a name', () => {
+      expect(loadConfig({ DATABASE_URL, AI_MODEL: ' openai/gpt-oss-120b ' }).aiModel).toBe(
+        'openai/gpt-oss-120b',
+      );
+      expect(loadConfig({ DATABASE_URL, AI_MODEL: '  ' }).aiModel).toBeUndefined();
+      expect(() => loadConfig({ DATABASE_URL, AI_MODEL: 'a model; drop table' })).toThrow(
+        /AI_MODEL must be the name of a model/,
+      );
+    });
+
     it('refuses a service the server does not know, and names the ones it does', () => {
       expect(() => loadConfig({ DATABASE_URL, AI_PROVIDER: 'skynet' })).toThrow(
-        /AI_PROVIDER must be one of: fake\. Got "skynet"/,
+        /AI_PROVIDER must be one of: fake, groq\. Got "skynet"/,
       );
     });
   });

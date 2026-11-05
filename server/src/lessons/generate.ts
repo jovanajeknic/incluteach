@@ -96,12 +96,15 @@ async function runGeneration(
   },
 ): Promise<void> {
   try {
-    const [summary, quiz] = await Promise.all([
-      job.summary
-        ? withTimeout(ai.makeSummary({ text: job.text }), timeoutMs).then(validateSummary)
-        : null,
-      job.quiz ? withTimeout(ai.makeQuiz({ text: job.text }), timeoutMs).then(validateQuiz) : null,
-    ]);
+    // One after the other, not together: a real service limits how much text it takes in a
+    // minute, and two requests with the whole lesson at once would use that up twice as fast.
+    // If the summary fails the quiz is not tried, since the teacher has to start again anyway.
+    const summary = job.summary
+      ? validateSummary(await withTimeout(ai.makeSummary({ text: job.text }), timeoutMs))
+      : null;
+    const quiz = job.quiz
+      ? validateQuiz(await withTimeout(ai.makeQuiz({ text: job.text }), timeoutMs))
+      : null;
 
     await inTransaction(pool, (db) => saveResults(db, job, { summary, quiz }));
   } catch (error) {

@@ -64,7 +64,7 @@ npm start
 
 ## The AI for summaries and quizzes
 
-The server makes summaries and quizzes through one replaceable part. `AI_PROVIDER` in `.env` chooses the service. Only `fake` exists for now: it makes invented but complete results from the text of the lesson and sends nothing anywhere, so everything can be built and tested for free. To plug in a real service, write an object like `server/src/ai/fake.ts` (two functions that take the lesson text), add its name to `server/src/ai/index.ts`, and set `AI_PROVIDER`. Whatever a service returns is checked before it is stored. In a lesson text, `[[ai-fail]]` makes the fake AI fail on purpose and `[[ai-bad-output]]` makes it answer in an unusable form, for testing the error screens.
+The server makes summaries and quizzes through one replaceable part. `AI_PROVIDER` in `.env` chooses the service. `fake` (the default) makes invented but complete results from the text of the lesson and sends nothing anywhere, so everything can be built and tested for free. `groq` uses the free level of the Groq API: put your key in `.env` as `GROQ_API_KEY` (never in Git; `.env.example` lists the names) and set `AI_PROVIDER=groq`; `AI_MODEL` is optional and defaults to `openai/gpt-oss-120b`. Only the text of the lesson is sent to Groq, nothing about students. To plug in another service, write an object like `server/src/ai/fake.ts` (two functions that take the lesson text), add its name to `server/src/ai/index.ts`, and set `AI_PROVIDER`. Whatever a service returns is checked before it is stored. In a lesson text, `[[ai-fail]]` makes the fake AI fail on purpose and `[[ai-bad-output]]` makes it answer in an unusable form, for testing the error screens.
 
 ## Connect the frontend on this computer
 
