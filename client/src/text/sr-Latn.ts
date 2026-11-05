@@ -436,6 +436,8 @@ export const text = {
   nav: {
     home: 'Moji predmeti',
     newLesson: 'Dodaj lekciju',
+    requests: 'Zahtjevi',
+    newRequests: 'na čekanju',
     suggestions: 'Prijedlozi roditelja',
     newSuggestions: 'novih',
     openMenu: 'Otvori meni',
@@ -589,6 +591,27 @@ export const text = {
       takeBackYes: 'Da, povuci',
       takenBack: 'Zvjezdica je povučena.',
       cancel: 'Odustani',
+    },
+    requests: {
+      pageTitle: 'Zahtjevi za predmete',
+      heading: 'Zahtjevi za predmete',
+      intro:
+        'Učenici koji žele da budu upisani na tvoj predmet. Do tebe stižu tek kad ih potvrdi roditelj. Kad odobriš, učenik odmah vidi objavljene lekcije predmeta.',
+      empty: 'Nijedan zahtjev ne čeka tvoj odgovor.',
+      wants: 'želi da bude upisan/a na',
+      askedByStudent: 'Zatražio/la učenik, potvrdio roditelj',
+      askedByParent: 'Zatražio roditelj',
+      approve: 'Odobri',
+      reject: 'Odbij',
+      answering: 'Slanje…',
+      approveFor: (student: string, subject: string) => `Odobri: ${student}, ${subject}`,
+      rejectFor: (student: string, subject: string) => `Odbij: ${student}, ${subject}`,
+      rejectTitle: 'Odbiti zahtjev?',
+      rejectText: (student: string) =>
+        `${student} neće biti upisan/a na predmet, ali može ponovo poslati zahtjev.`,
+      rejectYes: 'Da, odbij',
+      cancel: 'Odustani',
+      alreadyAnswered: 'Zahtjev je već obrađen. Lista je osvježena.',
     },
     newLesson: {
       pageTitle: 'Dodaj lekciju',
