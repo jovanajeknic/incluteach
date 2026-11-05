@@ -9,8 +9,10 @@ import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select';
 import { text } from '@/text/sr-Latn';
-import { USERS_PAGE_SIZE, useUsers } from '../api/queries';
+import { USERS_PAGE_SIZE, useIssueActivation, useUsers } from '../api/queries';
 import type { ManagedUser, UserStatus } from '../api/usersApi';
+import { adminErrorMessage } from '../apiErrorMessage';
+import { ActivationLink } from '../components/ActivationLink';
 
 const t = text.admin.users;
 const roles: readonly Role[] = ['teacher', 'student', 'parent', 'admin'];
@@ -143,22 +145,53 @@ function Chip({ children, tone }: { children: string; tone: string }) {
 }
 
 function UserRow({ user }: { user: ManagedUser }) {
+  const issue = useIssueActivation();
+  const link = issue.data?.activation;
+  // A person who left the school cannot sign in again until they are brought back.
+  const canGetLink = !user.deactivatedAt;
+
   return (
-    <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-2xl bg-card px-5 py-4 shadow-sm">
-      <div className="min-w-0">
-        <p className="font-display text-lg font-semibold break-words text-ink">{user.fullName}</p>
-        <p className="text-sm text-ink-soft">{t.username(user.username)}</p>
-        <p className="text-sm text-ink-soft">{user.email ?? t.noEmail}</p>
-        <p className="text-sm text-ink-soft">{t.createdOn(formatDate(user.createdAt))}</p>
+    <div className="rounded-2xl bg-card px-5 py-4 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        <div className="min-w-0">
+          <p className="font-display text-lg font-semibold break-words text-ink">{user.fullName}</p>
+          <p className="text-sm text-ink-soft">{t.username(user.username)}</p>
+          <p className="text-sm text-ink-soft">{user.email ?? t.noEmail}</p>
+          <p className="text-sm text-ink-soft">{t.createdOn(formatDate(user.createdAt))}</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Chip tone="bg-lilac text-lilac-ink">{text.admin.roles[user.role]}</Chip>
+          {user.deactivatedAt ? (
+            <Chip tone="bg-blush text-blush-ink">{t.deactivated}</Chip>
+          ) : (
+            !user.activated && <Chip tone="bg-butter text-butter-ink">{t.notActivated}</Chip>
+          )}
+          {canGetLink && (
+            <Button
+              type="button"
+              variant="outline"
+              aria-label={t.newLinkFor(user.fullName)}
+              disabled={issue.isPending}
+              onClick={() => issue.mutate(user.id)}
+            >
+              {issue.isPending ? t.issuing : t.newLink}
+            </Button>
+          )}
+        </div>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <Chip tone="bg-lilac text-lilac-ink">{text.admin.roles[user.role]}</Chip>
-        {user.deactivatedAt ? (
-          <Chip tone="bg-blush text-blush-ink">{t.deactivated}</Chip>
-        ) : (
-          !user.activated && <Chip tone="bg-butter text-butter-ink">{t.notActivated}</Chip>
-        )}
-      </div>
+      {issue.isError && (
+        <p role="alert" className="mt-3 font-medium text-blush-ink">
+          {adminErrorMessage(issue.error)}
+        </p>
+      )}
+      {link && (
+        <div className="mt-4 border-t border-border pt-4">
+          <ActivationLink activation={link} person={user} />
+          <Button type="button" variant="ghost" className="mt-3" onClick={() => issue.reset()}>
+            {text.admin.link.hide}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

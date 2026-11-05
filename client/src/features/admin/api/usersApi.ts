@@ -15,6 +15,15 @@ export interface ManagedUser {
   createdAt: string;
 }
 
+/** The roles an admin can create here; another admin is made on the server. */
+export type NewUserRole = 'teacher' | 'student' | 'parent';
+
+/** The one-time link a person opens to choose a password. */
+export interface Activation {
+  url: string;
+  expiresAt: string;
+}
+
 export type UserStatus = 'active' | 'deactivated' | 'all';
 
 export interface UsersFilter {
@@ -31,4 +40,11 @@ export const usersApi = {
     if (search) query.set('search', search);
     return apiRequest<{ users: ManagedUser[]; total: number }>(`/users?${query}`);
   },
+  create: (body: { fullName: string; role: NewUserRole }) =>
+    apiRequest<{ user: ManagedUser }>('/users', { method: 'POST', body }),
+  /** Asking again cancels the link given before, so it is also the answer to a forgotten password. */
+  issueActivation: (id: string) =>
+    apiRequest<{ activation: Activation }>(`/users/${encodeURIComponent(id)}/activation`, {
+      method: 'POST',
+    }),
 };

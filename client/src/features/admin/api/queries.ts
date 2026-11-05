@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { usersApi, type UsersFilter } from './usersApi';
 
 export const USERS_PAGE_SIZE = 25;
@@ -13,3 +13,13 @@ export const useUsers = (filter: UsersFilter) =>
     queryFn: () => usersApi.list(filter),
     placeholderData: keepPreviousData,
   });
+
+export function useCreateUser() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: usersApi.create,
+    onSuccess: () => client.invalidateQueries({ queryKey: ['admin', 'users'] }),
+  });
+}
+
+export const useIssueActivation = () => useMutation({ mutationFn: usersApi.issueActivation });
