@@ -98,6 +98,7 @@ describe.skipIf(!process.env.DATABASE_URL)('lesson files', () => {
           bodyRevision: 2,
           status: 'draft',
         });
+        expect(response.body.warnings).toEqual([]);
       });
     });
 
@@ -115,6 +116,30 @@ describe.skipIf(!process.env.DATABASE_URL)('lesson files', () => {
         expect(response.body.lesson.source).toBe('pdf');
         expect(response.body.lesson.body).toContain('č ć š đ ž Č Ć Š Đ Ž');
         expect(response.body.lesson.body).toContain('Фотосинтеза је процес у којем');
+        expect(response.body.warnings).toEqual([]);
+      });
+    });
+
+    it('warns that the pictures of a PDF are not in the text', async () => {
+      await inApi(async (api) => {
+        const w = await setup(api);
+        const id = await draft(api, w, { body: '' });
+        const file = makePdf(
+          [['Prva stranica ima dovoljno teksta.'], ['Druga stranica ima teksta.']],
+          {
+            imagesPerPage: 2,
+          },
+        );
+
+        const response = await w.teacher.postFile(`/lessons/${id}/source`, file, {
+          type: 'application/pdf',
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.body.warnings).toEqual([{ code: 'images_not_included', count: 4 }]);
+        expect(response.body.lesson.body).toBe(
+          'Prva stranica ima dovoljno teksta.\n\nDruga stranica ima teksta.',
+        );
       });
     });
 

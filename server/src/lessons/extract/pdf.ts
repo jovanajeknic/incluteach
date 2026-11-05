@@ -1,7 +1,8 @@
-import { extractText, getDocumentProxy } from 'unpdf';
+import { extractText, getDocumentProxy, getResolvedPDFJS } from 'unpdf';
+import type { PDFDocumentProxy } from 'unpdf/pdfjs';
 
 import { HttpError } from '../../http/errors.ts';
-import { joinWrappedLines, normalizeText } from './text.ts';
+import { joinWrappedLines, normalizeText, removePageNumber } from './text.ts';
 
 // Reading a very long PDF takes long and its text would be far over the limit anyway.
 export const MAX_PDF_PAGES = 100;
@@ -16,15 +17,51 @@ const unreadable = () =>
     'The PDF could not be read. It may be damaged or protected with a password.',
   );
 
-// The text of a PDF, with the lines of a paragraph joined. A PDF made of pictures of pages (a
-// scan) has no text to read; that is reported as `no_text_in_file`, because turning pictures
-// into text (OCR) is not supported.
-export async function pdfToText(data: Uint8Array): Promise<string> {
+// How many pictures (graphs, photos, screenshots, tables drawn as pictures) the pages show.
+// They are not part of the text, so the teacher is told how many were left out. A count that
+// cannot be made is not worth failing the whole file for.
+async function countImages(pdf: PDFDocumentProxy): Promise<number> {
+  try {
+    const { OPS } = await getResolvedPDFJS();
+    const imageOperations = new Set<number>(
+      [
+        OPS.paintImageXObject,
+        OPS.paintInlineImageXObject,
+        OPS.paintImageMaskXObject,
+        OPS.paintImageXObjectRepeat,
+        OPS.paintImageMaskXObjectRepeat,
+        OPS.paintImageMaskXObjectGroup,
+      ].filter((operation): operation is number => typeof operation === 'number'),
+    );
+
+    let count = 0;
+    for (let number = 1; number <= pdf.numPages; number += 1) {
+      const page = await pdf.getPage(number);
+      const { fnArray } = await page.getOperatorList();
+      count += fnArray.filter((operation) => imageOperations.has(operation)).length;
+    }
+    return count;
+  } catch {
+    return 0;
+  }
+}
+
+export interface PdfContent {
+  text: string;
+  // The number of pictures that are not in the text.
+  imageCount: number;
+}
+
+// The text of a PDF, with the lines of a paragraph joined and the page numbers left out. A PDF
+// made of pictures of pages (a scan) has no text to read; that is reported as
+// `no_text_in_file`, because turning pictures into text (OCR) is not supported.
+export async function readPdf(data: Uint8Array): Promise<PdfContent> {
   // The reader may keep the array it is given, so it gets its own copy.
   const copy = new Uint8Array(data);
 
   const work = (async () => {
-    const pdf = await getDocumentProxy(copy);
+    // Verbosity 0 keeps the reader from printing a warning for every font it does not know.
+    const pdf = await getDocumentProxy(copy, { verbosity: 0 });
     if (pdf.numPages > MAX_PDF_PAGES) {
       throw new HttpError(
         422,
@@ -33,7 +70,7 @@ export async function pdfToText(data: Uint8Array): Promise<string> {
       );
     }
     const { text } = await extractText(pdf, { mergePages: false });
-    return text;
+    return { pages: text, imageCount: await countImages(pdf) };
   })();
 
   let timer: NodeJS.Timeout | undefined;
@@ -42,8 +79,9 @@ export async function pdfToText(data: Uint8Array): Promise<string> {
   });
 
   let pages: string[];
+  let imageCount: number;
   try {
-    pages = await Promise.race([work, timeout]);
+    ({ pages, imageCount } = await Promise.race([work, timeout]));
   } catch (error) {
     if (error instanceof HttpError) {
       throw error;
@@ -54,7 +92,9 @@ export async function pdfToText(data: Uint8Array): Promise<string> {
   }
 
   const text = normalizeText(
-    pages.map((page) => joinWrappedLines(normalizeText(page))).join('\n\n'),
+    pages
+      .map((page, index) => joinWrappedLines(removePageNumber(normalizeText(page), index + 1)))
+      .join('\n\n'),
   );
   const letters = text.replace(/\s/g, '').length;
   if (letters < MIN_CHARACTERS_PER_PAGE * Math.max(pages.length, 1)) {
@@ -64,5 +104,9 @@ export async function pdfToText(data: Uint8Array): Promise<string> {
       'This PDF is a picture of pages and has no text to read. Send a Word file or paste the text.',
     );
   }
-  return text;
+  return { text, imageCount };
+}
+
+export async function pdfToText(data: Uint8Array): Promise<string> {
+  return (await readPdf(data)).text;
 }

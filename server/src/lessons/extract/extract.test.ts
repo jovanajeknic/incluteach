@@ -7,8 +7,8 @@ import { describe, expect, it } from 'vitest';
 import { MAX_BODY_LENGTH } from '../limits.ts';
 import { docxToText, documentXmlToText, MAX_DOCUMENT_XML_BYTES } from './docx.ts';
 import { detectFileKind, extractLessonText } from './index.ts';
-import { pdfToText } from './pdf.ts';
-import { joinWrappedLines, normalizeText } from './text.ts';
+import { pdfToText, readPdf } from './pdf.ts';
+import { joinWrappedLines, normalizeText, removePageNumber } from './text.ts';
 import { documentXml, makeDocx, makeOtherZip, makePdf, wordParagraph } from './testFiles.ts';
 
 const rejection = async (run: () => unknown) =>
@@ -36,6 +36,51 @@ describe('normalizeText', () => {
 
   it('removes the NUL character', () => {
     expect(normalizeText(`a${String.fromCharCode(0)}b`)).toBe('ab');
+  });
+
+  it('turns the dots of a table of contents into a space, but keeps an ellipsis', () => {
+    expect(normalizeText('Uvod ........................ 2\nI onda...\n.......\nKraj')).toBe(
+      'Uvod 2\nI onda...\n\nKraj',
+    );
+  });
+
+  it('turns the bullet of a symbol font into a bullet, and drops it elsewhere', () => {
+    expect(normalizeText('\uF0B7 Prva stavka\n\uF0B7Druga stavka\nTekst\uF0B7 u sredini')).toBe(
+      '\u2022 Prva stavka\n\u2022 Druga stavka\nTekst u sredini',
+    );
+  });
+});
+
+describe('removePageNumber', () => {
+  const page = (...lines: string[]) => lines.join('\n');
+
+  it('removes the number of the page from the end of it', () => {
+    expect(removePageNumber(page('Tekst stranice.', '12'), 12)).toBe('Tekst stranice.');
+  });
+
+  it('removes it from the start of the page, and when the numbering is off by one', () => {
+    expect(removePageNumber(page('3', 'Tekst stranice.'), 4)).toBe('Tekst stranice.');
+    expect(removePageNumber(page('Tekst stranice.', '5', ''), 4)).toBe('Tekst stranice.\n');
+  });
+
+  it('keeps a number that is not close to the number of the page', () => {
+    expect(removePageNumber(page('Tekst stranice.', '1999'), 3)).toBe(
+      page('Tekst stranice.', '1999'),
+    );
+  });
+
+  it('keeps a number in the middle of a page, and numbers with other text', () => {
+    expect(removePageNumber(page('Prvi red', '3', 'Treći red'), 3)).toBe(
+      page('Prvi red', '3', 'Treći red'),
+    );
+    expect(removePageNumber(page('Tekst stranice.', 'Strana 3'), 3)).toBe(
+      page('Tekst stranice.', 'Strana 3'),
+    );
+  });
+
+  it('removes only one number, and leaves an empty page alone', () => {
+    expect(removePageNumber(page('1', 'Tekst', '2'), 2)).toBe(page('1', 'Tekst'));
+    expect(removePageNumber('', 1)).toBe('');
   });
 });
 
@@ -76,8 +121,70 @@ describe('joinWrappedLines', () => {
     );
   });
 
-  it('does not join a line that ends with a hyphen, which may be a real one', () => {
+  it('does not join a short line that ends with a hyphen, which may be a real one', () => {
     expect(joinWrappedLines('ugljen-\ndioksid')).toBe('ugljen-\ndioksid');
+  });
+
+  it('joins a word cut at a hyphen at the end of a long line, and keeps the hyphen', () => {
+    expect(
+      joinWrappedLines('Koristi se hi-kvadrat test i drugi testovi nezavisnosti hi-\nkvadrat test'),
+    ).toBe('Koristi se hi-kvadrat test i drugi testovi nezavisnosti hi-kvadrat test');
+  });
+
+  it('joins the short lines of a text in a narrow column', () => {
+    expect(
+      joinWrappedLines(
+        'Analizom grafika može\nse primijetiti da\nenergija i glasnoća\nrastu kroz decenije.',
+      ),
+    ).toBe('Analizom grafika može se primijetiti da energija i glasnoća rastu kroz decenije.');
+  });
+
+  it('joins a line with one that continues it with a number', () => {
+    expect(joinWrappedLines('Muzika je bila tmurnija u\n1940-tim godinama.')).toBe(
+      'Muzika je bila tmurnija u 1940-tim godinama.',
+    );
+  });
+
+  it('joins a line cut after a year that is followed by a word', () => {
+    expect(
+      joinWrappedLines('Rast se vidi na kraju perioda, oko 2010–2020.\ngodine, kao trend.'),
+    ).toBe('Rast se vidi na kraju perioda, oko 2010–2020. godine, kao trend.');
+  });
+
+  it('joins a line cut after a bracket or a quote that did not end the sentence', () => {
+    expect(joinWrappedLines('Većina pjesama (oko 75%)\ni izvođača ima nisku popularnost.')).toBe(
+      'Većina pjesama (oko 75%) i izvođača ima nisku popularnost.',
+    );
+    expect(
+      joinWrappedLines('Medijana je veća u grupi „Da“ (0.48) u odnosu na grupu „Ne“\n(0.26).'),
+    ).toBe('Medijana je veća u grupi „Da“ (0.48) u odnosu na grupu „Ne“ (0.26).');
+    expect(joinWrappedLines('Prosječna popularnost je mala u grupi\n“explicit” pjesama.')).toBe(
+      'Prosječna popularnost je mala u grupi “explicit” pjesama.',
+    );
+  });
+
+  it('keeps a sentence that ends with a bracket or a quote after a full stop', () => {
+    expect(joinWrappedLines('Ovo je cijela rečenica o fotosintezi (vidi sliku.)\nnastavak')).toBe(
+      'Ovo je cijela rečenica o fotosintezi (vidi sliku.)\nnastavak',
+    );
+  });
+
+  it('does not join a short line to a line that starts with a bracket', () => {
+    expect(joinWrappedLines('Naslov poglavlja\n(vidi sliku)')).toBe(
+      'Naslov poglavlja\n(vidi sliku)',
+    );
+  });
+
+  it('does not join a numbered list item to the line before it', () => {
+    expect(joinWrappedLines('Koraci postupka su sljedeći\n1. Prvi korak.')).toBe(
+      'Koraci postupka su sljedeći\n1. Prvi korak.',
+    );
+  });
+
+  it('does not join a lone word to a short line, which starts a list', () => {
+    expect(joinWrappedLines('Najvažnije varijable su\nenergy\nloudness')).toBe(
+      'Najvažnije varijable su\nenergy\nloudness',
+    );
   });
 
   it('does not join across an empty line', () => {
@@ -236,6 +343,32 @@ describe('pdfToText', () => {
     );
   });
 
+  it('leaves out the page numbers', async () => {
+    const pdf = makePdf([
+      ['Prva stranica ima dovoljno teksta da se prepozna.', '1'],
+      ['Druga stranica takodje ima dovoljno teksta za citanje.', '2'],
+    ]);
+
+    expect(await pdfToText(pdf)).toBe(
+      'Prva stranica ima dovoljno teksta da se prepozna.\n\nDruga stranica takodje ima dovoljno teksta za citanje.',
+    );
+  });
+
+  it('counts the pictures that are not in the text', async () => {
+    const pdf = makePdf(
+      [['Prva stranica ima dovoljno teksta.'], ['Druga stranica ima dovoljno teksta.']],
+      {
+        imagesPerPage: 2,
+      },
+    );
+
+    const { imageCount, text } = await readPdf(pdf);
+
+    expect(imageCount).toBe(4);
+    expect(text).toBe('Prva stranica ima dovoljno teksta.\n\nDruga stranica ima dovoljno teksta.');
+    expect((await readPdf(makePdf([['Samo tekst na ovoj jedinoj stranici.']]))).imageCount).toBe(0);
+  });
+
   it('says that a PDF made of empty pages (a scan) has no text', async () => {
     const error = await rejection(() => pdfToText(makePdf([null, null])));
 
@@ -290,6 +423,7 @@ describe('extractLessonText', () => {
     expect(await extractLessonText(makeDocx(wordParagraph('Biljke prave hranu.')))).toEqual({
       text: 'Biljke prave hranu.',
       source: 'docx',
+      imageCount: 0,
     });
   });
 
@@ -300,6 +434,15 @@ describe('extractLessonText', () => {
 
     expect(result.source).toBe('pdf');
     expect(result.text).toBe('Jedna stranica sa dovoljno teksta za citanje.');
+    expect(result.imageCount).toBe(0);
+  });
+
+  it('tells how many pictures of a PDF are left out', async () => {
+    const result = await extractLessonText(
+      makePdf([['Jedna stranica sa dovoljno teksta za citanje.']], { imagesPerPage: 3 }),
+    );
+
+    expect(result.imageCount).toBe(3);
   });
 
   it.each([

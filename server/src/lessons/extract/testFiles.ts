@@ -33,7 +33,11 @@ export function makeOtherZip(): Buffer {
 
 // A PDF with one page per entry. Each entry is the lines of text on that page, or null for a
 // page with nothing on it (like a scan). Text is plain ASCII, in the standard Helvetica font.
-export function makePdf(pages: (string[] | null)[]): Buffer {
+// `imagesPerPage` puts that many tiny pictures on every page that has text.
+export function makePdf(
+  pages: (string[] | null)[],
+  { imagesPerPage = 0 }: { imagesPerPage?: number } = {},
+): Buffer {
   const objects: string[] = [];
   const add = (body: string) => objects.push(body) && objects.length;
 
@@ -48,7 +52,9 @@ export function makePdf(pages: (string[] | null)[]): Buffer {
       const stream =
         'BT /F1 12 Tf 14 TL 40 700 Td ' +
         lines.map((line) => `(${line.replace(/[()\\]/g, '\\$&')}) Tj T*`).join(' ') +
-        ' ET';
+        ' ET' +
+        // A picture of one grey dot, drawn as an inline image.
+        ' q 10 0 0 10 40 600 cm BI /W 1 /H 1 /CS /G /BPC 8 ID \x80 EI Q'.repeat(imagesPerPage);
       contents = ` /Contents ${add(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`)} 0 R`;
     }
     pageNumbers.push(

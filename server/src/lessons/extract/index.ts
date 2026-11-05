@@ -1,13 +1,16 @@
 import { HttpError } from '../../http/errors.ts';
 import { MAX_BODY_LENGTH } from '../limits.ts';
 import { docxToText } from './docx.ts';
-import { pdfToText } from './pdf.ts';
+import { readPdf } from './pdf.ts';
 
 export type FileKind = 'pdf' | 'docx';
 
 export interface ExtractedLesson {
   text: string;
   source: FileKind;
+  // How many pictures were in the file. They are not in the text. Only a PDF is counted for
+  // now; for a Word file this is always 0.
+  imageCount: number;
 }
 
 const unsupported = (message: string) => new HttpError(415, 'unsupported_file', message);
@@ -50,13 +53,14 @@ export async function extractLessonText(data: Uint8Array): Promise<ExtractedLess
 
   let result: ExtractedLesson;
   if (kind === 'pdf') {
-    result = { text: await pdfToText(data), source: 'pdf' };
+    const pdf = await readPdf(data);
+    result = { text: pdf.text, source: 'pdf', imageCount: pdf.imageCount };
   } else if (kind === 'zip') {
     const text = docxToText(data);
     if (text === null) {
       throw unsupported('Only Word (.docx) and PDF files can be used.');
     }
-    result = { text, source: 'docx' };
+    result = { text, source: 'docx', imageCount: 0 };
   } else if (kind === 'old-office') {
     throw unsupported(
       'This is an old Word file (.doc). Open it in Word and save it as .docx, then send it again.',

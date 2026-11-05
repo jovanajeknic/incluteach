@@ -180,7 +180,8 @@ export function lessonsRouter(pool: Queryable, generation: GenerationOptions): R
   // Fills the lesson with the text of a Word (.docx) or PDF file. The body of the request is
   // the file itself (at most 10 MB); the name can be sent in the X-File-Name header, written
   // with encodeURIComponent. The type is found out from the content. The text replaces what
-  // the lesson had; the teacher reads and corrects it afterwards.
+  // the lesson had; the teacher reads and corrects it afterwards. `warnings` says what is not
+  // in the text, such as the pictures of a PDF.
   router.post('/:id/source', requireRole('teacher'), fileBody, async (req, res) => {
     const lessonId = readLessonId(req.params.id);
     const file: unknown = req.body;
@@ -188,7 +189,7 @@ export function lessonsRouter(pool: Queryable, generation: GenerationOptions): R
       throw new HttpError(400, 'invalid_request', 'Send the file as the body of the request.');
     }
 
-    const { text, source } = await extractLessonText(file);
+    const { text, source, imageCount } = await extractLessonText(file);
     const lesson = await setBodyFromFile(pool, {
       user: getUser(req),
       lessonId,
@@ -196,7 +197,9 @@ export function lessonsRouter(pool: Queryable, generation: GenerationOptions): R
       source,
       fileName: readFileName(req.get('x-file-name')),
     });
-    res.json({ lesson });
+    // Things the teacher should know about the file, as codes the screen turns into a message.
+    const warnings = imageCount > 0 ? [{ code: 'images_not_included', count: imageCount }] : [];
+    res.json({ lesson, warnings });
   });
 
   // Asks the AI to make a summary and/or a quiz from the text of the lesson. Answers 202 at
