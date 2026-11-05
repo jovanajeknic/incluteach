@@ -1,4 +1,4 @@
-import type { Subject, SubjectColor, SubjectIcon } from '@/features/student/types';
+import type { Subject, SubjectColor, SubjectIcon } from '@/shared/visual/subjectTypes';
 
 const COLORS: readonly SubjectColor[] = ['mint', 'blush', 'butter', 'lilac', 'sky', 'pistachio'];
 

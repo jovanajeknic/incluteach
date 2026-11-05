@@ -4,5 +4,7 @@ export { ChildJoinPage } from '@/features/parent/pages/ChildJoinPage';
 export { ChildLessonPage } from '@/features/parent/pages/ChildLessonPage';
 export { ChildPage } from '@/features/parent/pages/ChildPage';
 export { ChildSubjectPage } from '@/features/parent/pages/ChildSubjectPage';
+export { ParentConversationPage } from '@/features/parent/pages/ParentConversationPage';
 export { ParentHomePage } from '@/features/parent/pages/ParentHomePage';
+export { ParentMessagesPage } from '@/features/parent/pages/ParentMessagesPage';
 export { ParentRequestsPage } from '@/features/parent/pages/ParentRequestsPage';

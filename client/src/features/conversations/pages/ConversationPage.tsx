@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeftIcon, PaperPlaneTiltIcon } from '@phosphor-icons/react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Link, useParams } from 'react-router';
 import { z } from 'zod';
@@ -28,9 +28,48 @@ type MessageValues = z.output<typeof messageSchema>;
 
 const dateTime = new Intl.DateTimeFormat('sr-Latn-ME', { dateStyle: 'medium', timeStyle: 'short' });
 
-/** The conversation of the parents of one student with the teacher of one subject. */
+/** The teacher's way into the conversation: from the page of the student. */
 export function ConversationPage() {
   const { subjectId = '', studentId = '' } = useParams();
+
+  return (
+    <ConversationView
+      audience="teacher"
+      subjectId={subjectId}
+      studentId={studentId}
+      back={<BackLink to={subjectStudentPath(subjectId, studentId)}>{t.back}</BackLink>}
+    />
+  );
+}
+
+/** A link back, in the style of the page. */
+export function BackLink({ to, children }: { to: string; children: ReactNode }) {
+  return (
+    <Link
+      to={to}
+      className="inline-flex items-center gap-1.5 rounded-full font-display font-medium text-ink-soft hover:text-forest"
+    >
+      <ArrowLeftIcon aria-hidden="true" weight="bold" className="size-4" />
+      {children}
+    </Link>
+  );
+}
+
+interface ConversationViewProps {
+  /** Who is looking: it changes the words about who else can read the conversation. */
+  audience: 'teacher' | 'parent';
+  subjectId: string;
+  studentId: string;
+  /** The link back at the top. */
+  back: ReactNode;
+}
+
+/**
+ * The conversation of the parents of one student with the teacher of one subject. The teacher and
+ * every parent of the child see the same messages and write in them; the child does not see it.
+ */
+export function ConversationView({ audience, subjectId, studentId, back }: ConversationViewProps) {
+  const copy = audience === 'parent' ? text.guardian.conversation : t;
   const conversation = useConversation(subjectId, studentId);
 
   if (conversation.isPending) return <LoadingState label={text.teacher.load.loading} />;
@@ -42,8 +81,8 @@ export function ConversationPage() {
     if (!missing) return <ErrorState onRetry={() => void conversation.refetch()} />;
     return (
       <>
-        <title>{text.app.pageTitle(t.notFoundTitle)}</title>
-        <MessagePage title={t.notFoundTitle} description={t.notFoundDescription} />
+        <title>{text.app.pageTitle(copy.notFoundTitle)}</title>
+        <MessagePage title={copy.notFoundTitle} description={copy.notFoundDescription} />
       </>
     );
   }
@@ -52,22 +91,16 @@ export function ConversationPage() {
 
   return (
     <>
-      <title>{text.app.pageTitle(t.pageTitle(student.fullName))}</title>
-      <Link
-        to={subjectStudentPath(subjectId, studentId)}
-        className="inline-flex items-center gap-1.5 rounded-full font-display font-medium text-ink-soft hover:text-forest"
-      >
-        <ArrowLeftIcon aria-hidden="true" weight="bold" className="size-4" />
-        {t.back}
-      </Link>
+      <title>{text.app.pageTitle(copy.pageTitle(student.fullName))}</title>
+      {back}
 
       <h1 className="mt-5 font-display text-4xl font-semibold tracking-tight text-ink">
-        {t.heading}
+        {copy.heading}
       </h1>
       <p className="mt-1 font-display text-lg font-medium text-ink-soft">
-        {t.about(student.fullName, subject.name)}
+        {copy.about(student.fullName, subject.name)}
       </p>
-      <p className="mt-3 max-w-2xl text-ink-soft">{t.privacy}</p>
+      <p className="mt-3 max-w-2xl text-ink-soft">{copy.privacy}</p>
 
       <MessageList messages={messages} total={total} />
       <WriteMessage subjectId={subjectId} studentId={studentId} />

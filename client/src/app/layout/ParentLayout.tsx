@@ -1,6 +1,6 @@
-import { HandshakeIcon, UsersThreeIcon } from '@phosphor-icons/react';
+import { ChatsCircleIcon, HandshakeIcon, UsersThreeIcon } from '@phosphor-icons/react';
 import { useSession } from '@/features/auth/api/session';
-import { parentHomePath, parentRequestsPath } from '@/features/parent/paths';
+import { parentHomePath, parentMessagesPath, parentRequestsPath } from '@/features/parent/paths';
 import { useWaitingRequests } from '@/features/subject-requests/api/queries';
 import { initialsOfName } from '@/shared/lib/format';
 import { text } from '@/text/sr-Latn';
@@ -29,6 +29,12 @@ export function ParentLayout() {
           icon: HandshakeIcon,
           tone: 'bg-mint text-mint-ink',
           count: { value: waiting, label: t.nav.requestsLabel },
+        },
+        {
+          to: parentMessagesPath,
+          label: t.nav.messages,
+          icon: ChatsCircleIcon,
+          tone: 'bg-blush text-blush-ink',
         },
       ]}
       person={{

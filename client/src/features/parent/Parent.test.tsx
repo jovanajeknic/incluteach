@@ -115,7 +115,7 @@ describe('Moja djeca', () => {
       within(menu)
         .getAllByRole('link')
         .map((link) => link.textContent),
-    ).toEqual(['Moja djeca', 'Zahtjevi']);
+    ).toEqual(['Moja djeca', 'Zahtjevi', 'Poruke']);
     expect(screen.getByText('Petar Marković')).toBeInTheDocument();
     expect(screen.getByText(/petar_markovic/)).toBeInTheDocument();
   });

@@ -127,6 +127,14 @@ export const routes: RouteObject[] = [
                 lazy: fromArea(parentArea, (area) => area.ParentRequestsPage),
               },
               {
+                path: 'messages',
+                lazy: fromArea(parentArea, (area) => area.ParentMessagesPage),
+              },
+              {
+                path: 'children/:childId/subjects/:subjectId/conversation',
+                lazy: fromArea(parentArea, (area) => area.ParentConversationPage),
+              },
+              {
                 path: 'children/:childId/join',
                 lazy: fromArea(parentArea, (area) => area.ChildJoinPage),
               },

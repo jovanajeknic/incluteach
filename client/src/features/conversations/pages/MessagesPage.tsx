@@ -7,9 +7,31 @@ import { formatDate } from '@/shared/lib/format';
 import { text } from '@/text/sr-Latn';
 import { useInbox } from '../api/queries';
 
-/** "Poruke": every conversation that has a message, the one with the newest message first. */
+/** "Poruke" of the teacher: every conversation that has a message, the newest first. */
 export function MessagesPage() {
-  const t = text.teacher.messages;
+  return <MessagesInbox copy={text.teacher.messages} hrefFor={conversationPath} />;
+}
+
+/** The words of an inbox: the teacher and a parent each have their own. */
+interface InboxCopy {
+  pageTitle: string;
+  heading: string;
+  intro: string;
+  empty: string;
+  about: (student: string, subject: string) => string;
+  count: (count: number) => string;
+  lastFrom: (name: string, body: string) => string;
+  open: (student: string, subject: string) => string;
+}
+
+interface MessagesInboxProps {
+  copy: InboxCopy;
+  /** Where a conversation opens, from the subject and the student it is about. */
+  hrefFor: (subjectId: string, studentId: string) => string;
+}
+
+/** Every conversation that has a message, the one with the newest message first. */
+export function MessagesInbox({ copy: t, hrefFor }: MessagesInboxProps) {
   const inbox = useInbox();
 
   return (
@@ -29,7 +51,7 @@ export function MessagesPage() {
           {inbox.data.conversations.map(({ student, subject, messageCount, lastMessage }) => (
             <li key={`${subject.id}-${student.id}`}>
               <Link
-                to={conversationPath(subject.id, student.id)}
+                to={hrefFor(subject.id, student.id)}
                 aria-label={t.open(student.fullName, subject.name)}
                 className="group flex items-center gap-4 rounded-3xl bg-card px-5 py-4 shadow-soft transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-lifted"
               >

@@ -1,4 +1,4 @@
-import { ArrowLeftIcon } from '@phosphor-icons/react';
+import { ArrowLeftIcon, ChatsCircleIcon } from '@phosphor-icons/react';
 import { Link, useParams } from 'react-router';
 import { useMyRequests } from '@/features/student/api/queries';
 import { SubjectOverview } from '@/features/student/components/SubjectOverview';
@@ -8,7 +8,7 @@ import { MessagePage } from '@/shared/components/MessagePage';
 import { Button } from '@/shared/ui/button';
 import { text } from '@/text/sr-Latn';
 import { ChildGate } from '../components/ChildGate';
-import { childLessonPath, childPath } from '../paths';
+import { childConversationPath, childLessonPath, childPath } from '../paths';
 
 const t = text.guardian.subject;
 
@@ -67,6 +67,14 @@ function Subject({
         <ArrowLeftIcon aria-hidden="true" weight="bold" className="size-4" />
         {t.back(name)}
       </Link>
+      <div className="mt-4">
+        <Button asChild variant="outline" size="lg">
+          <Link to={childConversationPath(childId, subjectId)}>
+            <ChatsCircleIcon aria-hidden="true" weight="bold" />
+            {text.guardian.conversation.open}
+          </Link>
+        </Button>
+      </div>
       <SubjectOverview
         subject={enrollment.subject}
         studentId={childId}

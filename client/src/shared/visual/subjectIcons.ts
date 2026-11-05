@@ -6,7 +6,7 @@ import {
   PaletteIcon,
   type Icon,
 } from '@phosphor-icons/react';
-import type { SubjectColor, SubjectIcon } from '@/features/student/types';
+import type { SubjectColor, SubjectIcon } from '@/shared/visual/subjectTypes';
 
 /** Teacher-area subject icons (Phosphor, used with the duotone weight). */
 export const teacherSubjectIcons: Record<SubjectIcon, Icon> = {

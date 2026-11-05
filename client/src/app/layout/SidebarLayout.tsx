@@ -30,8 +30,6 @@ interface SidebarLayoutProps {
   /** One highlighted action under the navigation, e.g. "Dodaj lekciju". */
   action?: { to: string; label: string; icon: Icon };
   person: { name: string; initials: string; role: string; badge: string };
-  /** A note that the data is invented; left out where the data is real. */
-  demoNotice?: string;
 }
 
 /**
@@ -40,13 +38,7 @@ interface SidebarLayoutProps {
  * bar on phones. The current page is joined to the content by a curved tab, so the sidebar
  * and the page read as one surface.
  */
-export function SidebarLayout({
-  navLabel,
-  navItems,
-  action,
-  person,
-  demoNotice,
-}: SidebarLayoutProps) {
+export function SidebarLayout({ navLabel, navItems, action, person }: SidebarLayoutProps) {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const navId = useId();
@@ -176,9 +168,6 @@ export function SidebarLayout({
                 <p role="alert" className="mt-2 text-sm font-medium text-destructive">
                   {text.session.signOutFailed}
                 </p>
-              )}
-              {demoNotice && (
-                <p className="mt-4 text-xs leading-relaxed text-ink-soft">{demoNotice}</p>
               )}
             </div>
           </div>

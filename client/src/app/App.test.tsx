@@ -1,9 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
-import { DemoParentProvider } from '@/features/parent/data/DemoParentProvider';
-import { DemoSchoolProvider } from '@/features/school/DemoSchoolProvider';
-import { DemoStudentProvider } from '@/features/student/data/DemoStudentProvider';
 import { describe, expect, it } from 'vitest';
 import { createQueryClient, SESSION_QUERY_KEY } from '@/shared/api/queryClient';
 import { testUsers } from '@/test/authFixtures';
@@ -66,13 +63,7 @@ describe('Code splitting', () => {
     queryClient.setQueryData(SESSION_QUERY_KEY, testUsers[role]);
     render(
       <QueryClientProvider client={queryClient}>
-        <DemoSchoolProvider aiDelayMs={0}>
-          <DemoStudentProvider>
-            <DemoParentProvider>
-              <RouterProvider router={router} />
-            </DemoParentProvider>
-          </DemoStudentProvider>
-        </DemoSchoolProvider>
+        <RouterProvider router={router} />
       </QueryClientProvider>,
     );
     expect(await screen.findByRole('heading', { level: 1, name: heading })).toBeInTheDocument();

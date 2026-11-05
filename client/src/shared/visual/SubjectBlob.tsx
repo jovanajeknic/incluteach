@@ -1,4 +1,4 @@
-import type { Subject } from '@/features/student/types';
+import type { Subject } from '@/shared/visual/subjectTypes';
 import { cn } from '@/shared/lib/utils';
 import { blobShape, subjectTheme, teacherSubjectIcons } from './subjectIcons';
 

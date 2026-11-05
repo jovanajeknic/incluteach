@@ -203,11 +203,8 @@ export const text = {
   },
 
   student: {
-    demoNotice:
-      'Demo verzija sa izmišljenim podacima. Napredak se ne čuva nakon osvježavanja stranice.',
     profile: {
       role: 'Učenik',
-      badge: 'Demo profil',
     },
     nav: {
       label: 'Učenička navigacija',
@@ -649,6 +646,35 @@ export const text = {
     stars: {
       empty: 'Dijete još nema zvjezdica.',
     },
+    conversation: {
+      pageTitle: (student: string) => `Razgovor · ${student}`,
+      heading: 'Razgovor sa nastavnikom',
+      back: (subject: string) => `Nazad na predmet: ${subject}`,
+      open: 'Razgovor sa nastavnikom',
+      about: (student: string, subject: string) => `${student} · ${subject}`,
+      privacy:
+        'Ovaj razgovor vide nastavnik predmeta i svi roditelji ovog djeteta. Dijete ga ne vidi. Poruke se ne mogu mijenjati ni brisati.',
+      notFoundTitle: 'Razgovor nije pronađen',
+      notFoundDescription: 'Dijete nije upisano na ovaj predmet.',
+    },
+    messages: {
+      pageTitle: 'Poruke',
+      heading: 'Poruke',
+      intro:
+        'Razgovori sa nastavnicima o tvojoj djeci, po djetetu i predmetu. Razgovor vide nastavnik i svi roditelji tog djeteta, a dijete ne vidi.',
+      empty:
+        'Još nema razgovora. Počni ga sa stranice predmeta svog djeteta, dugmetom „Razgovor sa nastavnikom“.',
+      about: (student: string, subject: string) => `${student} · ${subject}`,
+      count: (count: number) => {
+        const last = count % 10;
+        const lastTwo = count % 100;
+        if (last === 1 && lastTwo !== 11) return `${count} poruka`;
+        if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) return `${count} poruke`;
+        return `${count} poruka`;
+      },
+      lastFrom: (name: string, body: string) => `${name}: ${body}`,
+      open: (student: string, subject: string) => `Otvori razgovor: ${student}, ${subject}`,
+    },
     lesson: {
       notFoundTitle: 'Lekcija nije pronađena',
       notFoundDescription: 'Ove lekcije nema, ili je ne možeš vidjeti.',
@@ -681,108 +707,6 @@ export const text = {
       notFoundTitle: 'Predmet nije pronađen',
       notFoundDescription: 'Dijete nije upisano na ovaj predmet.',
     },
-  },
-
-  parent: {
-    demoNotice:
-      'Demo verzija sa izmišljenim podacima. Prijedlozi se ne šalju stvarno i gube se osvježavanjem stranice.',
-    profile: {
-      role: 'Roditelj',
-      badge: 'Demo profil',
-    },
-    nav: {
-      label: 'Roditeljska navigacija',
-      children: 'Moja djeca',
-      suggestions: 'Moji prijedlozi',
-    },
-    home: {
-      pageTitle: 'Moja djeca',
-      greeting: (name: string) => `Dobro došli, ${name}`,
-      heading: 'Moja djeca',
-      childrenHeading: 'Povezana djeca',
-      classLabel: (name: string) => `Odjeljenje ${name}`,
-    },
-    stats: {
-      lessons: 'Pređene lekcije',
-      quizzes: 'Urađeni kvizovi',
-      stars: 'Zvjezdice',
-      toRepeat: 'Pitanja za ponavljanje',
-      ofTotal: (done: number, total: number) => `${done} od ${total}`,
-    },
-    child: {
-      backToChildren: 'Moja djeca',
-      progressHeading: 'Napredak',
-      toRepeatHeading: 'Za ponavljanje kod kuće',
-      toRepeatIntro: 'Na ovim pitanjima prvi odgovor nije bio tačan:',
-      lessonsHeading: 'Lekcije po predmetima',
-      quizDone: 'kviz urađen',
-      profileHeading: 'Koje verzije lekcija dobija',
-      profileIntro:
-        'Ovo je dogovoreno sa razrednim starešinom. Dijete ovo ne vidi. Ako mislite da nešto treba promijeniti, pošaljite prijedlog.',
-      audioYes: 'Dobija i audio zapis',
-      audioNo: 'Bez audio zapisa',
-      suggestChange: 'Predloži promjenu',
-      noLessons: 'U ovom predmetu još nema lekcija.',
-      forbiddenTitle: 'Nemate pristup',
-      forbiddenDescription: 'Ovo dijete nije povezano sa vašim nalogom.',
-    },
-    lesson: {
-      backToChild: (name: string) => name,
-      lessonDone: 'Označeno kao pređeno',
-      lessonNotDone: 'Još nije označeno kao pređeno',
-      versionHeading: (name: string) => `Lekcija kako je vidi ${name}`,
-      /** Parents agreed to these versions with the teacher, so naming them is fine here. */
-      versionNames: {
-        standard: 'Osnovna verzija',
-        shortened: 'Skraćena verzija',
-        easier: 'Verzija nižeg nivoa',
-        dyslexia: 'Verzija za lakše čitanje',
-        audio: 'Audio zapis',
-        illustrations: 'Ilustracije',
-      },
-      practiceHeading: 'Kviz',
-      practiceNotDone: 'Kviz još nije urađen.',
-      practiceDone: (date: string) => `Kviz je urađen ${date}`,
-      difficultHeading: 'Gdje je bilo teško',
-      difficultIntro: 'Na ovim pitanjima prvi odgovor nije bio tačan. Možete ih ponoviti zajedno:',
-      noDifficult: 'Sva pitanja su odgovorena tačno iz prvog pokušaja.',
-      homeHeading: 'Za rad kod kuće',
-      notFoundTitle: 'Lekcija nije pronađena',
-      notFoundDescription: 'Ova lekcija ne postoji ili nije dodijeljena vašem djetetu.',
-    },
-    suggestions: {
-      heading: 'Prijedlozi za prilagođavanje',
-      intro:
-        'Opišite šta vašem djetetu pomaže u učenju. Prijedlog prvo čita nastavnik, koji odlučuje kako će ga AI uzeti u obzir pri prilagođavanju lekcija.',
-      lessonIntro: 'Prijedlog će se odnositi na ovu lekciju.',
-      label: 'Vaš prijedlog',
-      hint: 'Na primjer: „Bolje razumije kad su rečenice kratke i kad ima primjer iz svakodnevnog života.“ Dijagnoza nije potrebna.',
-      privacy: 'Prijedlog vidi samo nastavnik. Dijete ga ne vidi.',
-      submit: 'Pošalji nastavniku',
-      required: 'Napišite prijedlog prije slanja.',
-      tooLong: (max: number) => `Prijedlog može imati najviše ${max} znakova.`,
-      demoSent:
-        'Prijedlog je zabilježen. Ovo je demo prikaz: ništa nije stvarno poslato nastavniku.',
-      listHeading: 'Vaši prijedlozi',
-      forLesson: (title: string) => `Lekcija: ${title}`,
-      general: 'Opšti prijedlog',
-    },
-    suggestionsPage: {
-      pageTitle: 'Moji prijedlozi',
-      heading: 'Moji prijedlozi',
-      intro: 'Šta ste predložili nastavniku i šta je nastavnik uradio sa prijedlogom.',
-      empty: 'Još niste poslali nijedan prijedlog.',
-      writeFor: (name: string) => `Napiši prijedlog za: ${name}`,
-    },
-  },
-
-  demo: {
-    notice:
-      'Demo verzija sa izmišljenim podacima. Izmjene se čuvaju samo dok je stranica otvorena i gube se osvježavanjem.',
-    profileName: 'Ana Marković',
-    profileInitials: 'AM',
-    profileRole: 'Nastavnica',
-    profileBadge: 'Demo profil',
   },
 
   nav: {
@@ -1216,23 +1140,6 @@ export const text = {
       deleteText: 'Lekcija će biti trajno obrisana, zajedno sa svime što joj pripada.',
       deleteYes: 'Da, obriši',
     },
-  },
-
-  lesson: {
-    statuses: {
-      draft: 'Nacrt',
-      processing: 'AI radi',
-      in_review: 'Čeka pregled',
-      approved: 'Odobrena',
-      assigned: 'Objavljena',
-    },
-    courseLabel: (subject: string, className: string) => `${subject} · ${className}`,
-  },
-
-  suggestionStatus: {
-    'pending-teacher': 'Čeka pregled nastavnika',
-    'use-for-adaptation': 'Nastavnik ga uzima u obzir pri prilagođavanju',
-    read: 'Nastavnik je pročitao',
   },
 
   notFound: {
