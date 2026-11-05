@@ -19,6 +19,7 @@ import { lessonsRouter } from './routes/lessons.ts';
 import { quizRouter } from './routes/quiz.ts';
 import { starsRouter } from './routes/stars.ts';
 import { parentLinksRouter } from './routes/parentLinks.ts';
+import { progressRouter } from './routes/progress.ts';
 import { subjectsRouter } from './routes/subjects.ts';
 import { usersRouter } from './routes/users.ts';
 
@@ -66,6 +67,8 @@ export function createApp({
   app.use('/auth', authRouter(pool, { secureCookies, passwordCost }));
   app.use('/users', usersRouter(pool, { publicUrl }));
   app.use('/classes', classesRouter(pool));
+  // Before the admin's subjects router, which lets nobody else through.
+  app.use('/subjects', progressRouter(pool));
   app.use('/subjects', subjectsRouter(pool));
   app.use('/parent-students', parentLinksRouter(pool));
   app.use('/catalog', catalogRouter(pool));

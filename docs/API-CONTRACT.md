@@ -597,6 +597,25 @@ A lesson belongs to a subject and holds the text of the teacher, as written. See
 - **Errors**: `403 forbidden` (student or admin).
 - **Used by (frontend)**: the list of conversations in the teacher's view, and "Poruke" for a parent.
 
+### GET /subjects/{id}/progress
+
+- **Status**: implemented
+- **Purpose**: how far one student got in one subject: finished lessons out of the published ones, and the stars.
+- **Who may call it**: `student` (their own, in a subject they joined), `parent` (one of their linked children), `teacher` of the subject (any student who joined it). The admin gets `403`.
+- **Request**: query `studentId`. A student leaves it out; a parent and a teacher must send it (`400 invalid_student` if missing, `400 invalid_request` if it is not an id).
+- **Success response**: `200 { student: { id, fullName }, subject: { id, name }, lessons: { published, completed }, stars: { automatic, teacher }, items }`. `items` is every published lesson of the subject, newest first, each `{ id, title, completed, completedAt }`, so a screen can show which are done. Only published lessons count: a lesson taken back to a draft leaves both numbers.
+- **Errors**: `400` as above, `403 forbidden` (a parent names a child that is not theirs, a student another student, or the admin), `404 not_found` (no such subject, the student has not joined it, or it is not this teacher's).
+- **Used by (frontend)**: the progress of the student in a subject (for example "4 od 7 lekcija" with a bar and the list of lessons), the same for a parent with the child chosen, and the detail of a student for the teacher.
+
+### GET /subjects/{id}/progress/students
+
+- **Status**: implemented
+- **Purpose**: the table for the teacher: every student who joined the subject, the one who got the furthest first.
+- **Who may call it**: `teacher` of the subject. Nobody else, so **only the teacher sees a ranking**; a student and a parent see only their own numbers.
+- **Success response**: `200 { subject: { id, name }, publishedLessons, students }`. Each student is `{ rank, student: { id, fullName }, completedLessons, stars: { automatic, teacher } }`. Order: more finished lessons first, then more stars (both kinds), then by name. Students who are equal in both share a `rank` (1, 2, 3, 3, 5). Students who are deactivated are not listed. A subject nobody joined gives `students: []`.
+- **Errors**: `403 forbidden` (not a teacher), `404 not_found` (not this teacher's subject).
+- **Used by (frontend)**: the teacher's table of a subject: rank, name, "3 / 7 lekcija", stars. A click opens that student's progress and conversation.
+
 ## Not defined yet
 
-Progress per subject, removing a student from a subject at the end of the year, copying classes and subjects to a new school year, changing one's own password, the school request form of the landing page.
+Removing a student from a subject at the end of the year, copying classes and subjects to a new school year, changing one's own password, the school request form of the landing page.

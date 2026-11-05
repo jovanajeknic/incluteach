@@ -19,7 +19,7 @@ Summary of the backend database work and the agreements behind it. Working rules
 | The student does the quiz: tries, answers with feedback, a 10 minute wait between tries, finishing a lesson, the history of tries for student, parent and teacher | Done |
 | Stars for effort: automatic ones for finishing a lesson, and ones from a teacher with a message | Done |
 | Conversations between the parents of a child and the teacher of a subject                  | Done |
-| Progress per subject                                                                       | Not started |
+| Progress per subject for the student, the parent and the teacher (a table with a ranking for the teacher only) | Done |
 | Not built yet, smaller: removing students from subjects at the end of a school year, copying classes and subjects to a new school year, changing one's own password, verifying emails and sending messages, the school request form of the landing page, hosting (the server runs on the owner's computer for now; HTTPS, a proxy address and moving it elsewhere are not needed yet) | Open |
 
 The backend covers accounts, sign-in, the school structure and enrollments, all with tests. The frontend still uses demo data and is connected to this API step by step (see `docs/FRONTEND-PLAN.md`, "Backend API and frontend work").
