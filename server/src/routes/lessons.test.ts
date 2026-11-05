@@ -124,6 +124,8 @@ describe.skipIf(!process.env.DATABASE_URL)('lessons', () => {
           processingError: null,
           summary: null,
           quiz: null,
+          // Only a student has a progress in a lesson.
+          myProgress: null,
           subject: {
             id: w.mathId,
             name: 'Matematika',

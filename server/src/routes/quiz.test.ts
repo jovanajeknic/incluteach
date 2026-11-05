@@ -3,13 +3,14 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { createPool } from '../db/pool.ts';
 import {
+  insertActivatedUser,
   insertClass,
   insertEnrollment,
   insertLesson,
   insertParentStudent,
   insertSubject,
 } from '../db/testUtils.ts';
-import { inApi as runWithApi, type Api, type Requests } from './testApi.ts';
+import { inApi as runWithApi, PASSWORD, type Api, type Requests } from './testApi.ts';
 
 interface Option {
   id: string;
@@ -556,6 +557,262 @@ describe.skipIf(!process.env.DATABASE_URL)('the quiz for students', () => {
           const { rows } = await api.client.query(`SELECT 1 FROM ${table}`);
           expect(rows, table).toHaveLength(0);
         }
+      });
+    });
+  });
+
+  describe('finishing the lesson', () => {
+    const complete = (w: World, lessonId = w.lessonId) =>
+      w.student.post(`/lessons/${lessonId}/complete`);
+    const progressOf = async (w: World) =>
+      (await w.student.get(`/lessons/${w.lessonId}`)).body.lesson.myProgress;
+    const publishedWithoutQuiz = (api: Api, w: World) =>
+      insertLesson(api.client, {
+        schoolId: api.f.schoolId,
+        subjectId: w.subjectId,
+        createdBy: api.f.teacherId,
+        status: 'published',
+        publishedAt: new Date().toISOString(),
+      });
+
+    it('lets the student finish a lesson without a quiz at any time, once', async () => {
+      await inApi(async (api) => {
+        const w = await setup(api);
+        const id = await publishedWithoutQuiz(api, w);
+        const view = await w.student.get(`/lessons/${id}`);
+        expect(view.body.lesson.myProgress).toEqual({
+          completed: false,
+          completedAt: null,
+          canFinish: true,
+          quiz: null,
+        });
+
+        const first = await complete(w, id);
+        const again = await complete(w, id);
+
+        expect(first.status).toBe(200);
+        expect(first.body.progress).toMatchObject({ completed: true, canFinish: false });
+        expect(first.body.progress.completedAt).toEqual(expect.any(String));
+        expect(again.body.progress.completedAt).toBe(first.body.progress.completedAt);
+        const { rows } = await api.client.query('SELECT attempt_id FROM lesson_completions');
+        expect(rows).toEqual([{ attempt_id: null }]);
+      });
+    });
+
+    it('needs a try with every answer right when the lesson has a quiz', async () => {
+      await inApi(async (api) => {
+        const w = await setup(api);
+        expect(await progressOf(w)).toEqual({
+          completed: false,
+          completedAt: null,
+          canFinish: false,
+          quiz: { openAttemptId: null, nextAttemptAt: null, passed: false },
+        });
+        expect((await complete(w)).body.error.code).toBe('quiz_not_passed');
+
+        // A try with a mistake is not enough.
+        const first = (await start(w)).body.attempt;
+        expect(await progressOf(w)).toMatchObject({ quiz: { openAttemptId: first.id } });
+        await answerAll(w, first, [0]);
+        const failed = await progressOf(w);
+        expect(failed).toMatchObject({ canFinish: false, quiz: { passed: false } });
+        expect(failed.quiz.openAttemptId).toBeNull();
+        expect(failed.quiz.nextAttemptAt).toEqual(expect.any(String));
+        expect((await complete(w)).status).toBe(409);
+
+        await movePast(api, 11);
+        const second = (await start(w)).body.attempt;
+        await answerAll(w, second);
+        expect(await progressOf(w)).toMatchObject({
+          completed: false,
+          canFinish: true,
+          quiz: { passed: true },
+        });
+
+        const done = await complete(w);
+
+        expect(done.status).toBe(200);
+        expect(done.body.progress).toMatchObject({ completed: true, canFinish: false });
+        const { rows } = await api.client.query('SELECT attempt_id FROM lesson_completions');
+        expect(rows).toEqual([{ attempt_id: second.id }]);
+        expect((await complete(w)).body.progress.completed).toBe(true);
+      });
+    });
+
+    it('does not count a try made for a quiz that was rewritten since', async () => {
+      await inApi(async (api) => {
+        const w = await setup(api);
+        const { attempt } = (await start(w)).body;
+        await answerAll(w, attempt);
+        await w.teacher.post(`/lessons/${w.lessonId}/unpublish`);
+        await w.teacher.put(`/lessons/${w.lessonId}/quiz`, { questions: [question(7)] });
+        await w.teacher.post(`/lessons/${w.lessonId}/quiz/approve`);
+        await w.teacher.post(`/lessons/${w.lessonId}/publish`);
+
+        expect(await progressOf(w)).toMatchObject({ canFinish: false, quiz: { passed: false } });
+        expect((await complete(w)).body.error.code).toBe('quiz_not_passed');
+      });
+    });
+
+    it('stays finished when the quiz is rewritten later', async () => {
+      await inApi(async (api) => {
+        const w = await setup(api);
+        const { attempt } = (await start(w)).body;
+        await answerAll(w, attempt);
+        const first = await complete(w);
+        await w.teacher.post(`/lessons/${w.lessonId}/unpublish`);
+        await w.teacher.put(`/lessons/${w.lessonId}/quiz`, { questions: [question(7)] });
+        await w.teacher.post(`/lessons/${w.lessonId}/quiz/approve`);
+        await w.teacher.post(`/lessons/${w.lessonId}/publish`);
+
+        const again = await complete(w);
+
+        expect(again.status).toBe(200);
+        expect(again.body.progress.completedAt).toBe(first.body.progress.completedAt);
+      });
+    });
+
+    it('is only for a student who can see the lesson', async () => {
+      await inApi(async (api) => {
+        const w = await setup(api);
+        const draft = await insertLesson(api.client, {
+          schoolId: api.f.schoolId,
+          subjectId: w.subjectId,
+          createdBy: api.f.teacherId,
+        });
+
+        expect((await complete(w, draft)).status).toBe(404);
+        expect((await complete(w, 'nije-uuid')).status).toBe(404);
+        expect((await complete(w, '00000000-0000-4000-8000-000000000000')).status).toBe(404);
+        expect((await w.teacher.post(`/lessons/${w.lessonId}/complete`)).status).toBe(403);
+        expect((await w.parent.post(`/lessons/${w.lessonId}/complete`)).status).toBe(403);
+        expect((await api.post(`/lessons/${w.lessonId}/complete`)).status).toBe(403);
+        await api.client.query('DELETE FROM enrollments');
+        expect((await complete(w)).status).toBe(404);
+      });
+    });
+
+    it('shows the progress only to the student', async () => {
+      await inApi(async (api) => {
+        const w = await setup(api);
+
+        for (const person of [w.teacher, w.parent]) {
+          const lesson = (await person.get(`/lessons/${w.lessonId}`)).body.lesson;
+          expect(lesson.myProgress).toBeNull();
+        }
+      });
+    });
+  });
+
+  describe('the history of tries', () => {
+    const history = (who: Requests, w: World, query = '') =>
+      who.get(`/lessons/${w.lessonId}/quiz/attempts${query}`);
+    const complete = (w: World) => w.student.post(`/lessons/${w.lessonId}/complete`);
+
+    async function withTries(api: Api) {
+      const w = await setup(api);
+      const first = (await start(w)).body.attempt;
+      await answerAll(w, first, [0]);
+      await movePast(api, 11);
+      const second = (await start(w)).body.attempt;
+      await answerAll(w, second);
+      await complete(w);
+      return { w, first, second };
+    }
+
+    it('shows the student their tries, newest first, with every answer', async () => {
+      await inApi(async (api) => {
+        const { w, first, second } = await withTries(api);
+
+        const response = await history(w.student, w);
+
+        expect(response.status).toBe(200);
+        expect(response.body.student).toEqual({ id: api.f.studentId, fullName: 'Ana Ivić' });
+        expect(response.body.completedAt).toEqual(expect.any(String));
+        const [newest, oldest] = response.body.attempts;
+        expect([newest.id, oldest.id]).toEqual([second.id, first.id]);
+        expect(newest).toMatchObject({ status: 'completed', allCorrect: true });
+        expect(oldest).toMatchObject({ status: 'completed', allCorrect: false });
+        expect(oldest.answers).toHaveLength(3);
+        expect(oldest.answers.map((a: { position: number }) => a.position)).toEqual([1, 2, 3]);
+        const wrong = oldest.answers.filter((a: { correct: boolean }) => !a.correct);
+        expect(wrong).toHaveLength(1);
+        expect(wrong[0]).toMatchObject({
+          prompt: first.questions[0].prompt,
+          chosenText: expect.any(String),
+          correctText: expect.any(String),
+        });
+        expect(wrong[0].chosenText).not.toBe(wrong[0].correctText);
+      });
+    });
+
+    it('stays the same when the quiz is rewritten', async () => {
+      await inApi(async (api) => {
+        const { w } = await withTries(api);
+        const before = (await history(w.student, w)).body;
+        await w.teacher.post(`/lessons/${w.lessonId}/unpublish`);
+        await w.teacher.put(`/lessons/${w.lessonId}/quiz`, { questions: [question(7)] });
+
+        expect((await history(w.teacher, w, `?studentId=${api.f.studentId}`)).body).toEqual(before);
+      });
+    });
+
+    it('shows a parent the tries of their own child only', async () => {
+      await inApi(async (api) => {
+        const { w } = await withTries(api);
+        await insertActivatedUser(api.client, api.f.schoolId, 'parent', {
+          username: 'drugi_roditelj',
+          email: 'drugi@example.com',
+          password: PASSWORD,
+        });
+        const other = await api.as('drugi_roditelj');
+        const childQuery = `?studentId=${api.f.studentId}`;
+
+        const ok = await history(w.parent, w, childQuery);
+        expect(ok.status).toBe(200);
+        expect(ok.body.attempts).toHaveLength(2);
+        expect((await history(w.parent, w)).body.error.code).toBe('invalid_student');
+        expect((await history(other, w, childQuery)).status).toBe(403);
+        const stranger = `?studentId=${api.f.otherSchoolStudentId}`;
+        expect((await history(w.parent, w, stranger)).status).toBe(403);
+        await api.client.query('DELETE FROM enrollments');
+        expect((await history(w.parent, w, childQuery)).status).toBe(404);
+      });
+    });
+
+    it('shows the teacher of the subject the tries of a student who joined it', async () => {
+      await inApi(async (api) => {
+        const { w } = await withTries(api);
+        await insertActivatedUser(api.client, api.f.schoolId, 'teacher', {
+          username: 'mira_miric',
+          email: 'mira@example.com',
+          password: PASSWORD,
+        });
+        const otherTeacher = await api.as('mira_miric');
+        const studentQuery = `?studentId=${api.f.studentId}`;
+
+        const ok = await history(w.teacher, w, studentQuery);
+        expect(ok.status).toBe(200);
+        expect(ok.body.attempts).toHaveLength(2);
+        expect((await history(w.teacher, w)).body.error.code).toBe('invalid_student');
+        expect((await history(w.teacher, w, '?studentId=x')).status).toBe(400);
+        expect((await history(otherTeacher, w, studentQuery)).status).toBe(404);
+        // A student who did not join the subject, and somebody who is not a student.
+        const notJoined = `?studentId=${api.f.notActivatedStudentId}`;
+        expect((await history(w.teacher, w, notJoined)).status).toBe(404);
+        expect((await history(w.teacher, w, `?studentId=${api.f.parentId}`)).status).toBe(404);
+      });
+    });
+
+    it('is not for the admin, and a student cannot ask about another student', async () => {
+      await inApi(async (api) => {
+        const { w } = await withTries(api);
+        const other = `?studentId=${api.f.notActivatedStudentId}`;
+
+        expect((await history(api, w)).status).toBe(403);
+        expect((await history(w.student, w, other)).status).toBe(403);
+        expect((await history(w.student, w, `?studentId=${api.f.studentId}`)).status).toBe(200);
+        expect((await w.student.get('/lessons/nije-uuid/quiz/attempts')).status).toBe(404);
       });
     });
   });

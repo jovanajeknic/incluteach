@@ -4,21 +4,12 @@ import type { AuthUser } from '../auth/sessions.ts';
 import type { Queryable } from '../db/pool.ts';
 import { inTransaction } from '../db/transaction.ts';
 import { HttpError } from '../http/errors.ts';
+import type { QuizView } from '../lessons/content.ts';
 import { getLesson } from '../lessons/lessons.ts';
-
-// After an attempt, the child waits this long before starting the next one. The wait is for
-// learning: a child who must wait reads the mistakes again and thinks, instead of clicking
-// through the same questions at once until the answers happen to be right.
-export const RETRY_AFTER_MINUTES = 10;
+import { matchesQuiz, nextAttemptAt, RETRY_AFTER_MINUTES, type AttemptOrder } from './progress.ts';
 
 // An attempt left open for longer than this is closed. The child starts a new one.
 const OPEN_ATTEMPT_MAX_AGE_MINUTES = 120;
-
-// The order in which an attempt shows its questions, and the answers of each question.
-interface AttemptOrder {
-  questions: string[];
-  options: Record<string, string[]>;
-}
 
 export interface AnswerFeedback {
   optionId: string | null;
@@ -73,7 +64,7 @@ const notFound = () => new HttpError(404, 'not_found', 'Quiz not found.');
 // The quiz of a lesson as the student sees it, or a 404. A student only gets a lesson that is
 // published, of a subject they joined, and a quiz that a teacher approved and that still fits
 // the text.
-async function studentQuiz(pool: Queryable, user: AuthUser, lessonId: string) {
+async function studentQuiz(pool: Queryable, user: AuthUser, lessonId: string): Promise<QuizView> {
   if (user.role !== 'student') {
     throw notFound();
   }
@@ -84,24 +75,7 @@ async function studentQuiz(pool: Queryable, user: AuthUser, lessonId: string) {
   return lesson.quiz;
 }
 
-type StudentQuiz = Awaited<ReturnType<typeof studentQuiz>>;
-
-// Whether the questions and answers an attempt was made for are all still in the quiz. If a
-// teacher rewrote the quiz in the meantime they are not.
-function matchesQuiz(order: AttemptOrder, quiz: StudentQuiz): boolean {
-  const questions = new Map(quiz.questions.map((question) => [question.id, question]));
-  return order.questions.every((questionId) => {
-    const question = questions.get(questionId);
-    const optionIds = new Set(question?.options.map((option) => option.id));
-    return (
-      question !== undefined &&
-      order.options[questionId]?.length === optionIds.size &&
-      order.options[questionId].every((optionId) => optionIds.has(optionId))
-    );
-  });
-}
-
-async function buildAttempt(db: Queryable, row: AttemptRow, quiz: StudentQuiz): Promise<Attempt> {
+async function buildAttempt(db: Queryable, row: AttemptRow, quiz: QuizView): Promise<Attempt> {
   const questions = new Map(quiz.questions.map((question) => [question.id, question]));
 
   const { rows: answers } = await db.query<{
@@ -184,21 +158,13 @@ export async function startAttempt(
       await db.query("UPDATE quiz_attempts SET status = 'abandoned' WHERE id = $1", [open[0].id]);
     }
 
-    const { rows: waiting } = await db.query<{ next_at: Date | null; must_wait: boolean }>(
-      `SELECT next_at, coalesce(next_at > now(), false) AS must_wait FROM (
-         SELECT max(a.last_activity_at) + make_interval(mins => $3) AS next_at
-         FROM quiz_attempts a
-         WHERE a.student_id = $1 AND a.lesson_id = $2 AND a.status <> 'in_progress'
-           AND EXISTS (SELECT 1 FROM quiz_answers w WHERE w.attempt_id = a.id)
-       ) last_attempt`,
-      [user.id, lessonId, RETRY_AFTER_MINUTES],
-    );
-    if (waiting[0].must_wait && waiting[0].next_at) {
+    const waitUntil = await nextAttemptAt(db, { studentId: user.id, lessonId });
+    if (waitUntil) {
       throw new HttpError(
         409,
         'retry_later',
         `The quiz can be done again in ${RETRY_AFTER_MINUTES} minutes after the last try. Use the time to read the lesson again.`,
-        { nextAttemptAt: waiting[0].next_at.toISOString() },
+        { nextAttemptAt: waitUntil.toISOString() },
       );
     }
 

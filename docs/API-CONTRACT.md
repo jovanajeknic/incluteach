@@ -392,7 +392,7 @@ A lesson belongs to a subject and holds the text of the teacher, as written. See
 - **Status**: implemented
 - **Purpose**: one whole lesson, for editing or for reading.
 - **Who may call it**: `teacher`, `student`, `parent`, as described above.
-- **Success response**: `200 { lesson: Lesson }`.
+- **Success response**: `200 { lesson: Lesson }`. For a **student**, `lesson.myProgress` is `{ completed, completedAt, canFinish, quiz }`: `canFinish` says if the "Završi lekciju" button works now (no quiz, or the quiz was passed with every answer right); `quiz` is `null` if the lesson has no quiz the student can do, otherwise `{ openAttemptId, nextAttemptAt, passed }` (`openAttemptId`: a try to go on with; `nextAttemptAt`: when a new try may start, `null` if now; `passed`: a try with every answer right exists for the quiz as it is now). For a teacher or a parent `myProgress` is `null`.
 - **Errors**: `404 not_found` (unknown, or the caller may not see it).
 - **Used by (frontend)**: teacher editor, student reading view (the text is shaped by the display buttons, the Latin/Cyrillic switch and read-aloud in the browser).
 
@@ -514,8 +514,29 @@ A lesson belongs to a subject and holds the text of the teacher, as written. See
 - **Request**: body `{ questionId, optionId }`.
 - **Success response**: `200 { answer, attempt }`. `answer` is `{ questionId, optionId, correct, correctOptionId, explanation }`; `explanation` can be `null`. `attempt` is `{ id, status, answered, total, allCorrect }`: `status` becomes `completed` with the last answer, and then `allCorrect` is `true` or `false` (it is `null` before). A question can be answered **once** per try, so there is no changing an answer.
 - **Errors**: `400 invalid_question` / `400 invalid_option` (not part of this try), `403 forbidden`, `404 not_found`, `409 already_answered`, `409 attempt_finished` (the try is completed or closed), `409 quiz_changed` (the teacher changed the quiz after the try began; start again with `POST /lessons/{id}/quiz/attempts`).
-- **Used by (frontend)**: the question screen: after a tap, show green or red, the right answer and the explanation, then a "Dalje" button. After the last answer: all correct means the "Završi lekciju" button (it comes with the next step), otherwise a message that the quiz can be tried again after the wait.
+- **Used by (frontend)**: the question screen: after a tap, show green or red, the right answer and the explanation, then a "Dalje" button. After the last answer: all correct means the "Završi lekciju" button, otherwise a message that the quiz can be tried again after the wait.
+
+### POST /lessons/{id}/complete
+
+- **Status**: implemented
+- **Purpose**: the "Završi lekciju" button. It officially finishes the lesson for the student.
+- **Who may call it**: `student` who can see the lesson.
+- **Request**: none.
+- **Success response**: `200 { progress }`, where `progress` is the same object as `lesson.myProgress` (see below), now with `completed: true` and `completedAt`. Pressing the button again changes nothing and returns the same `completedAt`.
+- **Errors**: `403 forbidden` (not a student), `404 not_found`, `409 quiz_not_passed` (the lesson has a quiz and there is no try with every answer right for the quiz as it is now).
+- **Notes**: a lesson **without** a quiz can be finished at any time (`canFinish` is true as soon as the student can open it). A lesson **with** a quiz can be finished only after a try with every answer right, so the button is shown (or enabled) only when `myProgress.canFinish` is true: on the lesson screen for a lesson without a quiz, and at the end of the quiz when `attempt.allCorrect` is true. A lesson that is finished stays finished if the teacher rewrites the quiz later; a try made for the old quiz does not count for the new one.
+- **Used by (frontend)**: the "Završi lekciju" button.
+
+### GET /lessons/{id}/quiz/attempts
+
+- **Status**: implemented
+- **Purpose**: the tries of one student at the quiz of a lesson, newest first, with every question and answer, so a child can look back at the mistakes and a parent or the teacher can see how the child is doing.
+- **Who may call it**: `student` (their own), `parent` (one of their linked children), `teacher` of the subject (any student who joined the subject). The admin gets `403`.
+- **Request**: query `studentId`. A student leaves it out. A parent and a teacher must send it (`400 invalid_student` if missing, `400 invalid_request` if it is not an id).
+- **Success response**: `200 { student: { id, fullName }, completedAt, attempts }`. `completedAt` is when the student finished the lesson, or `null`. Each attempt is `{ id, status, startedAt, completedAt, allCorrect, answers }` and each answer `{ position, kind, prompt, chosenText, correctText, explanation, correct }`: the text is copied at the time of the try, so it does not change when the teacher rewrites the quiz. At most the 100 newest tries.
+- **Errors**: `400` as above, `403 forbidden` (a parent asks about a child that is not theirs, a student about another student, or the admin), `404 not_found` (no such lesson, not visible to the caller, or the student did not join the subject).
+- **Used by (frontend)**: "Moji pokušaji" on the student lesson screen; the child's lesson list for a parent; the student detail for a teacher.
 
 ## Not defined yet
 
-Finishing a lesson and the progress of a student, the quiz history for parents and teachers, comments, stars, removing a student from a subject at the end of the year, copying classes and subjects to a new school year, changing one's own password, the school request form of the landing page.
+Comments, stars, progress per subject, removing a student from a subject at the end of the year, copying classes and subjects to a new school year, changing one's own password, the school request form of the landing page.

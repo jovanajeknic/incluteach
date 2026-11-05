@@ -5,6 +5,8 @@ import type { Queryable } from '../db/pool.ts';
 import { HttpError } from '../http/errors.ts';
 import { isUuid } from '../http/validation.ts';
 import { answerQuestion, startAttempt } from '../quiz/attempts.ts';
+import { completeLesson } from '../quiz/complete.ts';
+import { attemptHistory } from '../quiz/history.ts';
 
 function readId(value: unknown, what: string): string {
   if (!isUuid(value)) {
@@ -48,6 +50,36 @@ export function quizRouter(pool: Queryable): Router {
       }),
     );
   });
+
+  // The "Završi lekciju" button. 409 `quiz_not_passed` while the lesson has a quiz that has not
+  // been passed with every answer right. Pressing it again changes nothing.
+  router.post('/:id/complete', requireRole('student'), async (req, res) => {
+    const progress = await completeLesson(pool, {
+      user: getUser(req),
+      lessonId: readId(req.params.id, 'Lesson'),
+    });
+    res.json({ progress });
+  });
+
+  // The tries of one student, newest first. Query: studentId (a parent names the child, the
+  // teacher names the student; a student leaves it out).
+  router.get(
+    '/:id/quiz/attempts',
+    requireRole('student', 'parent', 'teacher'),
+    async (req, res) => {
+      const { studentId } = req.query;
+      if (studentId !== undefined && !isUuid(studentId)) {
+        throw new HttpError(400, 'invalid_request', 'The student id is not valid.');
+      }
+      res.json(
+        await attemptHistory(pool, {
+          user: getUser(req),
+          lessonId: readId(req.params.id, 'Lesson'),
+          studentId,
+        }),
+      );
+    },
+  );
 
   return router;
 }

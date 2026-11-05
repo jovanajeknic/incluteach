@@ -3,6 +3,7 @@ import type { Queryable } from '../db/pool.ts';
 import { inTransaction } from '../db/transaction.ts';
 import { resolveChild } from '../enrollments/enrollments.ts';
 import { HttpError } from '../http/errors.ts';
+import { lessonProgress, type LessonProgress } from '../quiz/progress.ts';
 import { loadContent, type QuizView, type SummaryView } from './content.ts';
 
 export type LessonStatus = 'draft' | 'processing' | 'in_review' | 'published';
@@ -38,6 +39,9 @@ export interface Lesson extends Omit<LessonListItem, 'subject'> {
   // what a teacher approved, and without the right answers.
   summary: SummaryView | null;
   quiz: QuizView | null;
+  // Where the signed-in student stands in this lesson; null for everybody else. See
+  // docs/LESSONS.md, "Finishing a lesson".
+  myProgress: LessonProgress | null;
 }
 
 interface LessonRow {
@@ -90,11 +94,13 @@ function toLesson(
   row: LessonRow,
   content: { summary: SummaryView | null; quiz: QuizView | null },
   forTeacher: boolean,
+  myProgress: LessonProgress | null,
 ): Lesson {
   const item = toListItem(row);
   return {
     ...item,
     ...content,
+    myProgress,
     // Only the teacher is told why the AI failed.
     processingError: forTeacher ? (row.processing_error ?? null) : null,
     body: row.body as string,
@@ -208,7 +214,11 @@ export async function getLesson(
     bodyRevision: rows[0].body_revision as number,
     forTeacher: user.role === 'teacher',
   });
-  return toLesson(rows[0], content, user.role === 'teacher');
+  const myProgress =
+    user.role === 'student'
+      ? await lessonProgress(pool, { studentId: user.id, lessonId, quiz: content.quiz })
+      : null;
+  return toLesson(rows[0], content, user.role === 'teacher', myProgress);
 }
 
 export async function requireOwnedLesson(

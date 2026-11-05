@@ -16,7 +16,7 @@ Summary of the backend database work and the agreements behind it. Working rules
 | Admin API: users (create, list, rename, deactivate, delete), classes, subjects, parent links | Done     |
 | Enrollment API: subject catalog, requests, parent and teacher decisions                   | Done        |
 | Running it: `build` and `start`, hourly cleanup of ended sessions and old links, a request log, database backups with `npm run db:backup` | Done |
-| The student does the quiz: tries, answers with feedback, a 10 minute wait between tries (finishing a lesson and history follow) | In progress |
+| The student does the quiz: tries, answers with feedback, a 10 minute wait between tries, finishing a lesson, the history of tries for student, parent and teacher | Done |
 | Comments, stars, progress per subject                                                      | Not started |
 | Not built yet, smaller: removing students from subjects at the end of a school year, copying classes and subjects to a new school year, changing one's own password, verifying emails and sending messages, the school request form of the landing page, hosting (the server runs on the owner's computer for now; HTTPS, a proxy address and moving it elsewhere are not needed yet) | Open |
 
