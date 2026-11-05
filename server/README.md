@@ -84,6 +84,18 @@ server: {
 
 The frontend then calls `/api/auth/login`, `/api/users`, and so on, the session cookie works as usual, and the server needs no CORS settings. (For `npm run preview` the same block goes under `preview:`.)
 
+## Demo school with invented data
+
+To build and try the frontend there must be people and lessons to look at. `npm run seed:demo` creates one small school with an admin, two teachers (Biology and Geography), two students, three parents (one student has two), two published lessons with an approved summary and quiz (one of them in Cyrillic), a lesson that is only text, a draft, a finished lesson with an automatic star and a star from a teacher, a conversation between a teacher and the parents of a student, and an enrolment request that waits for a parent. Everything is made with the same functions the application uses, and all of it is invented.
+
+```sh
+npm run seed:demo             # create it (stops if it already exists)
+npm run seed:demo -- --reset  # delete it and create it again, with a new password
+npm run seed:demo -- --remove # only delete it
+```
+
+Every demo account has the same password, chosen at random and shown **once** at the end (set `DEMO_PASSWORD` in `.env` to choose your own). The usernames are shown too (for example `ana_markovic`, `milica_petrovic`, `marija_demic`). The command refuses to run when `NODE_ENV` is `production`. It only touches the school called "Demo škola (izmišljeni podaci)", never another school.
+
 ## Back up the database
 
 All the data lives in one database on this computer, so make backups.

@@ -4,6 +4,30 @@ Plan for the first version (v1) of the IncluTeach frontend. The frontend lives i
 
 Working rules for all contributors are in [AGENTS.md](../AGENTS.md). This document does not repeat them.
 
+## Start here: the backend is done (2026-11-05)
+
+The backend is built and tested, so the frontend can now work against the real API instead of the demo data. Read this section first: some of the demo below was built before the backend agreements and **does not match the real system**.
+
+**Where the truth is.** [API-CONTRACT.md](API-CONTRACT.md) lists every endpoint (all `implemented`) with roles, requests, answers and errors. The table in "Backend API and frontend work" below says what each screen does with them. Where the older text in this plan disagrees with them, the contract wins. [LESSONS.md](LESSONS.md) explains how lessons, the AI and the quiz work, and [DATABASE.md](DATABASE.md) the data.
+
+**Run it on this computer.** In `server/`: `npm run dev` (needs PostgreSQL and `server/.env`, see [server/README.md](../server/README.md)), then `npm run seed:demo` for a school with invented people and lessons (the password is shown once; `--reset` and `--remove` exist). The default AI is a fake one that makes invented results, shown by `GET /health` as `ai: "fake"`: show a clear "test AI" label then. `groq` is a real AI.
+
+**First step in `client/`: the proxy.** The browser treats `localhost:5173` (the frontend) and `localhost:3000` (the server) as different addresses and would block the calls. Add the proxy from "Connect the frontend on this computer" in `server/README.md` to `client/vite.config.ts`, and call `/api/...` from the code. The server sets a session cookie (`httpOnly`, so scripts cannot read it): never store a token yourself; ask `GET /auth/me` who is signed in and treat `401` as "go to sign-in". The server has no CORS settings on purpose.
+
+**Replace the in-memory store.** The demo keeps its data behind a `LessonsStore` interface (`client/src/features/lessons/data/`). Implement it with real calls, and keep MSW (FE-04) for tests and for error cases only.
+
+**What the demo shows that the backend does not have.** Do not build against these, and remove or hide them when the real screen replaces the demo one:
+
+- The **five versions** of a lesson and the **student version profile** (original, shortened, easier, dyslexia-friendly, with "needs" and a class teacher who changes them). There is one text, a summary and a quiz. How the text looks is the student's choice in the browser (size, spacing, font, Latin/Cyrillic), kept on the device.
+- **Illustrations** and a **narration script** written by the AI. Reading aloud is the voice of the browser.
+- A **class teacher** with special rights. A subject has one teacher; there is no "razredni starešina" rule.
+- **Sign-in with a QR code** for students, and **registration** or the **"Prijavite školu"** form. Nobody registers: the admin creates every account and gives out a one-time activation link (it can be shown as a QR code); the person sets a password and uses their username or email to sign in. A school gets its first admin from `npm run create-admin`.
+- **Parent suggestions** about versions. Parents and the teacher of a subject write to each other in a **conversation** (one for each child and subject, both parents of the child see it, the child does not). The "questions missed" of the demo are replaced by the **history of tries** (`GET /lessons/{id}/quiz/attempts`), which shows every question and answer of every try to the student, the parent and the teacher.
+
+**What the backend has that the demo lacks.** File upload (Word and PDF) with a note about pictures that were left out; the AI making a summary and quiz in the background (poll the lesson); editing and approving them by the teacher; the quiz for students (one try is the whole quiz, feedback after every answer, a 10 minute wait, no score); the "Završi lekciju" button; stars of two kinds; the conversation; progress per subject, with a table for the teacher only; printing (frontend only, see the table below). The AI is **not** perfect: a teacher must read what it made, Cyrillic especially, and on the free level a lesson over about 10,000 characters (6,000 in Cyrillic) is refused with a message.
+
+**Quiz answers in Cyrillic.** The answers `Tačno` and `Netačno` of a true/false question always come in Latin script. Show them in the script the student chose.
+
 ## How to read this document
 
 Every item is one of:
