@@ -1,10 +1,5 @@
-import { ChatsCircleIcon, HouseIcon, PlusIcon, StudentIcon } from '@phosphor-icons/react';
-import {
-  classPath,
-  newLessonPath,
-  suggestionsPath,
-  teacherHomePath,
-} from '@/features/lessons/paths';
+import { ChatsCircleIcon, HouseIcon, PlusIcon } from '@phosphor-icons/react';
+import { newLessonPath, suggestionsPath, teacherHomePath } from '@/features/lessons/paths';
 import { useSchool } from '@/features/school/schoolContext';
 import { initialsOf } from '@/shared/lib/format';
 import { text } from '@/text/sr-Latn';
@@ -27,12 +22,6 @@ export function TeacherLayout() {
           icon: HouseIcon,
           tone: 'bg-butter text-butter-ink',
           end: true,
-        },
-        {
-          to: classPath,
-          label: text.nav.myClass,
-          icon: StudentIcon,
-          tone: 'bg-mint text-mint-ink',
         },
         {
           to: suggestionsPath,

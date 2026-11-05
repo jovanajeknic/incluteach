@@ -1,22 +1,24 @@
-import { ArrowLeftIcon, CaretRightIcon, PlusIcon } from '@phosphor-icons/react';
+import { CaretRightIcon, PlusIcon } from '@phosphor-icons/react';
 import { motion } from 'motion/react';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { ErrorState } from '@/shared/components/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState';
-import { MessagePage } from '@/shared/components/MessagePage';
 import { formatDate } from '@/shared/lib/format';
 import { cn } from '@/shared/lib/utils';
 import { Button } from '@/shared/ui/button';
 import { AiPulse } from '@/shared/visual/AiPulse';
-import { SubjectBlob } from '@/shared/visual/SubjectBlob';
-import { subjectTheme } from '@/shared/visual/subjectIcons';
 import { text } from '@/text/sr-Latn';
-import { LESSON_STATES, type LessonListItem, type LessonState } from '../api/lessonsApi';
-import { useLessons, useMySubjects } from '../api/queries';
+import {
+  LESSON_STATES,
+  type LessonListItem,
+  type LessonState,
+  type TeacherSubject,
+} from '../api/lessonsApi';
+import { useLessons } from '../api/queries';
 import { LessonStateBadge } from '../components/LessonStateBadge';
-import { lessonPath, newLessonForPath, teacherHomePath } from '../paths';
-import { subjectAppearance } from '../subjectAppearance';
+import { SubjectFrame } from '../components/SubjectFrame';
+import { lessonPath, newLessonForPath } from '../paths';
 
 type Filter = 'all' | LessonState;
 const FILTERS: readonly Filter[] = ['all', ...LESSON_STATES];
@@ -24,88 +26,50 @@ const PAGE_SIZE = 50;
 
 /** All lessons of one subject, which already belongs to exactly one odeljenje. */
 export function SubjectLessonsPage() {
-  const t = text.teacher.subject;
   const { subjectId = '' } = useParams();
-  const subjects = useMySubjects();
+
+  return (
+    <SubjectFrame
+      subjectId={subjectId}
+      action={
+        <Button asChild size="lg" className="h-12 px-6 text-base">
+          <Link to={newLessonForPath(subjectId)}>
+            <PlusIcon aria-hidden="true" weight="bold" />
+            {text.nav.newLesson}
+          </Link>
+        </Button>
+      }
+    >
+      {(subject) => (
+        <>
+          <title>
+            {text.app.pageTitle(
+              `${subject.name} · ${text.teacher.home.classHeading(subject.className)}`,
+            )}
+          </title>
+          <Lessons subject={subject} />
+        </>
+      )}
+    </SubjectFrame>
+  );
+}
+
+function Lessons({ subject }: { subject: TeacherSubject }) {
+  const t = text.teacher.subject;
   const [filter, setFilter] = useState<Filter>('all');
   const [limit, setLimit] = useState(PAGE_SIZE);
   const lessons = useLessons({
-    subjectId,
+    subjectId: subject.id,
     status: filter === 'all' ? undefined : filter,
     limit,
   });
 
-  if (subjects.isPending) return <LoadingState label={text.teacher.load.loading} />;
-  if (subjects.isError) return <ErrorState onRetry={() => void subjects.refetch()} />;
-
-  const subject = subjects.data.subjects.find((item) => item.id === subjectId);
-  if (!subject) {
-    return (
-      <>
-        <title>{text.app.pageTitle(t.notFoundTitle)}</title>
-        <MessagePage
-          title={t.notFoundTitle}
-          description={t.notFoundDescription}
-          action={
-            <Button asChild variant="outline" size="lg">
-              <Link to={teacherHomePath}>{t.back}</Link>
-            </Button>
-          }
-        />
-      </>
-    );
-  }
-
-  const appearance = subjectAppearance(subject.id, subject.name);
-  const theme = subjectTheme[appearance.color];
   const total = Object.values(subject.lessonCounts).reduce((sum, count) => sum + count, 0);
   const countOf = (option: Filter) => (option === 'all' ? total : subject.lessonCounts[option]);
 
   return (
     <>
-      <title>
-        {text.app.pageTitle(
-          `${subject.name} · ${text.teacher.home.classHeading(subject.className)}`,
-        )}
-      </title>
-      <Link
-        to={teacherHomePath}
-        className="inline-flex items-center gap-1.5 rounded-full font-display font-medium text-ink-soft hover:text-forest"
-      >
-        <ArrowLeftIcon aria-hidden="true" weight="bold" className="size-4" />
-        {t.back}
-      </Link>
-
-      <header
-        className={cn('relative mt-5 overflow-hidden rounded-[2.25rem] p-6 sm:p-8', theme.surface)}
-      >
-        <span
-          aria-hidden="true"
-          className={cn(
-            'absolute -right-14 -bottom-20 size-56 rounded-full opacity-40',
-            theme.deep,
-          )}
-        />
-        <div className="relative flex flex-wrap items-center gap-5">
-          <SubjectBlob subject={appearance} size="xl" className="bg-card" />
-          <div className="min-w-0 flex-1">
-            <h1 className="font-display text-4xl font-semibold tracking-tight text-ink">
-              {subject.name}
-            </h1>
-            <p className={cn('mt-1 font-display text-lg font-medium', theme.ink)}>
-              {t.meta(subject.className, subject.studentCount)}
-            </p>
-          </div>
-          <Button asChild size="lg" className="h-12 px-6 text-base">
-            <Link to={newLessonForPath(subject.id)}>
-              <PlusIcon aria-hidden="true" weight="bold" />
-              {text.nav.newLesson}
-            </Link>
-          </Button>
-        </div>
-      </header>
-
-      <div role="group" aria-label={t.filterLabel} className="mt-8 flex flex-wrap gap-x-6 gap-y-2">
+      <div role="group" aria-label={t.filterLabel} className="mt-6 flex flex-wrap gap-x-6 gap-y-2">
         {FILTERS.map((option) => {
           const active = filter === option;
           return (

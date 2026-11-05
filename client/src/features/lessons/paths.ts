@@ -7,7 +7,14 @@ export const lessonPath = (lessonId: string) => `/teacher/lessons/${encodeURICom
 /** The lessons of one subject (a subject already belongs to exactly one odeljenje). */
 export const subjectLessonsPath = (subjectId: string) =>
   `/teacher/subjects/${encodeURIComponent(subjectId)}`;
-export const classPath = '/teacher/class';
-export const teacherStudentPath = (studentId: string) =>
-  `/teacher/students/${encodeURIComponent(studentId)}`;
+/**
+ * The students of a subject. `odjeljenje` is what the filter shows: a subject id of the same
+ * name in another odeljenje, or "sva" for all of them. Without it, the subject's own odeljenje.
+ */
+export const subjectStudentsPath = (subjectId: string, odjeljenje?: string) =>
+  `${subjectLessonsPath(subjectId)}/students${
+    odjeljenje ? `?${new URLSearchParams({ odjeljenje })}` : ''
+  }`;
+export const subjectStudentPath = (subjectId: string, studentId: string) =>
+  `${subjectLessonsPath(subjectId)}/students/${encodeURIComponent(studentId)}`;
 export const suggestionsPath = '/teacher/suggestions';

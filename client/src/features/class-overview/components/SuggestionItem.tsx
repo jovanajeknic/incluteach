@@ -1,7 +1,7 @@
 import { Check, Clock, Sparkles } from 'lucide-react';
 import { useId, useState } from 'react';
 import { Link } from 'react-router';
-import { lessonPath, teacherStudentPath } from '@/features/lessons/paths';
+import { lessonPath } from '@/features/lessons/paths';
 import { useSchool } from '@/features/school/schoolContext';
 import type { Suggestion } from '@/features/school/types';
 import { formatDate } from '@/shared/lib/format';
@@ -101,11 +101,6 @@ export function SuggestionItem({
           >
             <Check aria-hidden="true" />
             {t.markRead}
-          </Button>
-        )}
-        {showStudent && student && (
-          <Button asChild variant="outline" className="h-10 px-4">
-            <Link to={teacherStudentPath(student.id)}>{t.openStudent}</Link>
           </Button>
         )}
       </div>
