@@ -438,8 +438,7 @@ export const text = {
     newLesson: 'Dodaj lekciju',
     requests: 'Zahtjevi',
     newRequests: 'na čekanju',
-    suggestions: 'Prijedlozi roditelja',
-    newSuggestions: 'novih',
+    messages: 'Poruke',
     openMenu: 'Otvori meni',
     signOut: 'Odjavi se',
     closeMenu: 'Zatvori meni',
@@ -473,7 +472,7 @@ export const text = {
       text_too_long:
         'Tekst iz fajla je predug (više od 40.000 znakova ili 100 stranica). Pošalji kraći dio.',
       file_too_large: 'Fajl je veći od 10 MB.',
-      invalid_message: 'Poruka mora imati od 1 do 200 znakova.',
+      invalid_message: 'Poruka nije ispravna. Provjeri da nije prazna i da nije predugačka.',
       invalid_student: 'Izaberi učenika koji je upisan na tvoj predmet.',
       not_found: 'Ovo ne postoji ili ne možeš da ga vidiš.',
       forbidden: 'Nemaš pravo da ovo uradiš.',
@@ -613,6 +612,47 @@ export const text = {
       cancel: 'Odustani',
       alreadyAnswered: 'Zahtjev je već obrađen. Lista je osvježena.',
     },
+    messages: {
+      pageTitle: 'Poruke',
+      heading: 'Poruke',
+      intro:
+        'Razgovori sa roditeljima, po učeniku i predmetu. Razgovor vide ti i svi roditelji tog učenika, a učenik ne vidi.',
+      empty: 'Još nema razgovora. Pojaviće se kad ti roditelj napiše poruku ili ti njemu.',
+      about: (student: string, subject: string) => `${student} · ${subject}`,
+      count: (count: number) => {
+        const last = count % 10;
+        const lastTwo = count % 100;
+        if (last === 1 && lastTwo !== 11) return `${count} poruka`;
+        if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) return `${count} poruke`;
+        return `${count} poruka`;
+      },
+      lastFrom: (name: string, body: string) => `${name}: ${body}`,
+      open: (student: string, subject: string) => `Otvori razgovor: ${student}, ${subject}`,
+    },
+    conversation: {
+      pageTitle: (student: string) => `Razgovor · ${student}`,
+      heading: 'Razgovor sa roditeljima',
+      back: 'Nazad na učenika',
+      open: 'Razgovor sa roditeljima',
+      about: (student: string, subject: string) => `${student} · ${subject}`,
+      privacy:
+        'Ovaj razgovor vide ti i svi roditelji ovog učenika. Učenik ga ne vidi. Poruke se ne mogu mijenjati ni brisati.',
+      listLabel: 'Poruke',
+      empty: 'Još nema poruka. Napiši prvu.',
+      onlyNewest: (shown: number, total: number) =>
+        `Prikazano je posljednjih ${shown} od ${total} poruka.`,
+      roles: { parent: 'roditelj', teacher: 'nastavnik' },
+      you: 'Ti',
+      writeLabel: 'Tvoja poruka',
+      writeHint: 'Prelom reda je dozvoljen.',
+      counter: (used: number, max: number) => `${used} od ${max} znakova`,
+      send: 'Pošalji',
+      sending: 'Slanje…',
+      messageRequired: 'Napiši poruku.',
+      messageTooLong: 'Poruka može imati najviše 1000 znakova.',
+      notFoundTitle: 'Razgovor nije pronađen',
+      notFoundDescription: 'Ovaj učenik nije upisan na tvoj predmet.',
+    },
     newLesson: {
       pageTitle: 'Dodaj lekciju',
       heading: 'Dodaj lekciju',
@@ -720,27 +760,6 @@ export const text = {
       assigned: 'Objavljena',
     },
     courseLabel: (subject: string, className: string) => `${subject} · ${className}`,
-  },
-
-  suggestionsInbox: {
-    pageTitle: 'Prijedlozi roditelja',
-    heading: 'Prijedlozi roditelja',
-    intro:
-      'Roditelji opisuju šta pomaže njihovom djetetu. Odaberite prijedloge koje AI treba da uzme u obzir pri sljedećem prilagođavanju.',
-    filterNew: 'Novi',
-    filterAll: 'Svi',
-    filterLabel: 'Prikaz prijedloga',
-    empty: 'Nema prijedloga za prikaz.',
-    forStudent: (name: string) => `Za: ${name}`,
-    useForAdaptation: 'Napiši uputstvo za AI',
-    aiNoteLabel: 'Uputstvo za AI',
-    aiNoteHint:
-      'Svojim riječima napiši šta AI treba da uradi, na primjer „kraće rečenice i više slika“. Bez imena i dijagnoza: AI dobija samo ovo uputstvo, nikad tekst roditelja.',
-    aiNoteRequired: 'Napiši uputstvo prije čuvanja.',
-    saveAiNote: 'Sačuvaj uputstvo',
-    cancelAiNote: 'Odustani',
-    aiNoteShown: (note: string) => `Uputstvo za AI: „${note}“`,
-    markRead: 'Označi kao pročitano',
   },
 
   suggestionStatus: {

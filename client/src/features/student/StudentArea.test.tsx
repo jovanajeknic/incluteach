@@ -55,6 +55,13 @@ function stubVoice(): string[] {
 }
 
 describe('Student subjects and lessons', () => {
+  it('does not show an unpublished lesson to students', () => {
+    renderApp({ path: '/student/lessons/saobracaj' });
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Lekcija nije pronađena' }),
+    ).toBeInTheDocument();
+  });
+
   it('lists the student subjects with lesson counts', () => {
     renderApp({ path: '/student' });
 

@@ -76,9 +76,10 @@ export const routes: RouteObject[] = [
                 path: 'subjects/:subjectId/students/:studentId',
                 lazy: fromArea(teacherArea, (area) => area.StudentPage),
               },
+              { path: 'messages', lazy: fromArea(teacherArea, (area) => area.MessagesPage) },
               {
-                path: 'suggestions',
-                lazy: fromArea(teacherArea, (area) => area.SuggestionsInboxPage),
+                path: 'subjects/:subjectId/students/:studentId/conversation',
+                lazy: fromArea(teacherArea, (area) => area.ConversationPage),
               },
               { path: '*', element: <NotFoundPage homePath={teacherHomePath} /> },
             ],

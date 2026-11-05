@@ -2,7 +2,7 @@ import { ChatsCircleIcon, HouseIcon, PlusIcon, UserPlusIcon } from '@phosphor-ic
 import {
   newLessonPath,
   requestsPath,
-  suggestionsPath,
+  messagesPath,
   teacherHomePath,
 } from '@/features/lessons/paths';
 import { useSchool } from '@/features/school/schoolContext';
@@ -12,13 +12,10 @@ import { text } from '@/text/sr-Latn';
 import { SidebarLayout } from './SidebarLayout';
 
 export function TeacherLayout() {
-  const { data, suggestionsForTeacher } = useSchool();
+  const { data } = useSchool();
   const teacher = data.teacher;
   // The same request as the page of the requests, so the number and the list always agree.
   const waitingRequests = useWaitingRequests().data?.total ?? 0;
-  const newSuggestions = suggestionsForTeacher().filter(
-    (item) => item.status === 'pending-teacher',
-  ).length;
 
   return (
     <SidebarLayout
@@ -39,11 +36,10 @@ export function TeacherLayout() {
           count: { value: waitingRequests, label: text.nav.newRequests },
         },
         {
-          to: suggestionsPath,
-          label: text.nav.suggestions,
+          to: messagesPath,
+          label: text.nav.messages,
           icon: ChatsCircleIcon,
           tone: 'bg-blush text-blush-ink',
-          count: { value: newSuggestions, label: text.nav.newSuggestions },
         },
       ]}
       action={{ to: newLessonPath, label: text.nav.newLesson, icon: PlusIcon }}

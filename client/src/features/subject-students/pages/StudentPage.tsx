@@ -1,4 +1,4 @@
-import { ArrowLeftIcon } from '@phosphor-icons/react';
+import { ArrowLeftIcon, ChatsCircleIcon } from '@phosphor-icons/react';
 import { Link, useParams } from 'react-router';
 import { ApiError } from '@/shared/api/apiClient';
 import { ErrorState } from '@/shared/components/ErrorState';
@@ -7,7 +7,7 @@ import { MessagePage } from '@/shared/components/MessagePage';
 import { Button } from '@/shared/ui/button';
 import { text } from '@/text/sr-Latn';
 import { useMySubjects } from '@/features/lessons/api/queries';
-import { subjectStudentsPath } from '@/features/lessons/paths';
+import { conversationPath, subjectStudentsPath } from '@/features/lessons/paths';
 import { LessonProgressList } from '../components/LessonProgressList';
 import { StarsSection } from '../components/StarsSection';
 import { useStudentProgress } from '../api/queries';
@@ -63,9 +63,17 @@ export function StudentPage() {
         {t.backToStudents}
       </Link>
 
-      <h1 className="mt-5 font-display text-4xl font-semibold tracking-tight break-words text-ink">
-        {student.fullName}
-      </h1>
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
+        <h1 className="font-display text-4xl font-semibold tracking-tight break-words text-ink">
+          {student.fullName}
+        </h1>
+        <Button asChild variant="outline" size="lg">
+          <Link to={conversationPath(subjectId, studentId)}>
+            <ChatsCircleIcon aria-hidden="true" weight="bold" />
+            {text.teacher.conversation.open}
+          </Link>
+        </Button>
+      </div>
 
       <section aria-labelledby="progress-heading" className="mt-8">
         <h2 id="progress-heading" className="font-display text-2xl font-semibold text-ink">

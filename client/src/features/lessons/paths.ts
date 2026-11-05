@@ -18,4 +18,7 @@ export const subjectStudentsPath = (subjectId: string, odjeljenje?: string) =>
 export const subjectStudentPath = (subjectId: string, studentId: string) =>
   `${subjectLessonsPath(subjectId)}/students/${encodeURIComponent(studentId)}`;
 export const requestsPath = '/teacher/requests';
-export const suggestionsPath = '/teacher/suggestions';
+export const messagesPath = '/teacher/messages';
+/** The conversation with the parents of one student about one subject. */
+export const conversationPath = (subjectId: string, studentId: string) =>
+  `${subjectStudentPath(subjectId, studentId)}/conversation`;

@@ -1,6 +1,7 @@
 // Everything the teacher area needs, loaded as one chunk the first time a teacher page opens.
 export { TeacherLayout } from '../layout/TeacherLayout';
-export { SuggestionsInboxPage } from '@/features/class-overview/pages/SuggestionsInboxPage';
+export { ConversationPage } from '@/features/conversations/pages/ConversationPage';
+export { MessagesPage } from '@/features/conversations/pages/MessagesPage';
 export { LessonPage } from '@/features/lessons/pages/LessonPage';
 export { NewLessonPage } from '@/features/lessons/pages/NewLessonPage';
 export { SubjectLessonsPage } from '@/features/lessons/pages/SubjectLessonsPage';
