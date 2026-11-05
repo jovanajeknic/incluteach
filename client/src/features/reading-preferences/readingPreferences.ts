@@ -1,6 +1,9 @@
+import type { Script } from '@/shared/script/serbianScript';
+
 /**
  * How lesson text is displayed. These settings change presentation only, never the lesson
- * content itself (content adaptation is a separate, teacher-approved lesson version).
+ * content itself: the text stays exactly as the teacher wrote it, also when it is shown in the
+ * other script.
  */
 export interface ReadingPreferences {
   font: 'standard' | 'rounded' | 'dyslexic';
@@ -8,6 +11,8 @@ export interface ReadingPreferences {
   lineSpacing: 'normal' | 'relaxed' | 'loose';
   letterSpacing: 'normal' | 'wide';
   background: 'white' | 'cream' | 'mint' | 'sky' | 'butter';
+  /** The script the text, the summary and the quiz are shown in. */
+  script: Script;
 }
 
 export const FONT_OPTIONS = ['standard', 'rounded', 'dyslexic'] as const;
@@ -15,29 +20,17 @@ export const SIZE_OPTIONS = ['m', 'l', 'xl'] as const;
 export const LINE_SPACING_OPTIONS = ['normal', 'relaxed', 'loose'] as const;
 export const LETTER_SPACING_OPTIONS = ['normal', 'wide'] as const;
 export const BACKGROUND_OPTIONS = ['white', 'cream', 'mint', 'sky', 'butter'] as const;
+export const SCRIPT_OPTIONS = ['latin', 'cyrillic'] as const;
 
-export type ReadingPreset = 'standard' | 'easier-reading';
-
-/**
- * Starting point for a student. The "easier reading" preset opens lessons with the
- * dyslexia-friendly font and more space; the student can still change every setting.
- */
-export function presetPreferences(preset: ReadingPreset): ReadingPreferences {
-  if (preset === 'easier-reading') {
-    return {
-      font: 'dyslexic',
-      size: 'l',
-      lineSpacing: 'relaxed',
-      letterSpacing: 'wide',
-      background: 'cream',
-    };
-  }
+/** Where every student starts; each setting can be changed at any time. */
+export function defaultPreferences(): ReadingPreferences {
   return {
     font: 'standard',
     size: 'm',
     lineSpacing: 'normal',
     letterSpacing: 'normal',
     background: 'white',
+    script: 'latin',
   };
 }
 
@@ -102,6 +95,7 @@ export function parseStoredPreferences(
       background: isOneOf(BACKGROUND_OPTIONS, value.background)
         ? value.background
         : fallback.background,
+      script: isOneOf(SCRIPT_OPTIONS, value.script) ? value.script : fallback.script,
     };
   } catch {
     return fallback;

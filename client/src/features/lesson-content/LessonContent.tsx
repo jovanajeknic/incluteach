@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/shared/lib/utils';
 import { GlossaryTerm } from './GlossaryTerm';
-import { splitParagraphs, splitSentences } from './sentences';
+import { sentenceParts, splitParagraphs } from './sentences';
 
 export interface GlossaryItem {
   term: string;
@@ -55,13 +55,15 @@ export function LessonContent({
     <div className={cn('max-w-prose space-y-4 text-lg leading-relaxed', className)}>
       {splitParagraphs(content).map((paragraph, paragraphIndex) => (
         // Paragraphs have no stable id and the list is static for a given content string.
-        <p key={paragraphIndex}>
-          {splitSentences(paragraph).map((sentence, index) => {
+        // pre-line: single line breaks of the text (lists, headings) are kept. On paper a
+        // paragraph is not split between two pages when it fits on one.
+        <p key={paragraphIndex} className="whitespace-pre-line print:break-inside-avoid">
+          {sentenceParts(paragraph).map(({ lead, text: sentence }, index) => {
             const current = sentenceIndex++;
             const active = current === activeSentence;
             return (
               <span key={index}>
-                {index > 0 && ' '}
+                {index > 0 && (lead.includes('\n') ? lead : ' ')}
                 <span
                   data-sentence={current}
                   data-active={active || undefined}

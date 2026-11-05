@@ -25,6 +25,13 @@ export const useSubjectProgress = (subjectId: string) =>
     queryFn: () => studentApi.progress(subjectId),
   });
 
+export const useStudentLesson = (id: string) =>
+  useQuery({
+    queryKey: key('lesson', id),
+    queryFn: () => studentApi.lesson(id),
+    select: (answer) => answer.lesson,
+  });
+
 export const useSubjectLessons = (subjectId: string) =>
   useQuery({
     queryKey: key('lessons', subjectId),

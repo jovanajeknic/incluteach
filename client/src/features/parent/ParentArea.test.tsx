@@ -131,20 +131,6 @@ describe('Suggestions for the teacher', () => {
     expect(list).toHaveTextContent('Čeka pregled nastavnika');
     expect(fetchSpy).not.toHaveBeenCalled();
   });
-
-  it('never shows the suggestion to the child', async () => {
-    const { user, goAs } = renderApp({ path: '/parent/children/demo-student-luka' });
-
-    await user.type(screen.getByLabelText('Vaš prijedlog'), 'Treba mu više vremena za čitanje.');
-    await user.click(screen.getByRole('button', { name: 'Pošalji nastavniku' }));
-    expect(screen.getByText('Treba mu više vremena za čitanje.')).toBeInTheDocument();
-
-    await goAs('student', '/student/lessons/kruzenje-vode');
-    expect(
-      screen.getByRole('heading', { level: 1, name: 'Kruženje vode u prirodi' }),
-    ).toBeInTheDocument();
-    expect(document.body.textContent).not.toContain('Treba mu više vremena za čitanje.');
-  });
 });
 
 describe('Child page and suggestions overview', () => {

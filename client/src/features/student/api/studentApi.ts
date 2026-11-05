@@ -9,6 +9,47 @@ import type {
 
 export type { Enrollment, LessonListItem, Star, StarCounts, StudentProgress };
 
+/** What a student gets of a quiz question before answering: no right answer, no explanation. */
+export interface StudentQuizQuestion {
+  id: string;
+  position: number;
+  kind: 'choice' | 'true_false';
+  prompt: string;
+  options: { id: string; position: number; text: string }[];
+}
+
+/** How far the student got with a lesson (see API-CONTRACT.md, "GET /lessons/{id}"). */
+export interface MyProgress {
+  completed: boolean;
+  completedAt: string | null;
+  /** The server decides if "Završi lekciju" works now. */
+  canFinish: boolean;
+  quiz: {
+    openAttemptId: string | null;
+    nextAttemptAt: string | null;
+    passed: boolean;
+  } | null;
+}
+
+/** A published lesson as its student reads it: the text, the approved summary and quiz. */
+export interface StudentLesson {
+  id: string;
+  title: string;
+  status: 'published';
+  subject: {
+    id: string;
+    name: string;
+    className: string;
+    schoolYear: number;
+    teacher: { id: string; fullName: string };
+  };
+  publishedAt: string | null;
+  body: string;
+  summary: { points: string[] } | null;
+  quiz: { questions: StudentQuizQuestion[] } | null;
+  myProgress: MyProgress;
+}
+
 /** An odeljenje that has subjects to join (see API-CONTRACT.md, "Subject catalog"). */
 export interface CatalogClass {
   id: string;
@@ -53,6 +94,7 @@ export const studentApi = {
     apiRequest<{ enrollments: Enrollment[]; total: number }>('/enrollments?limit=200'),
   /** The progress of the signed-in student in a subject they joined. */
   progress: (subjectId: string) => apiRequest<StudentProgress>(`/subjects/${subjectId}/progress`),
+  lesson: (id: string) => apiRequest<{ lesson: StudentLesson }>(`/lessons/${id}`),
   lessonsOf: (subjectId: string) =>
     apiRequest<{ lessons: LessonListItem[]; total: number }>(
       `/lessons?${new URLSearchParams({ subjectId, limit: '200' })}`,

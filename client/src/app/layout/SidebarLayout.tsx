@@ -59,10 +59,11 @@ export function SidebarLayout({
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="area-theme min-h-screen bg-mint md:flex">
+      <div className="area-theme min-h-screen bg-mint md:flex print:block print:min-h-0 print:bg-white">
         <SkipLink />
 
-        <aside className="text-ink md:sticky md:top-0 md:flex md:h-screen md:w-68 md:shrink-0 md:flex-col">
+        {/* The menu is not part of a printed page. */}
+        <aside className="text-ink md:sticky md:top-0 md:flex md:h-screen md:w-68 md:shrink-0 md:flex-col print:hidden">
           <div className="flex items-center justify-between gap-3 px-4 py-3 md:px-7 md:pt-8 md:pb-9">
             <Link to="/" aria-label={text.app.homeLinkLabel} className="inline-flex rounded-md">
               <Logo />
@@ -187,9 +188,9 @@ export function SidebarLayout({
         <main
           id={MAIN_CONTENT_ID}
           tabIndex={-1}
-          className="min-h-screen min-w-0 flex-1 bg-background focus:outline-none md:rounded-l-[2.5rem]"
+          className="min-h-screen min-w-0 flex-1 bg-background focus:outline-none md:rounded-l-[2.5rem] print:min-h-0 print:rounded-none print:bg-white"
         >
-          <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-10 md:py-12">
+          <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-10 md:py-12 print:max-w-none print:p-0">
             <PageTransition key={location.pathname}>
               <Outlet />
             </PageTransition>

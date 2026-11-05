@@ -9,6 +9,7 @@ import {
   FONT_OPTIONS,
   LETTER_SPACING_OPTIONS,
   LINE_SPACING_OPTIONS,
+  SCRIPT_OPTIONS,
   SIZE_OPTIONS,
   type ReadingPreferences,
 } from './readingPreferences';
@@ -91,7 +92,7 @@ export function ReadingPreferencesPanel({
   onReset,
   className,
 }: ReadingPreferencesPanelProps) {
-  const t = text.student.reading;
+  const t = text.pupil.reading;
 
   return (
     <section
@@ -107,6 +108,13 @@ export function ReadingPreferencesPanel({
           labels={{ standard: t.font.standard, rounded: t.font.rounded, dyslexic: t.font.dyslexic }}
           onChange={(value) => onChange('font', value)}
           optionClassName={(option) => fontPreviewClass[option]}
+        />
+        <ChoiceGroup
+          legend={t.script.label}
+          options={SCRIPT_OPTIONS}
+          value={preferences.script}
+          labels={{ latin: t.script.latin, cyrillic: t.script.cyrillic }}
+          onChange={(value) => onChange('script', value)}
         />
         <ChoiceGroup
           legend={t.size.label}

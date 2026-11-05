@@ -1,12 +1,11 @@
 import { useCallback, useState } from 'react';
 import {
+  defaultPreferences,
   parseStoredPreferences,
-  presetPreferences,
   type ReadingPreferences,
-  type ReadingPreset,
 } from './readingPreferences';
 
-const storageKey = (studentId: string) => `incluteach.reading.${studentId}`;
+const storageKey = (userId: string) => `incluteach.reading.${userId}`;
 
 // Storage can be unavailable (private mode, blocked cookies); the settings then simply
 // last for the current visit.
@@ -28,13 +27,13 @@ function writeStored(key: string, value: string | null) {
 }
 
 /**
- * Reading preferences for one student on this device. Starts from the student's preset and
- * remembers any change locally. Only display settings are stored, never personal data.
+ * Display settings of one person on this device. They are remembered locally and never sent
+ * to the server; only display settings are stored, never personal data.
  */
-export function useReadingPreferences(studentId: string, preset: ReadingPreset) {
-  const key = storageKey(studentId);
+export function useReadingPreferences(userId: string) {
+  const key = storageKey(userId);
   const [preferences, setPreferences] = useState<ReadingPreferences>(() =>
-    parseStoredPreferences(readStored(key), presetPreferences(preset)),
+    parseStoredPreferences(readStored(key), defaultPreferences()),
   );
 
   const update = useCallback(
@@ -50,8 +49,8 @@ export function useReadingPreferences(studentId: string, preset: ReadingPreset) 
 
   const reset = useCallback(() => {
     writeStored(key, null);
-    setPreferences(presetPreferences(preset));
-  }, [key, preset]);
+    setPreferences(defaultPreferences());
+  }, [key]);
 
   return { preferences, update, reset };
 }

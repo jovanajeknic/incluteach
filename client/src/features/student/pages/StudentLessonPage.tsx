@@ -1,47 +1,60 @@
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
-  CheckCircleIcon,
+  FileDocIcon,
   FootprintsIcon,
-  InfoIcon,
+  PrinterIcon,
   PuzzlePieceIcon,
-  StarIcon,
   TextAaIcon,
+  TranslateIcon,
 } from '@phosphor-icons/react';
 import { motion } from 'motion/react';
-import { useEffect, useMemo, useState, type ComponentProps, type ReactNode } from 'react';
+import { useMemo, useState, type ComponentProps, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router';
+import { useSession } from '@/features/auth/api/session';
 import { LessonContent } from '@/features/lesson-content/LessonContent';
 import { lessonSentences, splitParagraphs } from '@/features/lesson-content/sentences';
+import { subjectAppearance } from '@/features/lessons/subjectAppearance';
 import {
   backgroundClass,
   readingTextClassName,
+  SCRIPT_OPTIONS,
 } from '@/features/reading-preferences/readingPreferences';
 import { ReadingPreferencesPanel } from '@/features/reading-preferences/ReadingPreferencesPanel';
 import { useReadingPreferences } from '@/features/reading-preferences/useReadingPreferences';
+import { ApiError } from '@/shared/api/apiClient';
+import { ErrorState } from '@/shared/components/ErrorState';
+import { LoadingState } from '@/shared/components/LoadingState';
 import { MessagePage } from '@/shared/components/MessagePage';
+import { formatDate } from '@/shared/lib/format';
 import { cn } from '@/shared/lib/utils';
+import { cyrillicToLatin, displayInScript } from '@/shared/script/serbianScript';
 import { Button } from '@/shared/ui/button';
-import { blobShape } from '@/shared/visual/subjectIcons';
 import { SubjectBlob } from '@/shared/visual/SubjectBlob';
+import { blobShape } from '@/shared/visual/subjectIcons';
 import { text } from '@/text/sr-Latn';
+import { useStudentLesson } from '../api/queries';
+import type { StudentLesson } from '../api/studentApi';
 import { ListenControls } from '../audio/ListenControls';
 import { useLessonSpeech } from '../audio/useLessonSpeech';
-import { useStudent } from '../data/studentContext';
-import { approvedVersion, pickAudioVersion, pickLessonVersion } from '../lessonVersion';
+import { downloadLessonAsWord, lessonDocumentContent } from '../export/lessonExport';
 import { studentHomePath, studentQuizPath, subjectPath } from '../paths';
-import type { StudentLesson, StudentProfile, Subject } from '../types';
 
 const SETTINGS_PANEL_ID = 'reading-settings';
 
+/** A published lesson: the text and the summary, shaped by the student's own settings. */
 export function StudentLessonPage() {
+  const t = text.pupil.lesson;
   const { lessonId = '' } = useParams();
-  const { profile, getLesson, getSubject } = useStudent();
-  const lesson = getLesson(lessonId);
-  const subject = lesson ? getSubject(lesson.subjectId) : undefined;
+  const lesson = useStudentLesson(lessonId);
 
-  if (!lesson || !subject) {
-    const t = text.student.lesson;
+  if (lesson.isPending) return <LoadingState label={text.pupil.load.loading} />;
+
+  if (lesson.isError) {
+    const missing =
+      lesson.error instanceof ApiError &&
+      (lesson.error.status === 404 || lesson.error.status === 403);
+    if (!missing) return <ErrorState onRetry={() => void lesson.refetch()} />;
     return (
       <>
         <title>{text.app.pageTitle(t.notFoundTitle)}</title>
@@ -50,7 +63,7 @@ export function StudentLessonPage() {
           description={t.notFoundDescription}
           action={
             <Button asChild variant="outline" size="lg">
-              <Link to={studentHomePath}>{text.student.subject.backToSubjects}</Link>
+              <Link to={studentHomePath}>{text.pupil.subject.back}</Link>
             </Button>
           }
         />
@@ -58,105 +71,174 @@ export function StudentLessonPage() {
     );
   }
 
-  // Keyed by lesson so steps, audio and panel state start fresh for each lesson.
-  return <LessonView key={lesson.id} lesson={lesson} subject={subject} profile={profile} />;
+  // Keyed by lesson so the steps, the voice and the open panel start fresh for each lesson.
+  return <LessonView key={lesson.data.id} lesson={lesson.data} />;
 }
 
-interface LessonViewProps {
-  lesson: StudentLesson;
-  subject: Subject;
-  profile: StudentProfile;
-}
-
-function LessonView({ lesson, subject, profile }: LessonViewProps) {
-  const t = text.student.lesson;
-  const { markStarted, markLessonDone, unmarkLessonDone, starsFor } = useStudent();
-  const earned = starsFor(lesson.id);
-  const support = profile.supportProfile;
-  // Only teacher-approved versions can be picked; the page is reached only if one exists.
-  const version = pickLessonVersion(lesson, support)!;
-  const audio = pickAudioVersion(lesson, support);
-  const illustrations = approvedVersion(lesson, 'illustrations')?.illustrations ?? [];
-
-  // Students meant to get the dyslexia-friendly text start with the matching font and
-  // spacing, even while that version is not ready and they read the teacher's text.
-  const { preferences, update, reset } = useReadingPreferences(
-    profile.id,
-    support.readingVersion === 'dyslexia' ? 'easier-reading' : 'standard',
-  );
+function LessonView({ lesson }: { lesson: StudentLesson }) {
+  const t = text.pupil.lesson;
+  const { user } = useSession();
+  const { preferences, update, reset } = useReadingPreferences(user?.id ?? 'anonymous');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [stepByStep, setStepByStep] = useState(false);
   const [step, setStep] = useState(0);
+  const [wordState, setWordState] = useState<'idle' | 'working' | 'done' | 'failed'>('idle');
 
-  const paragraphs = useMemo(() => splitParagraphs(version.content), [version.content]);
-  const shownContent = stepByStep ? (paragraphs[step] ?? '') : version.content;
-  // Students who receive audio hear the narrated script; others hear the text on screen.
-  const spokenContent = audio?.content ?? shownContent;
-  const sentences = useMemo(() => lessonSentences(spokenContent), [spokenContent]);
+  // The text is stored as the teacher wrote it; only what is shown is in the chosen script.
+  const show = (value: string) => displayInScript(value, preferences.script);
+  const body = useMemo(
+    () => displayInScript(lesson.body, preferences.script),
+    [lesson.body, preferences.script],
+  );
+  const paragraphs = useMemo(() => splitParagraphs(body), [body]);
+  const shownContent = stepByStep ? (paragraphs[step] ?? '') : body;
+  // The voice of the browser reads Latin script better, so it always gets Latin, also when the
+  // student looks at Cyrillic. The sentences are the same ones, so the highlight stays right.
+  const sentences = useMemo(() => lessonSentences(cyrillicToLatin(shownContent)), [shownContent]);
   const speech = useLessonSpeech(sentences);
 
-  useEffect(() => {
-    markStarted(lesson.id);
-  }, [lesson.id, markStarted]);
+  const { subject } = lesson;
+  const appearance = subjectAppearance(subject.id, subject.name);
+  const summary = lesson.summary?.points ?? [];
+  const readingClass = cn('text-ink', readingTextClassName(preferences));
+  const paperClass = cn(
+    'rounded-[2rem] px-6 py-8 shadow-soft sm:px-12 sm:py-12',
+    backgroundClass[preferences.background],
+    // On paper there is no colour behind the text, and no frame.
+    'print:rounded-none print:bg-white print:p-0 print:shadow-none',
+  );
+
+  async function saveAsWord() {
+    setWordState('working');
+    try {
+      await downloadLessonAsWord(
+        lessonDocumentContent({
+          title: lesson.title,
+          meta: t.metaLine(subject.name, subject.className),
+          dateLine: t.printedOn(formatDate(new Date().toISOString())),
+          summaryHeading: t.summaryHeading,
+          textHeading: t.textHeading,
+          body: lesson.body,
+          summaryPoints: summary,
+          script: preferences.script,
+        }),
+        preferences,
+      );
+      setWordState('done');
+    } catch {
+      setWordState('failed');
+    }
+  }
 
   return (
     <>
       <title>{text.app.pageTitle(lesson.title)}</title>
       <Link
         to={subjectPath(subject.id)}
-        className="inline-flex items-center gap-1.5 rounded-full font-display font-medium text-ink-soft hover:text-forest"
+        className="inline-flex items-center gap-1.5 rounded-full font-display font-medium text-ink-soft hover:text-forest print:hidden"
       >
         <ArrowLeftIcon aria-hidden="true" weight="bold" className="size-4" />
         {t.backToSubject(subject.name)}
       </Link>
 
-      <header className="mt-5 mb-6 flex flex-wrap items-center gap-4">
-        <SubjectBlob subject={subject} size="lg" />
-        <h1 className="font-display text-4xl font-semibold tracking-tight break-words text-ink">
-          {lesson.title}
-        </h1>
+      <header className="mt-5 mb-6 flex flex-wrap items-center gap-4 print:mt-0">
+        <SubjectBlob subject={appearance} size="lg" className="print:hidden" />
+        <div className="min-w-0">
+          <h1 className="font-display text-4xl font-semibold tracking-tight break-words text-ink print:text-black">
+            {show(lesson.title)}
+          </h1>
+          {/* Only on paper: who and when, because the page around it is not printed. */}
+          <p className="hidden text-base text-black print:block">
+            {show(t.metaLine(subject.name, subject.className))} ·{' '}
+            {t.printedOn(formatDate(new Date().toISOString()))}
+          </p>
+        </div>
       </header>
 
-      {/* Tools that change how the lesson is read or heard. */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.75rem] bg-card/70 p-2 shadow-soft">
-        <div className="flex flex-wrap gap-1">
-          <ToolButton
-            icon={TextAaIcon}
-            tone="bg-butter text-butter-ink"
-            active={settingsOpen}
-            aria-expanded={settingsOpen}
-            aria-controls={SETTINGS_PANEL_ID}
-            onClick={() => setSettingsOpen((open) => !open)}
-          >
-            {t.readingSettings}
-          </ToolButton>
-          <ToolButton
-            icon={FootprintsIcon}
-            tone="bg-mint text-mint-ink"
-            active={stepByStep}
-            aria-pressed={stepByStep}
-            onClick={() => {
-              setStepByStep((current) => !current);
-              setStep(0);
-            }}
-          >
-            {t.stepByStep}
-          </ToolButton>
+      {/* Tools that change how the lesson is read, heard or saved. They are not printed. */}
+      <div className="grid gap-3 print:hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.75rem] bg-card/70 p-2 shadow-soft">
+          <div className="flex flex-wrap items-center gap-1">
+            <ToolButton
+              icon={TextAaIcon}
+              tone="bg-butter text-butter-ink"
+              active={settingsOpen}
+              aria-expanded={settingsOpen}
+              aria-controls={SETTINGS_PANEL_ID}
+              onClick={() => setSettingsOpen((open) => !open)}
+            >
+              {t.readingSettings}
+            </ToolButton>
+            <ToolButton
+              icon={FootprintsIcon}
+              tone="bg-mint text-mint-ink"
+              active={stepByStep}
+              aria-pressed={stepByStep}
+              onClick={() => {
+                setStepByStep((current) => !current);
+                setStep(0);
+              }}
+            >
+              {t.stepByStep}
+            </ToolButton>
+            <ScriptSwitch
+              value={preferences.script}
+              onChange={(script) => update('script', script)}
+            />
+          </div>
+          <ListenControls
+            availability={speech.availability}
+            status={speech.status}
+            rate={speech.rate}
+            onRateChange={speech.setRate}
+            onPlay={speech.play}
+            onPause={speech.pause}
+            onResume={speech.resume}
+            onStop={speech.stop}
+          />
         </div>
-        <ListenControls
-          availability={speech.availability}
-          status={speech.status}
-          rate={speech.rate}
-          onRateChange={speech.setRate}
-          onPlay={speech.play}
-          onPause={speech.pause}
-          onResume={speech.resume}
-          onStop={speech.stop}
-        />
+        {preferences.script === 'cyrillic' && speech.availability === 'ready' && (
+          <p className="px-2 text-sm text-ink-soft">{text.pupil.audio.latinNote}</p>
+        )}
+
+        <div role="group" aria-label={t.export.label} className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => window.print()}
+            className="h-11 px-4"
+          >
+            <PrinterIcon aria-hidden="true" weight="bold" />
+            {t.export.print}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={wordState === 'working'}
+            onClick={() => void saveAsWord()}
+            className="h-11 px-4"
+          >
+            <FileDocIcon aria-hidden="true" weight="bold" />
+            {wordState === 'working' ? t.export.wordWorking : t.export.word}
+          </Button>
+          <p className="text-sm text-ink-soft">{t.export.printHint}</p>
+        </div>
+        <div role="status" aria-live="polite" className="empty:hidden">
+          {wordState === 'done' && <p className="font-medium text-mint-ink">{t.export.wordDone}</p>}
+          {wordState === 'failed' && (
+            <p role="alert" className="font-medium text-destructive">
+              {t.export.wordFailed}
+            </p>
+          )}
+        </div>
       </div>
 
       {settingsOpen && (
-        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mt-4">
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-4 print:hidden"
+        >
           <ReadingPreferencesPanel
             id={SETTINGS_PANEL_ID}
             preferences={preferences}
@@ -167,16 +249,26 @@ function LessonView({ lesson, subject, profile }: LessonViewProps) {
         </motion.div>
       )}
 
-      <article
-        aria-label={lesson.title}
-        className={cn(
-          'mt-4 rounded-[2rem] px-6 py-8 shadow-soft sm:px-12 sm:py-12',
-          backgroundClass[preferences.background],
-        )}
-      >
+      {summary.length > 0 && (
+        <section aria-labelledby="summary-heading" className={cn('mt-4', paperClass, 'print:mb-6')}>
+          <h2
+            id="summary-heading"
+            className="mb-4 font-display text-2xl font-semibold text-ink print:text-black"
+          >
+            {t.summaryHeading}
+          </h2>
+          <ul className={cn('list-disc space-y-2 pl-6', readingClass, 'print:text-black')}>
+            {summary.map((point, index) => (
+              <li key={index}>{show(point)}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <article aria-label={t.textHeading} className={cn('mt-4', paperClass)}>
         {stepByStep && (
           <p
-            className="mb-5 flex items-center gap-3 font-display font-medium text-mint-ink"
+            className="mb-5 flex items-center gap-3 font-display font-medium text-mint-ink print:hidden"
             aria-live="polite"
           >
             {t.stepProgress(step + 1, paragraphs.length)}
@@ -194,16 +286,27 @@ function LessonView({ lesson, subject, profile }: LessonViewProps) {
           </p>
         )}
 
-        <LessonContent
-          content={shownContent}
-          glossary={lesson.glossary}
-          // The narrated script differs from the text, so there is no sentence to follow.
-          activeSentence={audio ? null : speech.activeSentence}
-          className={cn('text-ink', readingTextClassName(preferences))}
-        />
+        {lesson.body.trim() === '' ? (
+          <p className="text-ink-soft">{t.noText}</p>
+        ) : (
+          // On paper the whole text is printed, also when the screen shows one step at a time.
+          <>
+            <LessonContent
+              content={shownContent}
+              activeSentence={speech.activeSentence}
+              className={cn(readingClass, stepByStep && 'print:hidden', 'print:text-black')}
+            />
+            {stepByStep && (
+              <LessonContent
+                content={body}
+                className={cn('hidden print:block print:text-black', readingClass)}
+              />
+            )}
+          </>
+        )}
 
         {stepByStep && (
-          <div className="mt-8 flex flex-wrap justify-between gap-3">
+          <div className="mt-8 flex flex-wrap justify-between gap-3 print:hidden">
             <Button
               type="button"
               variant="outline"
@@ -225,88 +328,65 @@ function LessonView({ lesson, subject, profile }: LessonViewProps) {
             </Button>
           </div>
         )}
-
-        {illustrations.length > 0 && (
-          <section aria-label={t.picturesLabel} className="mt-10 grid gap-6 sm:grid-cols-2">
-            {illustrations.map((item, index) => (
-              <motion.figure
-                key={item.id}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <img
-                  src={item.src}
-                  alt={item.alt}
-                  className="w-full rounded-3xl border border-border bg-card"
-                />
-                <figcaption className="mt-2 text-ink-soft">{item.caption}</figcaption>
-              </motion.figure>
-            ))}
-          </section>
-        )}
-
-        {lesson.glossary.length > 0 && (
-          <p className="mt-8 flex items-center gap-2 text-sm text-blush-ink">
-            <InfoIcon aria-hidden="true" weight="duotone" className="size-5 shrink-0" />
-            {t.glossaryHint}
-          </p>
-        )}
       </article>
 
-      <section aria-labelledby="finish-heading" className="mt-10">
-        <h2 id="finish-heading" className="font-display text-2xl font-semibold text-ink">
-          {t.finishHeading}
-        </h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <FinishCard
-            tone="bg-mint"
-            done={earned.lesson}
-            doneText={t.markedDone}
-            doneAction={
-              <button
-                type="button"
-                onClick={() => unmarkLessonDone(lesson.id)}
-                className="w-fit rounded-sm font-display font-medium text-mint-ink underline underline-offset-4"
-              >
-                {t.undoDone}
-              </button>
-            }
-          >
-            <Button
-              type="button"
-              onClick={() => markLessonDone(lesson.id)}
-              className="h-12 px-6 text-base"
-            >
-              <CheckCircleIcon aria-hidden="true" weight="bold" />
-              {t.markDone}
-            </Button>
-          </FinishCard>
-          {lesson.quiz.length > 0 && (
-            <FinishCard
-              tone="bg-lilac"
-              done={earned.quiz}
-              doneText={t.quizDone}
-              doneAction={
-                <Link
-                  to={studentQuizPath(lesson.id)}
-                  className="font-display font-medium text-lilac-ink underline underline-offset-4"
-                >
-                  {t.quizAgain}
-                </Link>
-              }
-            >
-              <Button asChild className="h-12 px-6 text-base">
-                <Link to={studentQuizPath(lesson.id)}>
-                  <PuzzlePieceIcon aria-hidden="true" weight="duotone" />
-                  {t.startQuiz}
-                </Link>
-              </Button>
-            </FinishCard>
-          )}
-        </div>
-      </section>
+      {lesson.quiz && (
+        <section
+          aria-labelledby="quiz-heading"
+          className="mt-10 rounded-[1.75rem] bg-lilac p-6 print:hidden"
+        >
+          <h2 id="quiz-heading" className="font-display text-2xl font-semibold text-ink">
+            {t.quizHeading}
+          </h2>
+          <p className="mt-1 text-ink">{t.quizIntro}</p>
+          <Button asChild className="mt-4 h-12 px-6 text-base">
+            <Link to={studentQuizPath(lesson.id)}>
+              <PuzzlePieceIcon aria-hidden="true" weight="duotone" />
+              {t.startQuiz}
+            </Link>
+          </Button>
+        </section>
+      )}
     </>
+  );
+}
+
+/** Latin or Cyrillic: two buttons, one of them pressed. Changes only what is shown. */
+function ScriptSwitch({
+  value,
+  onChange,
+}: {
+  value: (typeof SCRIPT_OPTIONS)[number];
+  onChange: (value: (typeof SCRIPT_OPTIONS)[number]) => void;
+}) {
+  const labels = text.pupil.reading.script;
+  return (
+    <div
+      role="group"
+      aria-label={text.pupil.lesson.scriptLabel}
+      className="flex items-center gap-1 rounded-2xl py-1.5 pr-1.5 pl-1.5"
+    >
+      <span
+        aria-hidden="true"
+        className={cn('flex size-9 items-center justify-center bg-sky text-sky-ink', blobShape)}
+      >
+        <TranslateIcon weight="duotone" className="size-5" />
+      </span>
+      {SCRIPT_OPTIONS.map((option) => (
+        <button
+          key={option}
+          type="button"
+          aria-pressed={value === option}
+          onClick={() => onChange(option)}
+          className={cn(
+            'rounded-xl px-3 py-1.5 font-display font-medium text-ink transition-colors',
+            value === option ? 'bg-card shadow-soft' : 'hover:bg-card/80',
+          )}
+        >
+          {labels[option]}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -339,44 +419,5 @@ function ToolButton({
       </span>
       {children}
     </button>
-  );
-}
-
-/** One way to earn a star: an action, or what was earned once it is done. */
-function FinishCard({
-  tone,
-  done,
-  doneText,
-  doneAction,
-  children,
-}: {
-  tone: string;
-  done: boolean;
-  doneText: string;
-  doneAction?: ReactNode;
-  children: ReactNode;
-}) {
-  const t = text.student.lesson;
-  return (
-    <div className={cn('flex flex-col gap-4 rounded-[1.75rem] p-6', tone)}>
-      {/* Always rendered so the earned star is announced when it appears. */}
-      <div role="status" className="flex items-center gap-3">
-        <motion.span
-          key={String(done)}
-          aria-hidden="true"
-          initial={done ? { scale: 0.4, rotate: -30 } : false}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 12 }}
-          className="flex size-12 shrink-0 items-center justify-center rounded-full bg-card"
-        >
-          <StarIcon
-            weight={done ? 'fill' : 'duotone'}
-            className={cn('size-7', done ? 'text-butter-deep' : 'text-ink-soft/50')}
-          />
-        </motion.span>
-        <p className="font-display font-semibold text-ink">{done ? doneText : t.plusStar}</p>
-      </div>
-      {done ? doneAction : children}
-    </div>
   );
 }

@@ -1,5 +1,5 @@
 import type { Enrollment } from '@/features/subject-requests/api/enrollmentsApi';
-import type { CatalogSubject, Star } from '@/features/student/api/studentApi';
+import type { CatalogSubject, Star, StudentLesson } from '@/features/student/api/studentApi';
 import { testUsers } from './authFixtures';
 import { biology5b } from './lessonApiFixtures';
 
@@ -77,3 +77,44 @@ export const teacherStar: Star = {
   message: 'Lijepo si radila na času',
   givenBy: { id: 't1', fullName: 'Milica Petrović' },
 };
+
+/** A published lesson as the test student gets it. */
+export function studentLessonOf(overrides: Partial<StudentLesson> = {}): StudentLesson {
+  return {
+    id: 'l1',
+    title: 'Fotosinteza',
+    status: 'published',
+    subject: {
+      id: biology5b.id,
+      name: 'Biologija',
+      className: '5-2',
+      schoolYear: 2026,
+      teacher: { id: 't1', fullName: 'Milica Petrović' },
+    },
+    publishedAt: '2026-11-03T10:00:00.000Z',
+    body: 'Biljke prave hranu uz pomoć svjetlosti. To se zove fotosinteza.\n\nLjubav prema njivi je velika!',
+    summary: { points: ['Biljke prave hranu.', 'Za to im treba svjetlost.'] },
+    quiz: {
+      questions: [
+        {
+          id: 'q1',
+          position: 1,
+          kind: 'choice',
+          prompt: 'Šta biljke prave?',
+          options: [
+            { id: 'o1', position: 1, text: 'Hranu' },
+            { id: 'o2', position: 2, text: 'Vodu' },
+            { id: 'o3', position: 3, text: 'Kamen' },
+          ],
+        },
+      ],
+    },
+    myProgress: {
+      completed: false,
+      completedAt: null,
+      canFinish: false,
+      quiz: { openAttemptId: null, nextAttemptAt: null, passed: false },
+    },
+    ...overrides,
+  };
+}

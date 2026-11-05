@@ -27,7 +27,7 @@ export function ListenControls({
   onResume,
   onStop,
 }: ListenControlsProps) {
-  const t = text.student.audio;
+  const t = text.pupil.audio;
   const speedId = useId();
 
   if (availability !== 'ready') {
