@@ -41,6 +41,42 @@ export const useSubjectLessons = (subjectId: string) =>
 /** The stars of the student; the menu, the home page and the stars page share this request. */
 export const useMyStars = () => useQuery({ queryKey: key('stars'), queryFn: studentApi.stars });
 
+/** The tries at the quiz, asked only when the student opens them. */
+export const useMyTries = (lessonId: string, enabled: boolean) =>
+  useQuery({
+    queryKey: key('tries', lessonId),
+    queryFn: () => studentApi.history(lessonId),
+    enabled,
+  });
+
+export const useStartTry = (lessonId: string) =>
+  useMutation({ mutationFn: () => studentApi.startTry(lessonId) });
+
+export const useAnswerQuestion = (lessonId: string, tryId: string) =>
+  useMutation({
+    mutationFn: (input: { questionId: string; optionId: string }) =>
+      studentApi.answer(lessonId, tryId, input),
+  });
+
+/** Finishing a lesson gives a star and moves the progress, so everything of the student is asked again. */
+export function useCompleteLesson(lessonId: string) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: () => studentApi.complete(lessonId),
+    onSuccess: () => client.invalidateQueries({ queryKey: key() }),
+  });
+}
+
+/** After a try the wait before the next one is known by the server only; ask the lesson again. */
+export function useRefreshLesson(lessonId: string) {
+  const client = useQueryClient();
+  return () =>
+    Promise.all([
+      client.invalidateQueries({ queryKey: key('lesson', lessonId) }),
+      client.invalidateQueries({ queryKey: key('tries', lessonId) }),
+    ]);
+}
+
 export function useRequestToJoin() {
   const client = useQueryClient();
   return useMutation({

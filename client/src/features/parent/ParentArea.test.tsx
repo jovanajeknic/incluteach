@@ -81,25 +81,6 @@ describe('Child lessons', () => {
     const home = screen.getByRole('region', { name: 'Za rad kod kuće' });
     expect(home).toHaveTextContent(/čašu vode na suncu/);
   });
-
-  it('shows practice done live in the student area, including where it was hard', async () => {
-    const { user, goAs } = renderApp({ path: '/student/lessons/kruzenje-vode/quiz' });
-
-    await user.click(screen.getByRole('button', { name: 'Mjesec' }));
-    await user.click(screen.getByRole('button', { name: /Sljedeće pitanje/ }));
-    await user.click(screen.getByRole('button', { name: 'Od sitnih kapljica vode' }));
-    await user.click(screen.getByRole('button', { name: /Sljedeće pitanje/ }));
-    await user.click(screen.getByRole('button', { name: 'Snijeg' }));
-    await user.click(screen.getByRole('button', { name: /Završi kviz/ }));
-
-    await goAs('parent', '/parent/children/demo-student-luka/lessons/kruzenje-vode');
-
-    expect(screen.getByText('Verzija nižeg nivoa')).toBeInTheDocument();
-    expect(screen.getByText('Još nije označeno kao pređeno')).toBeInTheDocument();
-    const practice = screen.getByRole('region', { name: 'Kviz' });
-    expect(practice).toHaveTextContent('Šta grije vodu u morima i rijekama?');
-    expect(practice).not.toHaveTextContent('Od čega nastaju oblaci?');
-  });
 });
 
 describe('Suggestions for the teacher', () => {

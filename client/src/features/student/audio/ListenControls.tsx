@@ -6,6 +6,8 @@ import { text } from '@/text/sr-Latn';
 import type { SpeechAvailability, SpeechRate, SpeechStatus } from './useLessonSpeech';
 
 interface ListenControlsProps {
+  /** The words on the play button; by default "Poslušaj lekciju". */
+  listenLabel?: string;
   availability: SpeechAvailability;
   status: SpeechStatus;
   rate: SpeechRate;
@@ -18,6 +20,7 @@ interface ListenControlsProps {
 
 /** Play, pause, stop and speed. Never starts on its own. */
 export function ListenControls({
+  listenLabel,
   availability,
   status,
   rate,
@@ -45,7 +48,7 @@ export function ListenControls({
       {status === 'idle' && (
         <Button type="button" onClick={onPlay} className="h-11 px-5">
           <PlayIcon aria-hidden="true" weight="fill" />
-          {t.listen}
+          {listenLabel ?? t.listen}
         </Button>
       )}
       {status === 'playing' && (
