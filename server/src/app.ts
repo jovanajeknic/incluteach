@@ -11,6 +11,7 @@ import { rejectNul } from './http/rejectNul.ts';
 import { requestLog } from './http/requestLog.ts';
 import { authRouter } from './routes/auth.ts';
 import { classesRouter } from './routes/classes.ts';
+import { conversationsRouter } from './routes/conversations.ts';
 import { catalogRouter, enrollmentsRouter } from './routes/enrollments.ts';
 import { BackgroundJobs } from './lessons/jobs.ts';
 import { healthRouter } from './routes/health.ts';
@@ -72,6 +73,7 @@ export function createApp({
   app.use('/lessons', lessonsRouter(pool, { ai, jobs, timeoutMs: aiTimeoutMs }));
   app.use('/lessons', quizRouter(pool));
   app.use('/stars', starsRouter(pool));
+  app.use('/conversations', conversationsRouter(pool));
 
   app.use(notFoundHandler);
   app.use(errorHandler);

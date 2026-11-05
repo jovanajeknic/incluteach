@@ -566,6 +566,37 @@ A lesson belongs to a subject and holds the text of the teacher, as written. See
 - **Success response**: `204`.
 - **Errors**: `403 forbidden`, `404 not_found` (no such star, not given by this teacher, or an automatic one).
 
+### GET /conversations/messages
+
+- **Status**: implemented
+- **Purpose**: the conversation between the parents of a child and the teacher of a subject. There is one conversation for each student and subject, shared by the teacher of the subject and **every parent linked to the student** (both parents see the same messages and can both write). The student does not see it.
+- **Who may call it**: `parent` (a linked child, who joined the subject), `teacher` (of the subject, a student who joined it).
+- **Request**: query `studentId` and `subjectId`, both required; `limit` (the newest messages, default 100, at most 200).
+- **Success response**: `200 { student: { id, fullName }, subject: { id, name }, messages, total }`. `messages` are the newest ones, **oldest first**, each `{ id, author: { id, fullName, role }, body, createdAt }` with `role` `parent` or `teacher`. `total` counts all messages. An empty conversation has `messages: []`.
+- **Errors**: `400 invalid_student` / `400 invalid_subject` (missing or not an id), `403 forbidden` (a parent names a child that is not theirs, or the caller is the student or the admin), `404 not_found` (the subject is not this teacher's, or the student has not joined the subject).
+- **Used by (frontend)**: the "Razgovor" screen of a child and a subject, for a parent and for the teacher: a list of messages with the name and role of the writer, and a field below. Reload it every few seconds or when the screen is opened (there is no push).
+
+### POST /conversations/messages
+
+- **Status**: implemented
+- **Purpose**: write a message in the conversation, as a parent or as the teacher.
+- **Who may call it**: `parent`, `teacher`, with the same access as above.
+- **Request**: body `{ studentId, subjectId, body }`. `body` is 1 to 1000 characters; line breaks stay, the space around the message is removed.
+- **Success response**: `201 { message }` with `{ id, author, body, createdAt, student, subject }`.
+- **Errors**: `400 invalid_student`, `400 invalid_subject`, `400 invalid_message`, `403 forbidden`, `404 not_found`.
+- **Notes**: a message cannot be edited or deleted, and there is no "read" mark yet.
+- **Used by (frontend)**: the send button of the conversation.
+
+### GET /conversations
+
+- **Status**: implemented
+- **Purpose**: an inbox: the conversations that have at least one message, the one with the newest message first.
+- **Who may call it**: `teacher` (conversations about students of their subjects), `parent` (conversations about their children).
+- **Request**: query `limit` (default 100, at most 200).
+- **Success response**: `200 { conversations }`, each `{ student: { id, fullName }, subject: { id, name }, messageCount, lastMessage }` where `lastMessage` is a message as above. To open one, call `GET /conversations/messages` with its student and subject.
+- **Errors**: `403 forbidden` (student or admin).
+- **Used by (frontend)**: the list of conversations in the teacher's view, and "Poruke" for a parent.
+
 ## Not defined yet
 
-Comments of a parent and the teacher, progress per subject, removing a student from a subject at the end of the year, copying classes and subjects to a new school year, changing one's own password, the school request form of the landing page.
+Progress per subject, removing a student from a subject at the end of the year, copying classes and subjects to a new school year, changing one's own password, the school request form of the landing page.

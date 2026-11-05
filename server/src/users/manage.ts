@@ -185,6 +185,11 @@ export async function deleteUsers(
     await db.query('DELETE FROM quiz_attempts WHERE student_id = ANY($1::uuid[])', [deleted]);
     await db.query('DELETE FROM lesson_completions WHERE student_id = ANY($1::uuid[])', [deleted]);
     await db.query('DELETE FROM stars WHERE student_id = ANY($1::uuid[])', [deleted]);
+    // The conversations about a deleted student, and what a deleted parent or teacher wrote.
+    await db.query(
+      'DELETE FROM conversation_messages WHERE student_id = ANY($1::uuid[]) OR author_id = ANY($1::uuid[])',
+      [deleted],
+    );
     // A deleted student's own requests go with them.
     await db.query('DELETE FROM enrollments WHERE student_id = ANY($1::uuid[])', [deleted]);
     // Links to a parent or student are removed too, except a link that a remaining
