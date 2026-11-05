@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { lessonsApi, type Lesson, type LessonFilters } from './lessonsApi';
+import { lessonsApi, type Lesson, type LessonFilters, type QuizQuestionInput } from './lessonsApi';
 
 // The first part of every key names the kind of data, so a change can refresh the right ones.
 const subjectsKey = ['subjects', 'mine'] as const;
@@ -75,6 +75,10 @@ export const useDeleteSummary = (id: string) =>
   useLessonCall(id, () => lessonsApi.deleteSummary(id));
 export const useApproveSummary = (id: string) =>
   useLessonCall(id, () => lessonsApi.approveSummary(id));
+export const useSaveQuiz = (id: string) =>
+  useLessonCall(id, (questions: QuizQuestionInput[]) => lessonsApi.saveQuiz(id, questions));
+export const useDeleteQuiz = (id: string) => useLessonCall(id, () => lessonsApi.deleteQuiz(id));
+export const useApproveQuiz = (id: string) => useLessonCall(id, () => lessonsApi.approveQuiz(id));
 
 export function useCreateLesson() {
   const refresh = useRefreshAfterChange();

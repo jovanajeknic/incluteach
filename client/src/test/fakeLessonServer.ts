@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
-import type { Lesson, Summary } from '@/features/lessons/api/lessonsApi';
+import type { Lesson, Quiz, QuizQuestionInput, Summary } from '@/features/lessons/api/lessonsApi';
 import { apiError } from './authFixtures';
-import { summaryOf } from './lessonApiFixtures';
+import { quizOf, summaryOf } from './lessonApiFixtures';
 import { server } from './server';
 
 /**
@@ -11,7 +11,13 @@ import { server } from './server';
 export function keepLesson(initial: Lesson, options: { ai?: string } = {}) {
   const state = {
     lesson: initial,
-    sent: { generate: [] as unknown[], summary: [] as string[][], approved: [] as string[] },
+    sent: {
+      generate: [] as unknown[],
+      summary: [] as string[][],
+      quiz: [] as QuizQuestionInput[][],
+      approved: [] as string[],
+      published: 0,
+    },
     /** Makes the next call of the given kind fail with an error code. */
     failNext: null as { code: string; status: number } | null,
   };
@@ -52,6 +58,40 @@ export function keepLesson(initial: Lesson, options: { ai?: string } = {}) {
       return touch({ summary });
     }),
     http.delete('*/api/lessons/:id/summary', () => touch({ summary: null })),
+    http.put('*/api/lessons/:id/quiz', async ({ request }) => {
+      const { questions } = (await request.json()) as { questions: QuizQuestionInput[] };
+      state.sent.quiz.push(questions);
+      const failed = failure();
+      if (failed) return failed;
+      const quiz: Quiz = quizOf(
+        {
+          origin: state.lesson.quiz?.origin ?? 'teacher',
+          updatedAt: `2026-11-05T13:0${state.sent.quiz.length}:00.000Z`,
+        },
+        questions,
+      );
+      return touch({ quiz });
+    }),
+    http.delete('*/api/lessons/:id/quiz', () => touch({ quiz: null })),
+    http.post('*/api/lessons/:id/quiz/approve', () => {
+      state.sent.approved.push('quiz');
+      const failed = failure();
+      if (failed) return failed;
+      const quiz: Quiz = {
+        ...state.lesson.quiz!,
+        status: 'approved',
+        outdated: false,
+        approvedAt: '2026-11-05T13:30:00.000Z',
+        updatedAt: '2026-11-05T13:30:00.000Z',
+      };
+      return touch({ quiz });
+    }),
+    http.post('*/api/lessons/:id/publish', () => {
+      state.sent.published += 1;
+      const failed = failure();
+      if (failed) return failed;
+      return touch({ status: 'published', publishedAt: '2026-11-05T14:00:00.000Z' });
+    }),
     http.post('*/api/lessons/:id/summary/approve', () => {
       state.sent.approved.push('summary');
       const failed = failure();

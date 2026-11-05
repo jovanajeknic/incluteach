@@ -1,6 +1,8 @@
 import type {
   Lesson,
   LessonListItem,
+  Quiz,
+  QuizQuestionInput,
   Summary,
   TeacherSubject,
 } from '@/features/lessons/api/lessonsApi';
@@ -78,6 +80,56 @@ export function summaryOf(overrides: Partial<Summary> = {}): Summary {
     approvedAt: null,
     updatedAt: '2026-11-05T10:00:00.000Z',
     points: ['Biljke prave hranu.', 'Za to im treba svjetlost.'],
+    ...overrides,
+  };
+}
+
+/** The questions of the usual test quiz, in the shape the teacher sends them. */
+export const quizQuestions: QuizQuestionInput[] = [
+  {
+    kind: 'choice',
+    prompt: 'Šta biljke prave uz svjetlost?',
+    explanation: 'Biljke prave hranu uz pomoć svjetlosti.',
+    options: [
+      { text: 'Hranu', isCorrect: true },
+      { text: 'Vodu', isCorrect: false },
+      { text: 'Kamen', isCorrect: false },
+    ],
+  },
+  {
+    kind: 'true_false',
+    prompt: 'Biljke diše kroz lišće.',
+    options: [
+      { text: 'Tačno', isCorrect: true },
+      { text: 'Netačno', isCorrect: false },
+    ],
+  },
+];
+
+/** A quiz as the teacher gets it, made from the questions in the form they are sent in. */
+export function quizOf(
+  overrides: Partial<Quiz> = {},
+  questions: QuizQuestionInput[] = quizQuestions,
+): Quiz {
+  return {
+    origin: 'ai',
+    status: 'draft',
+    outdated: false,
+    approvedAt: null,
+    updatedAt: '2026-11-05T10:00:00.000Z',
+    questions: questions.map((question, index) => ({
+      id: `q${index + 1}`,
+      position: index + 1,
+      kind: question.kind,
+      prompt: question.prompt,
+      explanation: question.explanation ?? null,
+      options: question.options.map((option, optionIndex) => ({
+        id: `q${index + 1}o${optionIndex + 1}`,
+        position: optionIndex + 1,
+        text: option.text,
+        isCorrect: option.isCorrect,
+      })),
+    })),
     ...overrides,
   };
 }

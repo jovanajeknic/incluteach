@@ -1,7 +1,7 @@
 import { text } from '@/text/sr-Latn';
 import type { Lesson } from '../api/lessonsApi';
 import { GeneratePanel } from './GeneratePanel';
-import { PartState } from './PartState';
+import { QuizSection } from './QuizSection';
 import { SummarySection } from './SummarySection';
 
 interface ReviewSectionProps {
@@ -25,16 +25,7 @@ export function ReviewSection({ lesson, textDirty, onDirtyChange }: ReviewSectio
 
       <GeneratePanel lesson={lesson} textDirty={textDirty} />
       <SummarySection lesson={lesson} locked={locked} onDirtyChange={onDirtyChange} />
-      {lesson.quiz && (
-        <div className="mt-8">
-          <h3 className="font-display text-xl font-semibold text-ink">{t.generate.quiz}</h3>
-          <PartState
-            origin={lesson.quiz.origin}
-            status={lesson.quiz.status}
-            outdated={lesson.quiz.outdated}
-          />
-        </div>
-      )}
+      <QuizSection lesson={lesson} locked={locked} onDirtyChange={onDirtyChange} />
     </section>
   );
 }

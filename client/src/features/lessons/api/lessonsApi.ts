@@ -85,6 +85,20 @@ export interface Quiz extends LessonPart {
   questions: QuizQuestion[];
 }
 
+/** Limits of the API (see API-CONTRACT.md, "PUT /lessons/{id}/quiz"). */
+export const QUIZ_MAX_QUESTIONS = 20;
+export const QUIZ_PROMPT_MAX_LENGTH = 500;
+export const QUIZ_OPTION_MAX_LENGTH = 300;
+export const QUIZ_EXPLANATION_MAX_LENGTH = 500;
+
+/** A question as the server takes it: the whole quiz is sent at once, in the order wanted. */
+export interface QuizQuestionInput {
+  kind: 'choice' | 'true_false';
+  prompt: string;
+  explanation?: string;
+  options: { text: string; isCorrect: boolean }[];
+}
+
 export interface Lesson extends LessonListItem {
   body: string;
   source: 'pasted' | 'docx' | 'pdf';
@@ -153,6 +167,12 @@ export const lessonsApi = {
     apiRequest<{ lesson: Lesson }>(`/lessons/${id}/summary`, { method: 'PUT', body: { points } }),
   deleteSummary: (id: string) =>
     apiRequest<{ lesson: Lesson }>(`/lessons/${id}/summary`, { method: 'DELETE' }),
+  saveQuiz: (id: string, questions: QuizQuestionInput[]) =>
+    apiRequest<{ lesson: Lesson }>(`/lessons/${id}/quiz`, { method: 'PUT', body: { questions } }),
+  deleteQuiz: (id: string) =>
+    apiRequest<{ lesson: Lesson }>(`/lessons/${id}/quiz`, { method: 'DELETE' }),
+  approveQuiz: (id: string) =>
+    apiRequest<{ lesson: Lesson }>(`/lessons/${id}/quiz/approve`, { method: 'POST' }),
   approveSummary: (id: string) =>
     apiRequest<{ lesson: Lesson }>(`/lessons/${id}/summary/approve`, { method: 'POST' }),
   publish: (id: string) =>
