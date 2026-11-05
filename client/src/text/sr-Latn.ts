@@ -456,11 +456,13 @@ export const text = {
       invalid_title: 'Naslov mora imati od 1 do 200 znakova.',
       invalid_body: 'Tekst je predug. Može imati najviše 40.000 znakova.',
       invalid_subject: 'Izaberi predmet koji predaješ.',
+      invalid_summary:
+        'Sažetak nije ispravan. Provjeri tačke: svaka mora imati od 1 do 300 znakova, a može ih biti najviše 30.',
       lesson_published: 'Objavljenu lekciju nije moguće mijenjati. Vrati je u nacrt, pa je uredi.',
       lesson_busy: 'AI trenutno radi na ovoj lekciji. Sačekaj da završi.',
       lesson_has_no_text: 'Lekcija nema tekst. Dodaj tekst, pa je objavi.',
       needs_approval:
-        'Sažetak ili kviz ove lekcije još nije odobren, pa je ne možeš objaviti. Odobravanje dolazi uskoro.',
+        'Sažetak ili kviz ove lekcije još nije odobren, pa je ne možeš objaviti. Odobri ih ili ih obriši.',
       content_outdated:
         'Tekst se promijenio poslije izrade sažetka ili kviza. Odobri ih ponovo prije objave.',
       wrong_state: 'Lekcija je u međuvremenu promijenjena. Osvježi stranicu i pokušaj ponovo.',
@@ -653,6 +655,80 @@ export const text = {
       notFoundTitle: 'Razgovor nije pronađen',
       notFoundDescription: 'Ovaj učenik nije upisan na tvoj predmet.',
     },
+    review: {
+      heading: 'Sažetak i kviz',
+      intro:
+        'AI može da napravi sažetak i kviz iz teksta lekcije. Ti ih pročitaš, ispraviš i odobriš; učenici vide samo ono što si odobrio/la.',
+      ai: {
+        fake: 'Test AI: rezultati su izmišljeni i služe samo za isprobavanje.',
+        real: 'Pažljivo pročitaj šta je AI napravio, naročito ako je lekcija na ćirilici.',
+      },
+      generate: {
+        legend: 'Šta da AI napravi',
+        summary: 'Sažetak',
+        quiz: 'Kviz',
+        button: 'Napravi sažetak i kviz',
+        buttonOne: 'Napravi',
+        retry: 'Pokušaj ponovo',
+        working: 'AI radi na sažetku i kvizu…',
+        workingHint: 'Ovo traje nekoliko sekundi. Stranica se sama osvježava.',
+        noText: 'Prvo dodaj tekst lekcije.',
+        unsavedText: 'Prvo sačuvaj izmjene teksta, jer AI čita sačuvani tekst.',
+        confirmTitle: 'Napraviti ponovo?',
+        confirmText:
+          'AI će zamijeniti postojeće i tvoje ručne izmjene u njemu se gube. Odobrenje se poništava.',
+        confirmYes: 'Da, napravi ponovo',
+        cancel: 'Odustani',
+      },
+      // The server explains a failed run in English; these are the matching Serbian texts.
+      failures: {
+        tooLong:
+          'Tekst je predug za AI koji je trenutno podešen. Pošalji kraći dio lekcije (oko 10.000 znakova na latinici, 6.000 na ćirilici).',
+        tooShort: 'Tekst je prekratak za kviz. Dodaj još sadržaja, ili napiši kviz sam/a.',
+        busy: 'AI je trenutno zauzet. Pokušaj ponovo za minut.',
+        dailyLimit: 'Dnevno ograničenje AI-ja je potrošeno. Pokušaj ponovo sjutra.',
+        unusable: 'AI je odgovorio na način koji se ne može iskoristiti. Pokušaj ponovo.',
+        interrupted: 'Posao je prekinut. Pokušaj ponovo.',
+        general: 'AI nije uspio da napravi sažetak i kviz. Ništa nije izgubljeno. Pokušaj ponovo.',
+      },
+      state: {
+        aiDraft: 'Napravio AI, čeka odobrenje',
+        teacherDraft: 'Nacrt, čeka odobrenje',
+        approved: 'Odobren',
+        outdated:
+          'Tekst lekcije se promijenio poslije izrade. Pročitaj ponovo i odobri ako i dalje odgovara.',
+      },
+      locked: 'Lekcija je objavljena ili je AI još radi. Vrati je u nacrt da urediš.',
+      summary: {
+        heading: 'Sažetak',
+        none: 'Za ovu lekciju još nema sažetka.',
+        write: 'Napiši sažetak sam/a',
+        pointLabel: (n: number) => `Tačka ${n}`,
+        add: 'Dodaj tačku',
+        remove: (n: number) => `Ukloni tačku ${n}`,
+        up: (n: number) => `Pomjeri tačku ${n} gore`,
+        down: (n: number) => `Pomjeri tačku ${n} dolje`,
+        counter: (used: number, max: number) => `${used} od ${max} znakova`,
+        save: 'Sačuvaj',
+        saving: 'Čuvanje…',
+        saved: 'Sažetak je sačuvan.',
+        approve: 'Odobri sažetak',
+        approving: 'Odobravanje…',
+        approved: 'Sažetak je odobren.',
+        approveFirstSave: 'Prvo sačuvaj izmjene, pa odobri.',
+        remove_all: 'Obriši sažetak',
+        removeTitle: 'Obrisati sažetak?',
+        removeText: 'Sažetak će biti trajno obrisan. Lekcija se može objaviti i bez njega.',
+        removeYes: 'Da, obriši',
+        removed: 'Sažetak je obrisan.',
+        errors: {
+          pointRequired: 'Napiši tačku ili je ukloni.',
+          pointTooLong: 'Tačka može imati najviše 300 znakova.',
+          noPoints: 'Sažetak mora imati bar jednu tačku.',
+          tooMany: 'Sažetak može imati najviše 30 tačaka.',
+        },
+      },
+    },
     newLesson: {
       pageTitle: 'Dodaj lekciju',
       heading: 'Dodaj lekciju',
@@ -711,7 +787,6 @@ export const text = {
       readOnlyPublished:
         'Lekcija je objavljena i ne može se mijenjati. Vrati je u nacrt da urediš tekst.',
       processing: 'AI trenutno radi na ovoj lekciji. Stranica se sama osvježava.',
-      processingError: 'AI nije uspio da završi posao. Pokušaj ponovo kasnije.',
       replaceFile: 'Zamijeni tekst iz fajla',
       replaceTitle: 'Zamijeniti tekst?',
       replaceText:
@@ -725,18 +800,6 @@ export const text = {
         count % 10 === 1 && count % 100 !== 11
           ? `Dokument ima ${count} sliku koja nije uključena u tekst. Ako je važna, opiši je u tekstu.`
           : `Dokument ima ${count} slika koje nisu uključene u tekst. Ako su važne, opiši ih u tekstu.`,
-      content: {
-        heading: 'Sažetak i kviz',
-        none: 'Za ovu lekciju još nema sažetka ni kviza.',
-        summary: 'Sažetak',
-        quiz: 'Kviz',
-        draft: 'čeka odobrenje',
-        approved: 'odobren',
-        outdated: 'zastario, tekst se promijenio',
-        byAi: 'napravio AI',
-        byTeacher: 'napisao nastavnik',
-        soon: 'Uređivanje i odobravanje dolaze uskoro.',
-      },
       publish: 'Objavi',
       publishing: 'Objavljivanje…',
       publishedAt: (date: string) =>

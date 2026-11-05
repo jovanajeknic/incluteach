@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { lessonsApi, type LessonFilters } from './lessonsApi';
+import { lessonsApi, type Lesson, type LessonFilters } from './lessonsApi';
 
 // The first part of every key names the kind of data, so a change can refresh the right ones.
 const subjectsKey = ['subjects', 'mine'] as const;
@@ -17,6 +17,15 @@ export const useLessons = (filters: LessonFilters) =>
     queryFn: () => lessonsApi.list(filters),
     // Changing the filter keeps the old list on screen until the new one arrives.
     placeholderData: keepPreviousData,
+  });
+
+/** Asked once: which AI is set up does not change while the page is open. */
+export const useAiName = () =>
+  useQuery({
+    queryKey: ['health'],
+    queryFn: lessonsApi.health,
+    select: (health) => health.ai ?? null,
+    staleTime: Infinity,
   });
 
 export const useLesson = (id: string) =>
@@ -38,6 +47,34 @@ function useRefreshAfterChange() {
       client.invalidateQueries({ queryKey: subjectsKey }),
     ]);
 }
+
+/**
+ * A call about the summary or the quiz answers with the whole lesson; it replaces the one on
+ * screen at once (no wait for a new request) and refreshes the lists and counters.
+ */
+function useLessonCall<Variables>(
+  id: string,
+  call: (variables: Variables) => Promise<{ lesson: Lesson }>,
+) {
+  const client = useQueryClient();
+  const refresh = useRefreshAfterChange();
+  return useMutation({
+    mutationFn: call,
+    onSuccess: (answer) => {
+      client.setQueryData([...lessonsKey, 'one', id], { lesson: answer.lesson });
+      return refresh();
+    },
+  });
+}
+
+export const useGenerate = (id: string) =>
+  useLessonCall(id, (parts: { summary: boolean; quiz: boolean }) => lessonsApi.generate(id, parts));
+export const useSaveSummary = (id: string) =>
+  useLessonCall(id, (points: string[]) => lessonsApi.saveSummary(id, points));
+export const useDeleteSummary = (id: string) =>
+  useLessonCall(id, () => lessonsApi.deleteSummary(id));
+export const useApproveSummary = (id: string) =>
+  useLessonCall(id, () => lessonsApi.approveSummary(id));
 
 export function useCreateLesson() {
   const refresh = useRefreshAfterChange();

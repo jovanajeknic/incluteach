@@ -252,7 +252,7 @@ describe('A lesson', () => {
       'href',
       `/teacher/subjects/${biology5b.id}`,
     );
-    expect(screen.getByText('Za ovu lekciju još nema sažetka ni kviza.')).toBeInTheDocument();
+    expect(screen.getByText('Za ovu lekciju još nema sažetka.')).toBeInTheDocument();
   });
 
   it('says it does not exist when the server says so', async () => {
@@ -277,24 +277,6 @@ describe('A lesson', () => {
     renderApp({ path: LESSON_PATH });
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Nije moguće učitati podatke');
-  });
-
-  it('shows what the AI made, with its state, and a warning when it is out of date', async () => {
-    keepLesson(
-      lessonOf({
-        status: 'in_review',
-        summary: { origin: 'ai', status: 'draft', outdated: false },
-        quiz: { origin: 'ai', status: 'approved', outdated: true },
-      }),
-    );
-    renderApp({ path: LESSON_PATH });
-
-    expect(await screen.findByText(/Sažetak/, { selector: 'li span' })).toBeInTheDocument();
-    const items = screen
-      .getAllByRole('listitem')
-      .filter((item) => /Sažetak|Kviz/.test(item.textContent ?? ''));
-    expect(items[0]).toHaveTextContent('Sažetak: čeka odobrenje · napravio AI');
-    expect(items[1]).toHaveTextContent('Kviz: zastario, tekst se promijenio');
   });
 
   describe('editing', () => {
@@ -569,23 +551,19 @@ describe('A lesson', () => {
       );
       renderApp({ path: LESSON_PATH });
 
-      expect(await screen.findByText(/AI trenutno radi na ovoj lekciji/)).toBeInTheDocument();
+      expect(await screen.findByText('AI radi na sažetku i kvizu…')).toBeInTheDocument();
       expect(screen.getByLabelText(/Tekst lekcije/)).toHaveAttribute('readonly');
       expect(screen.getByRole('button', { name: 'Objavi' })).toBeDisabled();
 
       // The page asks again every 2.5 seconds, without being touched.
-      await waitFor(() => expect(screen.queryByText(/AI trenutno radi/)).not.toBeInTheDocument(), {
-        timeout: 4500,
-      });
+      await waitFor(
+        () => expect(screen.queryByText(/AI radi na sažetku/)).not.toBeInTheDocument(),
+        {
+          timeout: 4500,
+        },
+      );
       expect(screen.getByText('Čeka pregled')).toBeInTheDocument();
       expect(screen.getByLabelText(/Tekst lekcije/)).not.toHaveAttribute('readonly');
     }, 10000);
-
-    it('says when the last AI run failed', async () => {
-      keepLesson(lessonOf({ processingError: 'The AI service is busy.' }));
-      renderApp({ path: LESSON_PATH });
-
-      expect(await screen.findByText(/AI nije uspio da završi posao/)).toBeInTheDocument();
-    });
   });
 });

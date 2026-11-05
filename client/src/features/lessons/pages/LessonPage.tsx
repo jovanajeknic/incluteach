@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeftIcon, FileArrowUpIcon, InfoIcon, WarningIcon } from '@phosphor-icons/react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Link, useBlocker, useLocation, useNavigate, useParams } from 'react-router';
 import { ApiError } from '@/shared/api/apiClient';
@@ -14,11 +14,10 @@ import { cn } from '@/shared/lib/utils';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Textarea } from '@/shared/ui/textarea';
-import { AiPulse } from '@/shared/visual/AiPulse';
 import { LessonContent } from '@/features/lesson-content/LessonContent';
 import { text } from '@/text/sr-Latn';
 import { lessonErrorMessage } from '../apiErrorMessage';
-import { BODY_MAX_LENGTH, type Lesson, type LessonPart } from '../api/lessonsApi';
+import { BODY_MAX_LENGTH, type Lesson } from '../api/lessonsApi';
 import {
   useDeleteLesson,
   useLesson,
@@ -30,6 +29,7 @@ import {
 import { LessonStateBadge } from '../components/LessonStateBadge';
 import { checkLessonFile, editLessonSchema, type EditLessonFormValues } from '../lessonFormSchemas';
 import type { LessonPageState } from '../lessonPageState';
+import { ReviewSection } from '../review/ReviewSection';
 import { subjectLessonsPath, teacherHomePath } from '../paths';
 
 /** One lesson: its text (edited here), what the AI made, and publishing. */
@@ -83,6 +83,15 @@ function LessonView({ lesson }: { lesson: Lesson }) {
   const fileInput = useRef<HTMLInputElement>(null);
 
   const locked = lesson.status === 'published' || lesson.status === 'processing';
+  // The summary and the quiz have forms of their own; any of them with unsaved edits counts.
+  const [dirtyParts, setDirtyParts] = useState<Record<string, boolean>>({});
+  const onPartDirty = useCallback(
+    (part: string, dirty: boolean) =>
+      setDirtyParts((current) =>
+        current[part] === dirty ? current : { ...current, [part]: dirty },
+      ),
+    [],
+  );
   const {
     register,
     handleSubmit,
@@ -95,17 +104,18 @@ function LessonView({ lesson }: { lesson: Lesson }) {
   });
   const body = useWatch({ control, name: 'body' });
   const saving = update.isPending;
+  const unsaved = isDirty || Object.values(dirtyParts).some(Boolean);
 
   // Leaving with unsaved changes asks first (in the app and when closing the tab).
-  const blocker = useBlocker(isDirty && !saving);
+  const blocker = useBlocker(unsaved && !saving);
   // Choosing "Napusti" closes the dialog too, and that must not cancel the move it allowed.
   const leaving = useRef(false);
   useEffect(() => {
-    if (!isDirty) return;
+    if (!unsaved) return;
     const warn = (event: BeforeUnloadEvent) => event.preventDefault();
     window.addEventListener('beforeunload', warn);
     return () => window.removeEventListener('beforeunload', warn);
-  }, [isDirty]);
+  }, [unsaved]);
 
   function clearMessages() {
     setNotice(null);
@@ -185,21 +195,10 @@ function LessonView({ lesson }: { lesson: Lesson }) {
             {t.imagesNotIncluded(warning.count)}
           </Message>
         ))}
-        {lesson.status === 'processing' && (
-          <p className="flex items-center gap-3 rounded-2xl bg-lilac px-4 py-3 font-medium text-lilac-ink">
-            <AiPulse size="sm" />
-            {t.processing}
-          </p>
-        )}
       </div>
       {problem && (
         <div role="alert" className="mt-3">
           <Message tone="bad">{problem}</Message>
-        </div>
-      )}
-      {lesson.status === 'draft' && lesson.processingError && (
-        <div className="mt-3">
-          <Message tone="bad">{t.processingError}</Message>
         </div>
       )}
 
@@ -287,7 +286,7 @@ function LessonView({ lesson }: { lesson: Lesson }) {
         </form>
       )}
 
-      <GeneratedContent lesson={lesson} />
+      <ReviewSection lesson={lesson} textDirty={isDirty} onDirtyChange={onPartDirty} />
 
       <section className="mt-10 flex flex-wrap items-center gap-3 border-t border-border pt-6">
         {lesson.status === 'published' ? (
@@ -332,7 +331,7 @@ function LessonView({ lesson }: { lesson: Lesson }) {
               type="button"
               size="lg"
               // Publishing sends what is saved, so unsaved edits must be saved first.
-              disabled={busy || isDirty || lesson.status === 'processing'}
+              disabled={busy || unsaved || lesson.status === 'processing'}
               onClick={() => void run(() => publish.mutateAsync())}
               className="h-12 px-6"
             >
@@ -384,41 +383,5 @@ function Message({ tone, children }: { tone: Tone; children: React.ReactNode }) 
       <MessageIcon aria-hidden="true" weight="fill" className="mt-0.5 size-5 shrink-0" />
       <span>{children}</span>
     </p>
-  );
-}
-
-/** What the AI (or the teacher) made next to the text. Read-only until the review screens. */
-function GeneratedContent({ lesson }: { lesson: Lesson }) {
-  const t = text.teacher.lesson.content;
-  const parts: { label: string; part: LessonPart }[] = [
-    ...(lesson.summary ? [{ label: t.summary, part: lesson.summary }] : []),
-    ...(lesson.quiz ? [{ label: t.quiz, part: lesson.quiz }] : []),
-  ];
-
-  return (
-    <section className="mt-10" aria-labelledby="generated-heading">
-      <h2 id="generated-heading" className="font-display text-2xl font-semibold text-ink">
-        {t.heading}
-      </h2>
-      {parts.length === 0 ? (
-        <p className="mt-3 text-ink-soft">{t.none}</p>
-      ) : (
-        <>
-          <ul className="mt-3 grid gap-2">
-            {parts.map(({ label, part }) => (
-              <li key={label} className="text-ink">
-                <span className="font-display font-semibold">{label}</span>:{' '}
-                {part.outdated ? t.outdated : part.status === 'approved' ? t.approved : t.draft}
-                <span className="text-ink-soft">
-                  {' '}
-                  · {part.origin === 'ai' ? t.byAi : t.byTeacher}
-                </span>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-3 text-sm text-ink-soft">{t.soon}</p>
-        </>
-      )}
-    </section>
   );
 }

@@ -44,11 +44,45 @@ export interface LessonListItem {
 
 export type ContentState = 'draft' | 'approved';
 
-/** What a teacher sees of the summary and the quiz; editing them is a later screen. */
-export interface LessonPart {
+/**
+ * What the AI or the teacher made next to the text. `outdated` is true when the text of the
+ * lesson changed after it was made or approved; approving again says it still fits.
+ */
+interface LessonPart {
   origin: 'ai' | 'teacher';
   status: ContentState;
   outdated: boolean;
+  approvedAt: string | null;
+  updatedAt: string;
+}
+
+/** Limits of the API (see API-CONTRACT.md, "PUT /lessons/{id}/summary"). */
+export const SUMMARY_MAX_POINTS = 30;
+export const SUMMARY_POINT_MAX_LENGTH = 300;
+
+export interface Summary extends LessonPart {
+  /** Each point is one short sentence. */
+  points: string[];
+}
+
+export interface QuizOption {
+  id: string;
+  position: number;
+  text: string;
+  isCorrect: boolean;
+}
+
+export interface QuizQuestion {
+  id: string;
+  position: number;
+  kind: 'choice' | 'true_false';
+  prompt: string;
+  explanation: string | null;
+  options: QuizOption[];
+}
+
+export interface Quiz extends LessonPart {
+  questions: QuizQuestion[];
 }
 
 export interface Lesson extends LessonListItem {
@@ -59,8 +93,8 @@ export interface Lesson extends LessonListItem {
   /** Why the last AI run failed; only the teacher gets it. */
   processingError: string | null;
   subject: LessonSubject & { teacher: { id: string; fullName: string } };
-  summary: LessonPart | null;
-  quiz: LessonPart | null;
+  summary: Summary | null;
+  quiz: Quiz | null;
 }
 
 /** Something the server noticed while reading a file; so far only left-out pictures. */
@@ -84,7 +118,14 @@ function queryString(values: Record<string, string | number | undefined>): strin
   return text ? `?${text}` : '';
 }
 
+/** Which AI service the server uses: `fake` makes invented results, `groq` is a real one. */
+export interface Health {
+  status: string;
+  ai?: string;
+}
+
 export const lessonsApi = {
+  health: () => apiRequest<Health>('/health'),
   mySubjects: () =>
     apiRequest<{ subjects: TeacherSubject[]; schoolYear: number }>('/subjects/mine'),
   list: ({ subjectId, status, limit }: LessonFilters = {}) =>
@@ -105,6 +146,15 @@ export const lessonsApi = {
       rawBody: file,
       headers: { 'X-File-Name': encodeURIComponent(file.name) },
     }),
+  /** The AI works in the background: the answer is the lesson in the state "processing". */
+  generate: (id: string, parts: { summary: boolean; quiz: boolean }) =>
+    apiRequest<{ lesson: Lesson }>(`/lessons/${id}/generate`, { method: 'POST', body: parts }),
+  saveSummary: (id: string, points: string[]) =>
+    apiRequest<{ lesson: Lesson }>(`/lessons/${id}/summary`, { method: 'PUT', body: { points } }),
+  deleteSummary: (id: string) =>
+    apiRequest<{ lesson: Lesson }>(`/lessons/${id}/summary`, { method: 'DELETE' }),
+  approveSummary: (id: string) =>
+    apiRequest<{ lesson: Lesson }>(`/lessons/${id}/summary/approve`, { method: 'POST' }),
   publish: (id: string) =>
     apiRequest<{ lesson: Lesson }>(`/lessons/${id}/publish`, { method: 'POST' }),
   unpublish: (id: string) =>

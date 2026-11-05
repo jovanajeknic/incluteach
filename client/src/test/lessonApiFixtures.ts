@@ -1,4 +1,9 @@
-import type { Lesson, LessonListItem, TeacherSubject } from '@/features/lessons/api/lessonsApi';
+import type {
+  Lesson,
+  LessonListItem,
+  Summary,
+  TeacherSubject,
+} from '@/features/lessons/api/lessonsApi';
 
 // Fictional subjects and lessons, in the shape the API answers with.
 
@@ -60,6 +65,19 @@ export function lessonOf(overrides: Partial<Lesson> = {}): Lesson {
     subject: { ...base.subject, teacher: { id: 'teacher-1', fullName: 'Milica Petrović' } },
     summary: null,
     quiz: null,
+    ...overrides,
+  };
+}
+
+/** A summary as the teacher gets it; the points are short sentences. */
+export function summaryOf(overrides: Partial<Summary> = {}): Summary {
+  return {
+    origin: 'ai',
+    status: 'draft',
+    outdated: false,
+    approvedAt: null,
+    updatedAt: '2026-11-05T10:00:00.000Z',
+    points: ['Biljke prave hranu.', 'Za to im treba svjetlost.'],
     ...overrides,
   };
 }
