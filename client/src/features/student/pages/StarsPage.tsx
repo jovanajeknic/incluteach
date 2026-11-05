@@ -1,92 +1,91 @@
-import { CheckCircleIcon, StarIcon } from '@phosphor-icons/react';
-import { motion } from 'motion/react';
+import { ArrowLeftIcon, ChatCircleDotsIcon, StarIcon } from '@phosphor-icons/react';
 import { Link } from 'react-router';
+import { ErrorState } from '@/shared/components/ErrorState';
+import { LoadingState } from '@/shared/components/LoadingState';
+import { formatDate } from '@/shared/lib/format';
 import { cn } from '@/shared/lib/utils';
-import { SubjectBlob } from '@/shared/visual/SubjectBlob';
 import { text } from '@/text/sr-Latn';
-import { LessonStars } from '../components/LessonStars';
-import { useStudent } from '../data/studentContext';
-import { studentLessonPath } from '../paths';
+import { useMyStars } from '../api/queries';
+import type { Star } from '../api/studentApi';
+import { studentHomePath } from '../paths';
 
-/** Every star the student has earned, lesson by lesson. Effort only: no scores, no ranking. */
+const t = text.pupil.stars;
+
+/**
+ * The two kinds of stars look clearly different: a filled star in yellow for a finished
+ * lesson, and a speech bubble in lilac for one from a teacher, which carries a message.
+ */
+const kinds = {
+  automatic: { icon: StarIcon, tone: 'bg-butter text-butter-ink' },
+  teacher: { icon: ChatCircleDotsIcon, tone: 'bg-lilac text-lilac-ink' },
+} as const;
+
+/** "Moje zvjezdice": the stars for effort, with what each was for. */
 export function StarsPage() {
-  const t = text.student.stars;
-  const { lessons, stars, starsFor, getSubject } = useStudent();
+  const stars = useMyStars();
 
   return (
     <>
       <title>{text.app.pageTitle(t.pageTitle)}</title>
-      <h1 className="font-display text-4xl font-semibold tracking-tight text-ink">{t.heading}</h1>
+      <Link
+        to={studentHomePath}
+        className="inline-flex items-center gap-1.5 rounded-full font-display font-medium text-ink-soft hover:text-forest"
+      >
+        <ArrowLeftIcon aria-hidden="true" weight="bold" className="size-4" />
+        {text.pupil.subject.back}
+      </Link>
+      <h1 className="mt-5 font-display text-4xl font-semibold tracking-tight text-ink">
+        {t.heading}
+      </h1>
+      <p className="mt-2 max-w-2xl text-ink-soft">{t.intro}</p>
 
-      <div className="relative mt-6 flex flex-wrap items-center gap-6 overflow-hidden rounded-[2.25rem] bg-butter p-6 sm:p-8">
-        <span
-          aria-hidden="true"
-          className="absolute -top-16 -right-10 size-52 rounded-full bg-butter-deep opacity-40"
-        />
-        <motion.span
-          aria-hidden="true"
-          initial={{ scale: 0.6, rotate: -20 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: 'spring', stiffness: 260, damping: 14 }}
-          className="relative flex size-24 items-center justify-center rounded-full bg-card shadow-soft"
-        >
-          <StarIcon weight="fill" className="size-14 text-butter-deep" />
-        </motion.span>
-        <div className="relative">
-          <p className="font-display text-4xl font-bold text-ink">{t.total(stars)}</p>
-          <p className="mt-1 max-w-md text-ink">{t.howTo}</p>
-        </div>
-      </div>
-
-      {lessons.length === 0 ? (
-        <p className="mt-8 text-lg text-ink-soft">{t.empty}</p>
+      {stars.isPending ? (
+        <LoadingState label={text.pupil.load.loading} />
+      ) : stars.isError ? (
+        <ErrorState onRetry={() => void stars.refetch()} />
       ) : (
-        <ul className="mt-8 grid gap-3">
-          {lessons.map((lesson, index) => {
-            const subject = getSubject(lesson.subjectId);
-            const earned = starsFor(lesson.id);
-            return (
-              <motion.li
-                key={lesson.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.04, duration: 0.35 }}
-                className="flex flex-wrap items-center gap-4 rounded-3xl bg-card px-5 py-4 shadow-soft"
-              >
-                {subject && <SubjectBlob subject={subject} />}
-                <span className="min-w-0 flex-1">
-                  <Link
-                    to={studentLessonPath(lesson.id)}
-                    className="block font-display text-lg font-semibold text-ink hover:text-forest"
-                  >
-                    {lesson.title}
-                  </Link>
-                  <span className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                    <StarReason label={t.lessonStar} earned={earned.lesson} />
-                    <StarReason label={t.quizStar} earned={earned.quiz} />
-                  </span>
-                </span>
-                <LessonStars lesson={earned.lesson} quiz={earned.quiz} />
-              </motion.li>
-            );
-          })}
-        </ul>
+        <>
+          <p className="mt-6 flex flex-wrap gap-x-6 gap-y-1 font-display text-lg font-medium text-ink">
+            <span>{t.countAutomatic(stars.data.counts.automatic)}</span>
+            <span>{t.countTeacher(stars.data.counts.teacher)}</span>
+          </p>
+          {stars.data.stars.length === 0 ? (
+            <p className="mt-6 text-lg text-ink-soft">{t.empty}</p>
+          ) : (
+            <ul className="mt-6 grid max-w-3xl gap-3">
+              {stars.data.stars.map((star) => (
+                <li key={star.id}>
+                  <StarEntry star={star} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       )}
     </>
   );
 }
 
-function StarReason({ label, earned }: { label: string; earned: boolean }) {
+function StarEntry({ star }: { star: Star }) {
+  const { icon: KindIcon, tone } = kinds[star.source];
   return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1',
-        earned ? 'font-medium text-mint-ink' : 'text-ink-soft',
-      )}
-    >
-      {earned && <CheckCircleIcon aria-hidden="true" weight="fill" className="size-4" />}
-      {label}
-      {!earned && `: ${text.student.stars.missing}`}
-    </span>
+    <div className="flex items-start gap-4 rounded-3xl bg-card px-5 py-4 shadow-soft">
+      <span
+        aria-hidden="true"
+        className={cn('flex size-11 shrink-0 items-center justify-center rounded-full', tone)}
+      >
+        <KindIcon weight="fill" className="size-6" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="font-display font-semibold text-ink">{t[star.source]}</p>
+        <p className="break-words text-ink">
+          {star.source === 'automatic' ? star.lesson?.title : star.message}
+        </p>
+        <p className="mt-0.5 text-sm text-ink-soft">
+          {t.subject(star.subject.name)}
+          {star.givenBy && <> · {t.from(star.givenBy.fullName)}</>} · {formatDate(star.createdAt)}
+        </p>
+      </div>
+    </div>
   );
 }

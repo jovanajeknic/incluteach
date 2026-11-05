@@ -1,5 +1,6 @@
 export const studentHomePath = '/student';
 export const studentStarsPath = '/student/stars';
+export const studentJoinPath = '/student/join';
 export const subjectPath = (subjectId: string) =>
   `/student/subjects/${encodeURIComponent(subjectId)}`;
 export const studentLessonPath = (lessonId: string) =>

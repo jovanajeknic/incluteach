@@ -30,7 +30,8 @@ interface SidebarLayoutProps {
   /** One highlighted action under the navigation, e.g. "Dodaj lekciju". */
   action?: { to: string; label: string; icon: Icon };
   person: { name: string; initials: string; role: string; badge: string };
-  demoNotice: string;
+  /** A note that the data is invented; left out where the data is real. */
+  demoNotice?: string;
 }
 
 /**
@@ -175,7 +176,9 @@ export function SidebarLayout({
                   {text.session.signOutFailed}
                 </p>
               )}
-              <p className="mt-4 text-xs leading-relaxed text-ink-soft">{demoNotice}</p>
+              {demoNotice && (
+                <p className="mt-4 text-xs leading-relaxed text-ink-soft">{demoNotice}</p>
+              )}
             </div>
           </div>
         </aside>

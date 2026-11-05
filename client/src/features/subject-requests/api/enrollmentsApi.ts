@@ -7,7 +7,14 @@ export interface Enrollment {
   id: string;
   status: EnrollmentStatus;
   student: { id: string; fullName: string };
-  subject: { id: string; name: string; className: string; schoolYear: number };
+  subject: {
+    id: string;
+    name: string;
+    className: string;
+    schoolYear: number;
+    /** Who teaches it; `deleted` when that person's data was erased. */
+    teacher?: { id: string; fullName: string; deleted: boolean };
+  };
   /** Who started it: a student needs a parent's confirmation first, a parent does not. */
   requestedBy: 'student' | 'parent';
   parentDecidedAt: string | null;

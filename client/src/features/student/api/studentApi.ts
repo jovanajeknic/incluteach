@@ -1,0 +1,64 @@
+import { apiRequest } from '@/shared/api/apiClient';
+import type { Enrollment } from '@/features/subject-requests/api/enrollmentsApi';
+import type { LessonListItem } from '@/features/lessons/api/lessonsApi';
+import type {
+  Star,
+  StarCounts,
+  StudentProgress,
+} from '@/features/subject-students/api/studentsApi';
+
+export type { Enrollment, LessonListItem, Star, StarCounts, StudentProgress };
+
+/** An odeljenje that has subjects to join (see API-CONTRACT.md, "Subject catalog"). */
+export interface CatalogClass {
+  id: string;
+  name: string;
+  schoolYear: number;
+  subjectCount: number;
+}
+
+export type RequestStatus = 'awaiting_parent' | 'awaiting_teacher' | 'approved' | 'rejected';
+
+/** A subject the student can ask to join, with the state of their own request for it. */
+export interface CatalogSubject {
+  id: string;
+  name: string;
+  className: string;
+  schoolYear: number;
+  teacher: { id: string; fullName: string };
+  request: { id: string; status: RequestStatus } | null;
+}
+
+export const CATALOG_PAGE_SIZE = 50;
+
+export const studentApi = {
+  catalogClasses: () =>
+    apiRequest<{ classes: CatalogClass[]; schoolYear: number }>('/catalog/classes'),
+  catalogSubjects: (filters: { classId?: string; search?: string; limit: number }) => {
+    const params = new URLSearchParams({ limit: String(filters.limit) });
+    if (filters.classId) params.set('classId', filters.classId);
+    if (filters.search) params.set('search', filters.search);
+    return apiRequest<{ subjects: CatalogSubject[]; total: number; schoolYear: number }>(
+      `/catalog/subjects?${params}`,
+    );
+  },
+  /** A student sends only the subject; the server knows who they are. */
+  requestToJoin: (subjectId: string) =>
+    apiRequest<{ enrollment: Enrollment }>('/enrollments', {
+      method: 'POST',
+      body: { subjectId },
+    }),
+  /** Every request of the student, of every state (a few at most). */
+  myRequests: () =>
+    apiRequest<{ enrollments: Enrollment[]; total: number }>('/enrollments?limit=200'),
+  /** The progress of the signed-in student in a subject they joined. */
+  progress: (subjectId: string) => apiRequest<StudentProgress>(`/subjects/${subjectId}/progress`),
+  lessonsOf: (subjectId: string) =>
+    apiRequest<{ lessons: LessonListItem[]; total: number }>(
+      `/lessons?${new URLSearchParams({ subjectId, limit: '200' })}`,
+    ),
+  stars: () =>
+    apiRequest<{ stars: Star[]; counts: StarCounts }>(
+      `/stars?${new URLSearchParams({ limit: '200' })}`,
+    ),
+};

@@ -5,15 +5,14 @@ import {
   messagesPath,
   teacherHomePath,
 } from '@/features/lessons/paths';
-import { useSchool } from '@/features/school/schoolContext';
+import { useSession } from '@/features/auth/api/session';
 import { useWaitingRequests } from '@/features/subject-requests/api/queries';
-import { initialsOf } from '@/shared/lib/format';
+import { initialsOfName } from '@/shared/lib/format';
 import { text } from '@/text/sr-Latn';
 import { SidebarLayout } from './SidebarLayout';
 
 export function TeacherLayout() {
-  const { data } = useSchool();
-  const teacher = data.teacher;
+  const { user } = useSession();
   // The same request as the page of the requests, so the number and the list always agree.
   const waitingRequests = useWaitingRequests().data?.total ?? 0;
 
@@ -44,12 +43,11 @@ export function TeacherLayout() {
       ]}
       action={{ to: newLessonPath, label: text.nav.newLesson, icon: PlusIcon }}
       person={{
-        name: `${teacher.firstName} ${teacher.lastName}`,
-        initials: initialsOf(teacher.firstName, teacher.lastName),
-        role: text.demo.profileRole,
-        badge: text.demo.profileBadge,
+        name: user?.fullName ?? '',
+        initials: initialsOfName(user?.fullName ?? ''),
+        role: text.nav.teacherRole,
+        badge: user?.username ?? '',
       }}
-      demoNotice={text.demo.notice}
     />
   );
 }

@@ -62,49 +62,6 @@ describe('Student subjects and lessons', () => {
     ).toBeInTheDocument();
   });
 
-  it('lists the student subjects with lesson counts', () => {
-    renderApp({ path: '/student' });
-
-    expect(screen.getByRole('heading', { level: 1, name: 'Moji predmeti' })).toBeInTheDocument();
-    expect(screen.getByText('Zdravo, Luka!')).toBeInTheDocument();
-    const subjects = within(screen.getByRole('region', { name: 'Predmeti' })).getAllByRole('link');
-    expect(subjects.map((link) => link.textContent)).toEqual([
-      expect.stringContaining('Priroda i društvo'),
-      expect.stringContaining('Matematika'),
-      expect.stringContaining('Maternji jezik'),
-      expect.stringContaining('Engleski jezik'),
-      expect.stringContaining('Likovna kultura'),
-    ]);
-    expect(subjects[0]).toHaveTextContent('2 lekcije');
-    // Luka has marked one of the two mathematics lessons as done.
-    expect(subjects[1]).toHaveTextContent('pređeno 1 od 2');
-    expect(subjects[4]).toHaveTextContent('Još nema lekcija');
-  });
-
-  it('opens a subject, then a lesson, and tracks progress', async () => {
-    const { user, router } = renderApp({ path: '/student' });
-
-    await user.click(screen.getByRole('link', { name: /Priroda i društvo/ }));
-    expect(router.state.location.pathname).toBe('/student/subjects/priroda');
-    const lessonLink = screen.getByRole('link', { name: /Kruženje vode u prirodi/ });
-    expect(lessonLink).toHaveTextContent('Nova');
-
-    await user.click(lessonLink);
-    expect(
-      screen.getByRole('heading', { level: 1, name: 'Kruženje vode u prirodi' }),
-    ).toBeInTheDocument();
-
-    await user.click(screen.getByRole('link', { name: 'Priroda i društvo' }));
-    expect(screen.getByRole('link', { name: /Kruženje vode u prirodi/ })).toHaveTextContent(
-      'Započeta',
-    );
-  });
-
-  it('shows an empty state for a subject without lessons', () => {
-    renderApp({ path: '/student/subjects/likovno' });
-    expect(screen.getByText(/još nema lekcija/)).toBeInTheDocument();
-  });
-
   it('explains when a subject or lesson does not exist', () => {
     renderApp({ path: '/student/lessons/ne-postoji' });
     expect(
@@ -266,71 +223,6 @@ describe('Lesson helpers', () => {
     await user.click(screen.getByRole('button', { name: 'Poslušaj lekciju' }));
 
     expect(spoken[0]).toMatch(/^Slušaj lekciju „Kruženje vode u prirodi“/);
-  });
-});
-
-describe('Practice quiz', () => {
-  it('gives feedback on every answer, has no score and ends with a star', async () => {
-    const { user, router } = renderApp({ path: '/student/lessons/kruzenje-vode/quiz' });
-
-    expect(screen.getByText('Pitanje 1 od 3')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Mjesec' }));
-    expect(screen.getByRole('status')).toHaveTextContent('Nije baš tako.');
-    expect(screen.getByRole('status')).toHaveTextContent('Tačan odgovor: Sunce');
-    expect(screen.getByRole('button', { name: 'Sunce' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: /Sljedeće pitanje/ })).toHaveFocus();
-
-    await user.click(screen.getByRole('button', { name: /Sljedeće pitanje/ }));
-    await user.click(screen.getByRole('button', { name: 'Od sitnih kapljica vode' }));
-    expect(screen.getByRole('status')).toHaveTextContent('Tačno!');
-
-    await user.click(screen.getByRole('button', { name: /Sljedeće pitanje/ }));
-    await user.click(screen.getByRole('button', { name: 'Snijeg' }));
-    await user.click(screen.getByRole('button', { name: /Završi kviz/ }));
-
-    expect(
-      screen.getByRole('heading', { level: 1, name: 'Bravo! Kviz je završen.' }),
-    ).toBeInTheDocument();
-    // Practice only: no points or "x of y correct" anywhere.
-    expect(document.body.textContent).not.toMatch(/\d+\s*(od|\/)\s*\d+\s*tačn/i);
-
-    await user.click(within(screen.getByRole('main')).getByRole('link', { name: 'Moji predmeti' }));
-    expect(router.state.location.pathname).toBe('/student');
-    // One star was already there (a lesson marked as done), plus one for this quiz.
-    expect(
-      within(screen.getByRole('main')).getByText('Zvjezdice za trud').nextElementSibling,
-    ).toHaveTextContent('2');
-  });
-});
-
-describe('Stars for effort', () => {
-  it('marks a lesson as done for one star, and the quiz brings another', async () => {
-    const { user } = renderApp({ path: '/student/lessons/kruzenje-vode' });
-    const finish = screen.getByRole('region', { name: 'Kad završiš' });
-    expect(finish).toHaveTextContent('+1 zvjezdica');
-
-    await user.click(within(finish).getByRole('button', { name: 'Označi kao pređeno' }));
-    expect(finish).toHaveTextContent('Lekcija je pređena. Zvjezdica je tvoja!');
-    expect(
-      within(finish).queryByRole('button', { name: 'Označi kao pređeno' }),
-    ).not.toBeInTheDocument();
-    expect(within(finish).getByRole('link', { name: 'Hajde na kviz' })).toBeInTheDocument();
-
-    await user.click(screen.getByRole('link', { name: /Moje zvjezdice/ }));
-    expect(screen.getByRole('heading', { level: 1, name: 'Moje zvjezdice' })).toBeInTheDocument();
-    expect(screen.getByText('2 zvjezdice')).toBeInTheDocument();
-    const row = screen.getByRole('link', { name: 'Kruženje vode u prirodi' }).closest('li')!;
-    expect(row).toHaveTextContent('Lekcija pređena');
-    expect(row).toHaveTextContent('Kviz urađen: još nije');
-    expect(row).toHaveTextContent('1 od 2 zvjezdice');
-  });
-
-  it('shows stars per lesson on the subject page', () => {
-    renderApp({ path: '/student/subjects/matematika' });
-    expect(screen.getByRole('link', { name: /Sabiranje do 100/ })).toHaveTextContent('Pređena');
-    expect(screen.getByRole('link', { name: /Sabiranje do 100/ })).toHaveTextContent(
-      '1 od 2 zvjezdice',
-    );
   });
 });
 

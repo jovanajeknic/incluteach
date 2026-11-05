@@ -99,6 +99,7 @@ export const routes: RouteObject[] = [
                 lazy: fromArea(studentArea, (area) => area.SubjectPage),
               },
               { path: 'stars', lazy: fromArea(studentArea, (area) => area.StarsPage) },
+              { path: 'join', lazy: fromArea(studentArea, (area) => area.JoinPage) },
               {
                 path: 'lessons/:lessonId',
                 lazy: fromArea(studentArea, (area) => area.StudentLessonPage),

@@ -331,6 +331,115 @@ export const text = {
     },
   },
 
+  // The real student screens. (`student` above is the older demo and goes when it is replaced.)
+  pupil: {
+    nav: {
+      label: 'Učenička navigacija',
+      subjects: 'Moji predmeti',
+      join: 'Prijava na predmet',
+      stars: 'Moje zvjezdice',
+      starsLabel: 'zvjezdica',
+    },
+    // Chosen by the `code` of an API error; `unknown_error` is the fallback for any other.
+    errors: {
+      no_parent:
+        'Za tebe još nije povezan nijedan roditelj ili staratelj, a oni potvrđuju prijavu. Javi se školi.',
+      request_exists: 'Za ovaj predmet već postoji zahtjev. Osvježi stranicu.',
+      invalid_subject: 'Ovaj predmet se ne može izabrati. Možda ga više niko ne predaje.',
+      not_found: 'Ovo ne postoji ili ne možeš da ga vidiš.',
+      forbidden: 'Nemaš pravo da ovo uradiš.',
+      network_error: 'Server trenutno nije dostupan. Provjeri vezu i pokušaj ponovo.',
+      unknown_error: 'Došlo je do greške. Pokušaj ponovo.',
+    },
+    load: {
+      loading: 'Učitavanje…',
+      failedTitle: 'Nije moguće učitati podatke',
+      failedDescription: 'Provjeri vezu i pokušaj ponovo.',
+      retry: 'Pokušaj ponovo',
+    },
+    home: {
+      pageTitle: 'Moji predmeti',
+      greeting: (name: string) => `Zdravo, ${name}!`,
+      heading: 'Moji predmeti',
+      subjectsHeading: 'Predmeti',
+      starsLabel: 'Zvjezdice za trud',
+      doneCount: (done: number, total: number) => `pređeno ${done} od ${total}`,
+      lessonCount: (count: number) => {
+        if (count === 0) return 'Još nema lekcija';
+        const last = count % 10;
+        const lastTwo = count % 100;
+        if (last === 1 && lastTwo !== 11) return `${count} lekcija`;
+        if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) return `${count} lekcije`;
+        return `${count} lekcija`;
+      },
+      teacher: (name: string) => `Nastavnik: ${name}`,
+      waiting: (count: number) =>
+        count === 1 ? '1 zahtjev čeka odgovor' : `${count} zahtjeva čeka odgovor`,
+      empty: 'Još nisi upisan/a ni na jedan predmet.',
+      emptyAction: 'Prijavi se na predmet',
+    },
+    join: {
+      pageTitle: 'Prijava na predmet',
+      heading: 'Prijava na predmet',
+      intro:
+        'Izaberi predmet i pošalji zahtjev. Prvo ga potvrđuje roditelj, pa ga odobrava nastavnik predmeta.',
+      classLabel: 'Odjeljenje',
+      classAll: 'Sva odjeljenja',
+      searchLabel: 'Traži predmet, odjeljenje ili nastavnika',
+      resultsLabel: 'Predmeti',
+      empty: 'Nijedan predmet ne odgovara. Probaj drugo odjeljenje ili drugu riječ.',
+      noSubjects: 'Škola još nije napravila predmete za ovu školsku godinu.',
+      teacher: (name: string) => `Nastavnik: ${name}`,
+      classOf: (name: string) => `Odjeljenje ${name}`,
+      join: 'Prijavi se',
+      joinAgain: 'Pošalji ponovo',
+      joining: 'Slanje…',
+      joinFor: (subject: string, className: string) =>
+        `Prijavi se: ${subject}, odjeljenje ${className}`,
+      joinAgainFor: (subject: string, className: string) =>
+        `Pošalji ponovo: ${subject}, odjeljenje ${className}`,
+      sent: 'Zahtjev je poslat. Čeka potvrdu roditelja.',
+      showMore: 'Prikaži još',
+      shown: (shown: number, total: number) => `Prikazano ${shown} od ${total}`,
+      status: {
+        awaiting_parent: 'Čeka roditelja',
+        awaiting_teacher: 'Čeka nastavnika',
+        approved: 'Upisan/a',
+        rejected: 'Odbijeno',
+      },
+      rejectedHint: 'Možeš ponovo poslati zahtjev.',
+      requestsHeading: 'Moji zahtjevi',
+      requestsEmpty: 'Nemaš zahtjeva koji čekaju.',
+      requestedOn: (date: string) => `poslato ${date}`,
+    },
+    subject: {
+      back: 'Nazad na predmete',
+      notFoundTitle: 'Predmet nije pronađen',
+      notFoundDescription: 'Nisi upisan/a na ovaj predmet.',
+      meta: (className: string) => `Odjeljenje ${className}`,
+      progress: (done: number, total: number) =>
+        `${done} od ${total} ${total === 1 ? 'lekcije' : 'lekcija'}`,
+      progressLabel: 'Napredak u predmetu',
+      lessonsHeading: 'Lekcije',
+      empty: 'U ovom predmetu još nema lekcija. Uskoro stižu!',
+      done: 'Pređena',
+      notDone: 'Nije pređena',
+    },
+    stars: {
+      pageTitle: 'Moje zvjezdice',
+      heading: 'Moje zvjezdice',
+      intro:
+        'Zvjezdice su za trud. Dobijaš ih kad završiš lekciju, a nastavnik ti ih može dati za nešto posebno.',
+      automatic: 'Završena lekcija',
+      teacher: 'Od nastavnika',
+      countAutomatic: (count: number) => `Za završene lekcije: ${count}`,
+      countTeacher: (count: number) => `Od nastavnika: ${count}`,
+      from: (name: string) => `Dao/la ${name}`,
+      empty: 'Još nemaš zvjezdica. Završi prvu lekciju!',
+      subject: (name: string) => `Predmet: ${name}`,
+    },
+  },
+
   parent: {
     demoNotice:
       'Demo verzija sa izmišljenim podacima. Prijedlozi se ne šalju stvarno i gube se osvježavanjem stranice.',
@@ -439,6 +548,7 @@ export const text = {
     requests: 'Zahtjevi',
     newRequests: 'na čekanju',
     messages: 'Poruke',
+    teacherRole: 'Nastavnik',
     openMenu: 'Otvori meni',
     signOut: 'Odjavi se',
     closeMenu: 'Zatvori meni',
