@@ -123,12 +123,12 @@ export const routes: RouteObject[] = [
               { index: true, lazy: fromArea(parentArea, (area) => area.ParentHomePage) },
               { path: 'children/:childId', lazy: fromArea(parentArea, (area) => area.ChildPage) },
               {
-                path: 'suggestions',
-                lazy: fromArea(parentArea, (area) => area.ParentSuggestionsPage),
+                path: 'children/:childId/join',
+                lazy: fromArea(parentArea, (area) => area.ChildJoinPage),
               },
               {
-                path: 'children/:childId/lessons/:lessonId',
-                lazy: fromArea(parentArea, (area) => area.ChildLessonPage),
+                path: 'children/:childId/subjects/:subjectId',
+                lazy: fromArea(parentArea, (area) => area.ChildSubjectPage),
               },
               { path: '*', element: <NotFoundPage homePath={parentHomePath} /> },
             ],

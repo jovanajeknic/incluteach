@@ -2,16 +2,12 @@ import { ArrowRightIcon, StarIcon } from '@phosphor-icons/react';
 import { motion } from 'motion/react';
 import { Link } from 'react-router';
 import { useSession } from '@/features/auth/api/session';
-import { subjectAppearance } from '@/features/lessons/subjectAppearance';
 import { ErrorState } from '@/shared/components/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState';
-import { cn } from '@/shared/lib/utils';
 import { itemMotion, listMotion } from '@/shared/motion/listMotion';
-import { SubjectCard } from '@/shared/visual/SubjectCard';
-import { subjectTheme } from '@/shared/visual/subjectIcons';
 import { text } from '@/text/sr-Latn';
-import type { Enrollment } from '../api/studentApi';
-import { useMyRequests, useMyStars, useSubjectProgress } from '../api/queries';
+import { SubjectTile } from '../components/SubjectTile';
+import { useMyRequests, useMyStars } from '../api/queries';
 import { studentJoinPath, studentStarsPath, subjectPath } from '../paths';
 
 /** "Moji predmeti": the subjects the student joined, with how far they got in each. */
@@ -98,70 +94,12 @@ export function StudentHomePage() {
           >
             {joined.map((enrollment) => (
               <motion.li key={enrollment.id} variants={itemMotion}>
-                <SubjectTile enrollment={enrollment} />
+                <SubjectTile enrollment={enrollment} to={subjectPath(enrollment.subject.id)} />
               </motion.li>
             ))}
           </motion.ul>
         )}
       </section>
     </>
-  );
-}
-
-function SubjectTile({ enrollment }: { enrollment: Enrollment }) {
-  const t = text.pupil.home;
-  const { subject } = enrollment;
-  const appearance = subjectAppearance(subject.id, subject.name);
-  const theme = subjectTheme[appearance.color];
-  const progress = useSubjectProgress(subject.id);
-  const published = progress.data?.lessons.published ?? 0;
-  const done = progress.data?.lessons.completed ?? 0;
-
-  return (
-    <Link
-      to={subjectPath(subject.id)}
-      aria-label={`${subject.name}, ${text.pupil.subject.meta(subject.className)}`}
-      className="block h-full rounded-[2rem]"
-    >
-      <SubjectCard subject={appearance}>
-        <p className="mt-3 text-sm text-ink">
-          {text.pupil.subject.meta(subject.className)}
-          {subject.teacher && !subject.teacher.deleted && <> · {subject.teacher.fullName}</>}
-        </p>
-        <div className="mt-4 flex items-end justify-between gap-3">
-          <span className="min-w-0">
-            {progress.data ? (
-              <>
-                <span className={cn('block font-display font-semibold', theme.ink)}>
-                  {t.lessonCount(published)}
-                </span>
-                {published > 0 && (
-                  <>
-                    <span className="block text-sm text-ink">{t.doneCount(done, published)}</span>
-                    <span
-                      aria-hidden="true"
-                      className="mt-2 block h-2 w-32 overflow-hidden rounded-full bg-card/70"
-                    >
-                      <motion.span
-                        className={cn('block h-full rounded-full', theme.deep)}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${(done / published) * 100}%` }}
-                        transition={{ duration: 0.8, ease: [0.2, 0.7, 0.3, 1] }}
-                      />
-                    </span>
-                  </>
-                )}
-              </>
-            ) : null}
-          </span>
-          <span
-            aria-hidden="true"
-            className="flex size-11 shrink-0 items-center justify-center rounded-full bg-card"
-          >
-            <ArrowRightIcon weight="bold" className={cn('size-5', theme.ink)} />
-          </span>
-        </div>
-      </SubjectCard>
-    </Link>
   );
 }

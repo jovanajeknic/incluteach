@@ -574,6 +574,66 @@ export const text = {
     },
   },
 
+  // The real parent screens. (`parent` above is the older demo and goes when it is replaced.)
+  guardian: {
+    role: 'Roditelj',
+    nav: {
+      label: 'Roditeljska navigacija',
+      children: 'Moja djeca',
+      requests: 'Zahtjevi',
+      requestsLabel: 'na čekanju',
+      messages: 'Poruke',
+    },
+    home: {
+      pageTitle: 'Moja djeca',
+      heading: 'Moja djeca',
+      intro: 'Ovdje pratiš napredak svoje djece i javljaš se nastavnicima.',
+      empty:
+        'Za tvoj nalog još nije povezano nijedno dijete. Javi se školi, ona povezuje roditelje i djecu.',
+      open: (name: string) => `Otvori: ${name}`,
+      noSubjects: 'Još nije upisano ni na jedan predmet.',
+      starsOf: (count: number) => `Zvjezdice: ${count}`,
+      waiting: (count: number) =>
+        count === 1 ? '1 zahtjev čeka tvoj odgovor' : `${count} zahtjeva čeka tvoj odgovor`,
+    },
+    child: {
+      back: 'Moja djeca',
+      subjectsHeading: 'Predmeti',
+      noSubjects: 'Dijete još nije upisano ni na jedan predmet.',
+      requestsHeading: 'Zahtjevi za predmete',
+      requestsEmpty: 'Nema zahtjeva koji čekaju.',
+      join: 'Prijavi dijete na predmet',
+      starsHeading: 'Zvjezdice za trud',
+      forbiddenTitle: 'Nemate pristup',
+      forbiddenDescription: 'Ovo dijete nije povezano sa vašim nalogom.',
+      conversation: 'Razgovor sa nastavnikom',
+    },
+    join: {
+      pageTitle: (name: string) => `Prijava na predmet: ${name}`,
+      heading: (name: string) => `Prijava na predmet za dijete: ${name}`,
+      intro:
+        'Zahtjev koji pošalješ ti ide pravo nastavniku predmeta, jer se tvoja prijava računa kao potvrda roditelja.',
+      join: 'Prijavi dijete',
+      joinAgain: 'Pošalji ponovo',
+      joining: 'Slanje…',
+      joinFor: (subject: string, className: string) =>
+        `Prijavi dijete: ${subject}, odjeljenje ${className}`,
+      joinAgainFor: (subject: string, className: string) =>
+        `Pošalji ponovo: ${subject}, odjeljenje ${className}`,
+      sent: 'Zahtjev je poslat nastavniku predmeta.',
+      requestsHeading: 'Zahtjevi djeteta',
+      requestsEmpty: 'Dijete nema zahtjeva koji čekaju.',
+    },
+    stars: {
+      empty: 'Dijete još nema zvjezdica.',
+    },
+    subject: {
+      back: (name: string) => `Nazad na dijete: ${name}`,
+      notFoundTitle: 'Predmet nije pronađen',
+      notFoundDescription: 'Dijete nije upisano na ovaj predmet.',
+    },
+  },
+
   parent: {
     demoNotice:
       'Demo verzija sa izmišljenim podacima. Prijedlozi se ne šalju stvarno i gube se osvježavanjem stranice.',

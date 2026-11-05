@@ -32,7 +32,7 @@ const statusLook: Record<RequestStatus, { icon: typeof ClockIcon; tone: string }
   rejected: { icon: XCircleIcon, tone: 'text-blush-ink' },
 };
 
-function StatusChip({ status }: { status: RequestStatus }) {
+export function StatusChip({ status }: { status: RequestStatus }) {
   const { icon: StatusIcon, tone } = statusLook[status];
   return (
     <span className={cn('inline-flex items-center gap-1.5 font-display font-medium', tone)}>
@@ -42,11 +42,20 @@ function StatusChip({ status }: { status: RequestStatus }) {
   );
 }
 
-/** "Prijava na predmet": find a subject and ask to join it, and see the state of the requests. */
-export function JoinPage() {
+interface CatalogBrowserProps {
+  /** A parent looks for a subject for one of their children. */
+  studentId?: string;
+}
+
+/**
+ * Find a subject and ask to join it, and see the state of the requests. For a student it asks a
+ * parent first; for a parent, who asks for a child, the request goes straight to the teacher.
+ */
+export function CatalogBrowser({ studentId }: CatalogBrowserProps) {
+  const copy = studentId ? text.guardian.join : t;
   const classes = useCatalogClasses();
-  const requests = useMyRequests();
-  const join = useRequestToJoin();
+  const requests = useMyRequests(studentId);
+  const join = useRequestToJoin(studentId);
   const [classId, setClassId] = useState('');
   const [search, setSearch] = useState('');
   const [limit, setLimit] = useState(CATALOG_PAGE_SIZE);
@@ -56,6 +65,7 @@ export function JoinPage() {
 
   const query = useDebounced(search.trim());
   const subjects = useCatalogSubjects({
+    studentId,
     classId: classId || undefined,
     search: query || undefined,
     limit,
@@ -65,7 +75,7 @@ export function JoinPage() {
     setNotice(null);
     setProblem(null);
     join.mutate(subjectId, {
-      onSuccess: () => setNotice(t.sent),
+      onSuccess: () => setNotice(copy.sent),
       onError: (error) => setProblem(studentErrorMessage(error)),
     });
   }
@@ -74,10 +84,6 @@ export function JoinPage() {
 
   return (
     <>
-      <title>{text.app.pageTitle(t.pageTitle)}</title>
-      <h1 className="font-display text-4xl font-semibold tracking-tight text-ink">{t.heading}</h1>
-      <p className="mt-2 max-w-2xl text-ink-soft">{t.intro}</p>
-
       <div role="status" aria-live="polite" className="mt-4 empty:hidden">
         {notice && (
           <p className="max-w-2xl rounded-2xl bg-mint px-4 py-3 font-medium text-mint-ink">
@@ -147,6 +153,7 @@ export function JoinPage() {
               {subjects.data.subjects.map((subject) => (
                 <li key={subject.id}>
                   <SubjectRow
+                    copy={copy}
                     subject={subject}
                     sending={join.isPending && join.variables === subject.id}
                     busy={join.isPending}
@@ -176,14 +183,14 @@ export function JoinPage() {
 
       <section aria-labelledby="requests-heading" className="mt-12 max-w-3xl">
         <h2 id="requests-heading" className="font-display text-2xl font-semibold text-ink">
-          {t.requestsHeading}
+          {copy.requestsHeading}
         </h2>
         {requests.isPending ? (
           <LoadingState label={text.pupil.load.loading} />
         ) : requests.isError ? (
           <ErrorState onRetry={() => void requests.refetch()} />
         ) : pending.length === 0 ? (
-          <p className="mt-3 text-ink-soft">{t.requestsEmpty}</p>
+          <p className="mt-3 text-ink-soft">{copy.requestsEmpty}</p>
         ) : (
           <ul className="mt-4 grid gap-3">
             {pending.map((request) => (
@@ -199,13 +206,15 @@ export function JoinPage() {
 }
 
 interface SubjectRowProps {
+  /** The words of the buttons: the student asks, a parent asks for a child. */
+  copy: typeof t | typeof text.guardian.join;
   subject: CatalogSubject;
   sending: boolean;
   busy: boolean;
   onJoin: () => void;
 }
 
-function SubjectRow({ subject, sending, busy, onJoin }: SubjectRowProps) {
+function SubjectRow({ copy, subject, sending, busy, onJoin }: SubjectRowProps) {
   const status = subject.request?.status;
   // A new request is possible when there is none, or after a rejection.
   const canJoin = !status || status === 'rejected';
@@ -230,20 +239,20 @@ function SubjectRow({ subject, sending, busy, onJoin }: SubjectRowProps) {
           type="button"
           size="lg"
           disabled={busy}
-          aria-label={(status === 'rejected' ? t.joinAgainFor : t.joinFor)(
+          aria-label={(status === 'rejected' ? copy.joinAgainFor : copy.joinFor)(
             subject.name,
             subject.className,
           )}
           onClick={onJoin}
         >
-          {sending ? t.joining : status === 'rejected' ? t.joinAgain : t.join}
+          {sending ? copy.joining : status === 'rejected' ? copy.joinAgain : copy.join}
         </Button>
       )}
     </div>
   );
 }
 
-function RequestRow({ request }: { request: Enrollment }) {
+export function RequestRow({ request }: { request: Enrollment }) {
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-3xl bg-card px-5 py-4 shadow-soft">
       <div className="min-w-0 flex-1">

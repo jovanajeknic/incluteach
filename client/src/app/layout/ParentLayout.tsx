@@ -1,13 +1,13 @@
-import { ChatsCircleIcon, UsersThreeIcon } from '@phosphor-icons/react';
-import { useParent } from '@/features/parent/data/parentContext';
-import { parentHomePath, parentSuggestionsPath } from '@/features/parent/paths';
-import { initialsOf } from '@/shared/lib/format';
+import { UsersThreeIcon } from '@phosphor-icons/react';
+import { useSession } from '@/features/auth/api/session';
+import { parentHomePath } from '@/features/parent/paths';
+import { initialsOfName } from '@/shared/lib/format';
 import { text } from '@/text/sr-Latn';
 import { SidebarLayout } from './SidebarLayout';
 
 export function ParentLayout() {
-  const t = text.parent;
-  const { parent } = useParent();
+  const t = text.guardian;
+  const { user } = useSession();
 
   return (
     <SidebarLayout
@@ -20,20 +20,13 @@ export function ParentLayout() {
           tone: 'bg-sky text-sky-ink',
           end: true,
         },
-        {
-          to: parentSuggestionsPath,
-          label: t.nav.suggestions,
-          icon: ChatsCircleIcon,
-          tone: 'bg-blush text-blush-ink',
-        },
       ]}
       person={{
-        name: `${parent.firstName} ${parent.lastName}`,
-        initials: initialsOf(parent.firstName, parent.lastName),
-        role: t.profile.role,
-        badge: t.profile.badge,
+        name: user?.fullName ?? '',
+        initials: initialsOfName(user?.fullName ?? ''),
+        role: t.role,
+        badge: user?.username ?? '',
       }}
-      demoNotice={t.demoNotice}
     />
   );
 }

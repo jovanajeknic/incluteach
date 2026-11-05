@@ -7,22 +7,40 @@ const key = (...parts: (string | number | undefined)[]) => ['student', ...parts]
 export const useCatalogClasses = () =>
   useQuery({ queryKey: key('catalog', 'classes'), queryFn: studentApi.catalogClasses });
 
-export const useCatalogSubjects = (filters: { classId?: string; search?: string; limit: number }) =>
+export const useCatalogSubjects = (filters: {
+  classId?: string;
+  search?: string;
+  limit: number;
+  studentId?: string;
+}) =>
   useQuery({
-    queryKey: key('catalog', 'subjects', filters.classId, filters.search, filters.limit),
+    queryKey: key(
+      'catalog',
+      'subjects',
+      filters.studentId,
+      filters.classId,
+      filters.search,
+      filters.limit,
+    ),
     queryFn: () => studentApi.catalogSubjects(filters),
     // A new filter keeps the old list on screen until the new one arrives.
     placeholderData: keepPreviousData,
   });
 
-/** All requests of the student: the joined subjects and the ones still waiting. */
-export const useMyRequests = () =>
-  useQuery({ queryKey: key('requests'), queryFn: studentApi.myRequests });
-
-export const useSubjectProgress = (subjectId: string) =>
+/**
+ * All requests of the student: the joined subjects and the ones still waiting. A parent says
+ * which child.
+ */
+export const useMyRequests = (studentId?: string) =>
   useQuery({
-    queryKey: key('progress', subjectId),
-    queryFn: () => studentApi.progress(subjectId),
+    queryKey: key('requests', studentId),
+    queryFn: () => studentApi.myRequests(studentId),
+  });
+
+export const useSubjectProgress = (subjectId: string, studentId?: string) =>
+  useQuery({
+    queryKey: key('progress', subjectId, studentId),
+    queryFn: () => studentApi.progress(subjectId, studentId),
   });
 
 export const useStudentLesson = (id: string) =>
@@ -32,14 +50,15 @@ export const useStudentLesson = (id: string) =>
     select: (answer) => answer.lesson,
   });
 
-export const useSubjectLessons = (subjectId: string) =>
+export const useSubjectLessons = (subjectId: string, studentId?: string) =>
   useQuery({
-    queryKey: key('lessons', subjectId),
-    queryFn: () => studentApi.lessonsOf(subjectId),
+    queryKey: key('lessons', subjectId, studentId),
+    queryFn: () => studentApi.lessonsOf(subjectId, studentId),
   });
 
 /** The stars of the student; the menu, the home page and the stars page share this request. */
-export const useMyStars = () => useQuery({ queryKey: key('stars'), queryFn: studentApi.stars });
+export const useMyStars = (studentId?: string) =>
+  useQuery({ queryKey: key('stars', studentId), queryFn: () => studentApi.stars(studentId) });
 
 /** The tries at the quiz, asked only when the student opens them. */
 export const useMyTries = (lessonId: string, enabled: boolean) =>
@@ -77,10 +96,10 @@ export function useRefreshLesson(lessonId: string) {
     ]);
 }
 
-export function useRequestToJoin() {
+export function useRequestToJoin(studentId?: string) {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: studentApi.requestToJoin,
+    mutationFn: (subjectId: string) => studentApi.requestToJoin(subjectId, studentId),
     // The catalog shows the new state of the request, and "Moji zahtjevi" the new line.
     onSuccess: () => client.invalidateQueries({ queryKey: key() }),
   });

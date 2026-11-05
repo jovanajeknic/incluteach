@@ -114,25 +114,37 @@ export const CATALOG_PAGE_SIZE = 50;
 export const studentApi = {
   catalogClasses: () =>
     apiRequest<{ classes: CatalogClass[]; schoolYear: number }>('/catalog/classes'),
-  catalogSubjects: (filters: { classId?: string; search?: string; limit: number }) => {
+  /** `studentId` is for a parent, who looks for a subject for one of their children. */
+  catalogSubjects: (filters: {
+    classId?: string;
+    search?: string;
+    limit: number;
+    studentId?: string;
+  }) => {
     const params = new URLSearchParams({ limit: String(filters.limit) });
+    if (filters.studentId) params.set('studentId', filters.studentId);
     if (filters.classId) params.set('classId', filters.classId);
     if (filters.search) params.set('search', filters.search);
     return apiRequest<{ subjects: CatalogSubject[]; total: number; schoolYear: number }>(
       `/catalog/subjects?${params}`,
     );
   },
-  /** A student sends only the subject; the server knows who they are. */
-  requestToJoin: (subjectId: string) =>
+  /** A student sends only the subject; a parent also says which child it is for. */
+  requestToJoin: (subjectId: string, studentId?: string) =>
     apiRequest<{ enrollment: Enrollment }>('/enrollments', {
       method: 'POST',
-      body: { subjectId },
+      body: studentId ? { subjectId, studentId } : { subjectId },
     }),
-  /** Every request of the student, of every state (a few at most). */
-  myRequests: () =>
-    apiRequest<{ enrollments: Enrollment[]; total: number }>('/enrollments?limit=200'),
-  /** The progress of the signed-in student in a subject they joined. */
-  progress: (subjectId: string) => apiRequest<StudentProgress>(`/subjects/${subjectId}/progress`),
+  /** Every request of the student (or of one child of a parent), of every state. */
+  myRequests: (studentId?: string) =>
+    apiRequest<{ enrollments: Enrollment[]; total: number }>(
+      `/enrollments?${new URLSearchParams({ limit: '200', ...(studentId ? { studentId } : {}) })}`,
+    ),
+  /** The progress in a subject that was joined: of the signed-in student, or of a child. */
+  progress: (subjectId: string, studentId?: string) =>
+    apiRequest<StudentProgress>(
+      `/subjects/${subjectId}/progress${studentId ? `?${new URLSearchParams({ studentId })}` : ''}`,
+    ),
   lesson: (id: string) => apiRequest<{ lesson: StudentLesson }>(`/lessons/${id}`),
   /** Starts the quiz, or goes on with the try that is still open. */
   startTry: (lessonId: string) =>
@@ -147,12 +159,12 @@ export const studentApi = {
     apiRequest<{ progress: MyProgress }>(`/lessons/${lessonId}/complete`, { method: 'POST' }),
   /** The tries of the signed-in student, newest first, with every question and answer. */
   history: (lessonId: string) => apiRequest<QuizHistory>(`/lessons/${lessonId}/quiz/attempts`),
-  lessonsOf: (subjectId: string) =>
+  lessonsOf: (subjectId: string, studentId?: string) =>
     apiRequest<{ lessons: LessonListItem[]; total: number }>(
-      `/lessons?${new URLSearchParams({ subjectId, limit: '200' })}`,
+      `/lessons?${new URLSearchParams({ subjectId, limit: '200', ...(studentId ? { studentId } : {}) })}`,
     ),
-  stars: () =>
+  stars: (studentId?: string) =>
     apiRequest<{ stars: Star[]; counts: StarCounts }>(
-      `/stars?${new URLSearchParams({ limit: '200' })}`,
+      `/stars?${new URLSearchParams({ limit: '200', ...(studentId ? { studentId } : {}) })}`,
     ),
 };
