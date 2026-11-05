@@ -87,57 +87,6 @@ const QUIZ_SCHEMA = {
   additionalProperties: false,
 };
 
-// Latin letters that look the same as a Cyrillic one. The model sometimes writes one of them in
-// the middle of a Cyrillic word (it looks right, but it is a different character, so the word
-// is not found by a search and is read out wrongly).
-const LOOK_ALIKES: Record<string, string> = {
-  a: '\u0430',
-  e: '\u0435',
-  o: '\u043E',
-  p: '\u0440',
-  c: '\u0441',
-  x: '\u0445',
-  y: '\u0443',
-  A: '\u0410',
-  B: '\u0412',
-  C: '\u0421',
-  E: '\u0415',
-  H: '\u041D',
-  K: '\u041A',
-  M: '\u041C',
-  O: '\u041E',
-  P: '\u0420',
-  T: '\u0422',
-  X: '\u0425',
-};
-
-// Cleans two faults of the model in a text: accent marks over Cyrillic letters (nobody asked
-// for them) and Latin look-alike letters inside a word that is otherwise Cyrillic. A word that
-// is only Latin (such as "Tačno" or an English term) is left alone, and so are the marks of
-// the Latin letters č, ć, š, ž, đ and of the Cyrillic й, which are not accents.
-export function tidyScript(text: string): string {
-  return text
-    .replace(/([\u0400-\u04FF])[\u0300\u0301\u0304\u030F\u0311]+/g, '$1')
-    .replace(/[\p{L}]+/gu, (word) =>
-      /[\u0400-\u04FF]/.test(word) && /[A-Za-z]/.test(word)
-        ? word.replace(/[A-Za-z]/g, (letter) => LOOK_ALIKES[letter] ?? letter)
-        : word,
-    );
-}
-
-function tidyAll(value: unknown): unknown {
-  if (typeof value === 'string') {
-    return tidyScript(value);
-  }
-  if (Array.isArray(value)) {
-    return value.map(tidyAll);
-  }
-  if (value !== null && typeof value === 'object') {
-    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, tidyAll(item)]));
-  }
-  return value;
-}
-
 export interface GroqOptions {
   apiKey: string;
   model?: string;
@@ -255,7 +204,7 @@ export function createGroqAi({
     // The shape was asked for, but the caller checks it again; an answer that is not JSON is
     // passed on as it is and refused there.
     try {
-      return tidyAll(JSON.parse(answer));
+      return JSON.parse(answer) as unknown;
     } catch {
       return answer;
     }

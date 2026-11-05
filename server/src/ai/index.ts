@@ -1,5 +1,6 @@
 import { createFakeAi } from './fake.ts';
 import { createGroqAi } from './groq.ts';
+import { withLatinScript } from './script.ts';
 import type { AiProvider } from './types.ts';
 
 // The AI services the server knows. To plug in another one, write an object like the fake one
@@ -22,6 +23,7 @@ export function createAiProvider(name: AiProviderName, settings: AiSettings = {}
       if (!settings.apiKey) {
         throw new Error('The groq AI service needs GROQ_API_KEY.');
       }
-      return createGroqAi({ apiKey: settings.apiKey, model: settings.model });
+      // The services write better Serbian in Latin script (see script.ts).
+      return withLatinScript(createGroqAi({ apiKey: settings.apiKey, model: settings.model }));
   }
 }

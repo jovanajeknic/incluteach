@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createGroqAi, DEFAULT_GROQ_MODEL, tidyScript } from './groq.ts';
+import { createGroqAi, DEFAULT_GROQ_MODEL } from './groq.ts';
 import { AiUserError } from './types.ts';
 import { validateQuiz, validateSummary } from './validate.ts';
 
@@ -275,65 +275,5 @@ describe('the Groq AI', () => {
       await expect(cut.ai.makeSummary({ text: 'Tekst.' })).rejects.toThrow(/cut short/);
       await expect(empty.ai.makeSummary({ text: 'Tekst.' })).rejects.toThrow(/without any text/);
     });
-  });
-});
-
-describe('tidyScript', () => {
-  it('writes a Latin look-alike letter inside a Cyrillic word as the Cyrillic letter', () => {
-    // The "a" of the first word and the "o" and "e" of the second are Latin characters.
-    const mixed = 'испаравaње и стварaње, мoрe';
-
-    const tidy = tidyScript(mixed);
-
-    expect(tidy).toBe('испаравање и стварање, море');
-    expect(/[A-Za-z]/.test(tidy)).toBe(false);
-  });
-
-  it('takes the accent marks off Cyrillic letters', () => {
-    expect(tidyScript('испа\u0301равање, ка\u030Fда')).toBe('испаравање, када');
-  });
-
-  it('leaves Latin words alone, including the answers Tačno and Netačno and English terms', () => {
-    const text = 'Tačno, Netačno, danceability, Spotify, hloroplasti, čaša, đak, šuma, žaba, ćup';
-
-    expect(tidyScript(text)).toBe(text);
-  });
-
-  it('leaves the marks of Latin letters that are written as two characters', () => {
-    const decomposed = 'c\u030Cas\u030Ca';
-
-    expect(tidyScript(decomposed)).toBe(decomposed);
-  });
-
-  it('leaves the letter й, written as two characters, and a Latin word next to a Cyrillic one', () => {
-    expect(tidyScript('и\u0306 Spotify и Python')).toBe('и\u0306 Spotify и Python');
-  });
-
-  it('is cleaned in everything the model answers, at any depth', async () => {
-    const { ai } = setup([
-      answer({
-        questions: [
-          {
-            kind: 'choice',
-            prompt: 'Како се зове процес?',
-            explanation: 'То је испа\u0301равaње.',
-            options: [
-              { text: 'испаравaње', isCorrect: true },
-              { text: 'кондензација', isCorrect: false },
-              { text: 'Tačno', isCorrect: false },
-            ],
-          },
-        ],
-      }),
-    ]);
-
-    const quiz = validateQuiz(await ai.makeQuiz({ text: 'Тест.' }));
-
-    expect(quiz.questions[0].explanation).toBe('То је испаравање.');
-    expect(quiz.questions[0].options.map((option) => option.text)).toEqual([
-      'испаравање',
-      'кондензација',
-      'Tačno',
-    ]);
   });
 });
