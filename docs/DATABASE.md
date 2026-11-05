@@ -17,7 +17,8 @@ Summary of the backend database work and the agreements behind it. Working rules
 | Enrollment API: subject catalog, requests, parent and teacher decisions                   | Done        |
 | Running it: `build` and `start`, hourly cleanup of ended sessions and old links, a request log, database backups with `npm run db:backup` | Done |
 | The student does the quiz: tries, answers with feedback, a 10 minute wait between tries, finishing a lesson, the history of tries for student, parent and teacher | Done |
-| Comments, stars, progress per subject                                                      | Not started |
+| Stars for effort: automatic ones for finishing a lesson, and ones from a teacher with a message | Done |
+| Comments between parents and the teacher, progress per subject                             | Not started |
 | Not built yet, smaller: removing students from subjects at the end of a school year, copying classes and subjects to a new school year, changing one's own password, verifying emails and sending messages, the school request form of the landing page, hosting (the server runs on the owner's computer for now; HTTPS, a proxy address and moving it elsewhere are not needed yet) | Open |
 
 The backend covers accounts, sign-in, the school structure and enrollments, all with tests. The frontend still uses demo data and is connected to this API step by step (see `docs/FRONTEND-PLAN.md`, "Backend API and frontend work").
@@ -53,6 +54,7 @@ The backend covers accounts, sign-in, the school structure and enrollments, all 
 | `lesson_summaries` | The summary of a lesson (bullet points), made by the AI or the teacher, a draft until a teacher approves it |
 | `lesson_quizzes`, `quiz_questions`, `quiz_options` | The quiz of a lesson: questions (choose one answer, or true/false) with their answers, one of them right; approved by a teacher like the summary |
 | `quiz_attempts`, `quiz_answers`, `lesson_completions` | A student doing the quiz: one try is one go through the whole quiz, with its own random order of questions and answers; every answer copies the question and the answers, so the history stays the same when the teacher rewrites the quiz; a finished lesson is a row in `lesson_completions`. Deleting a student deletes these rows too |
+| `stars` | Stars for effort. `source` is `automatic` (earned by finishing a lesson, one per student and lesson, deleted with the lesson) or `teacher` (given by a teacher of the subject to a student of it, with a message of up to 200 characters). A check makes sure each kind has exactly the fields that belong to it. Deleting a student deletes their stars too |
 
 ## Who enforces what
 

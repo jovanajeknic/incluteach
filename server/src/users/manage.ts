@@ -181,9 +181,10 @@ export async function deleteUsers(
 
     await db.query('DELETE FROM sessions WHERE user_id = ANY($1::uuid[])', [deleted]);
     await db.query('DELETE FROM activation_tokens WHERE user_id = ANY($1::uuid[])', [deleted]);
-    // A deleted student's quiz tries, answers and finished lessons are their own data too.
+    // A deleted student's quiz tries, answers, finished lessons and stars are their own data too.
     await db.query('DELETE FROM quiz_attempts WHERE student_id = ANY($1::uuid[])', [deleted]);
     await db.query('DELETE FROM lesson_completions WHERE student_id = ANY($1::uuid[])', [deleted]);
+    await db.query('DELETE FROM stars WHERE student_id = ANY($1::uuid[])', [deleted]);
     // A deleted student's own requests go with them.
     await db.query('DELETE FROM enrollments WHERE student_id = ANY($1::uuid[])', [deleted]);
     // Links to a parent or student are removed too, except a link that a remaining

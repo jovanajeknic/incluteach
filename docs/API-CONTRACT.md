@@ -524,7 +524,7 @@ A lesson belongs to a subject and holds the text of the teacher, as written. See
 - **Request**: none.
 - **Success response**: `200 { progress }`, where `progress` is the same object as `lesson.myProgress` (see below), now with `completed: true` and `completedAt`. Pressing the button again changes nothing and returns the same `completedAt`.
 - **Errors**: `403 forbidden` (not a student), `404 not_found`, `409 quiz_not_passed` (the lesson has a quiz and there is no try with every answer right for the quiz as it is now).
-- **Notes**: a lesson **without** a quiz can be finished at any time (`canFinish` is true as soon as the student can open it). A lesson **with** a quiz can be finished only after a try with every answer right, so the button is shown (or enabled) only when `myProgress.canFinish` is true: on the lesson screen for a lesson without a quiz, and at the end of the quiz when `attempt.allCorrect` is true. A lesson that is finished stays finished if the teacher rewrites the quiz later; a try made for the old quiz does not count for the new one.
+- **Notes**: a lesson **without** a quiz can be finished at any time (`canFinish` is true as soon as the student can open it). A lesson **with** a quiz can be finished only after a try with every answer right, so the button is shown (or enabled) only when `myProgress.canFinish` is true: on the lesson screen for a lesson without a quiz, and at the end of the quiz when `attempt.allCorrect` is true. Finishing a lesson also gives the student one **automatic star** (once for each lesson; see `GET /stars`). A lesson that is finished stays finished if the teacher rewrites the quiz later; a try made for the old quiz does not count for the new one.
 - **Used by (frontend)**: the "Završi lekciju" button.
 
 ### GET /lessons/{id}/quiz/attempts
@@ -537,6 +537,35 @@ A lesson belongs to a subject and holds the text of the teacher, as written. See
 - **Errors**: `400` as above, `403 forbidden` (a parent asks about a child that is not theirs, a student about another student, or the admin), `404 not_found` (no such lesson, not visible to the caller, or the student did not join the subject).
 - **Used by (frontend)**: "Moji pokušaji" on the student lesson screen; the child's lesson list for a parent; the student detail for a teacher.
 
+### GET /stars
+
+- **Status**: implemented
+- **Purpose**: the stars for effort. There are two kinds that must look clearly different on screen: `automatic` (earned by finishing a lesson, one per lesson) and `teacher` (given by a teacher, with a short message).
+- **Who may call it**: `student` (their own), `parent` (one of their linked children), `teacher` (students of the subjects they teach). The admin gets `403`.
+- **Request**: query `studentId` (a parent must send it; a teacher may narrow to one student; a student leaves it out), `subjectId`, `limit` (default 50, at most 200), `offset`.
+- **Success response**: `200 { stars, counts }`. `counts` is `{ automatic, teacher }`, the totals over all pages. A star is `{ id, source, student: { id, fullName }, subject: { id, name }, lesson: { id, title } | null, message: string | null, givenBy: { id, fullName } | null, createdAt }`: `lesson` is set for automatic stars, `message` and `givenBy` for stars from a teacher. Newest first.
+- **Errors**: `400 invalid_student` (a parent did not name a child), `400 invalid_request` (an id or a number is not valid), `403 forbidden` (a parent asks about a child that is not theirs, a student about another student, or the admin).
+- **Used by (frontend)**: the stars of the student (two clearly different icons or colors, the message of a teacher star shown as a small card), the same for a parent with the child chosen, and for the teacher a list per student.
+
+### POST /stars
+
+- **Status**: implemented
+- **Purpose**: a teacher gives a star for effort to a student of their subject, with a short message that says why.
+- **Who may call it**: `teacher`.
+- **Request**: body `{ studentId, subjectId, message }`. `message` is 1 to 200 characters, spaces tidied.
+- **Success response**: `201 { star }`.
+- **Errors**: `400 invalid_student`, `400 invalid_subject`, `400 invalid_message`, `403 forbidden`, `404 not_found` (the subject is not this teacher's, or the student has not joined it).
+- **Notes**: a teacher may give several stars to the same student. The student, and their parents, see the message.
+- **Used by (frontend)**: the "Daj zvjezdicu" button next to a student in the teacher's view, with a one line text field.
+
+### DELETE /stars/{id}
+
+- **Status**: implemented
+- **Purpose**: a teacher takes back a star they gave (for example by mistake).
+- **Who may call it**: `teacher` who gave it. Automatic stars cannot be taken back.
+- **Success response**: `204`.
+- **Errors**: `403 forbidden`, `404 not_found` (no such star, not given by this teacher, or an automatic one).
+
 ## Not defined yet
 
-Comments, stars, progress per subject, removing a student from a subject at the end of the year, copying classes and subjects to a new school year, changing one's own password, the school request form of the landing page.
+Comments of a parent and the teacher, progress per subject, removing a student from a subject at the end of the year, copying classes and subjects to a new school year, changing one's own password, the school request form of the landing page.

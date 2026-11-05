@@ -1,7 +1,9 @@
 import type { AuthUser } from '../auth/sessions.ts';
 import type { Queryable } from '../db/pool.ts';
+import { inTransaction } from '../db/transaction.ts';
 import { HttpError } from '../http/errors.ts';
 import { getLesson } from '../lessons/lessons.ts';
+import { awardLessonStar } from '../stars/stars.ts';
 import { lessonProgress, passedAttemptId, type LessonProgress } from './progress.ts';
 
 // The student presses "Završi lekciju". A lesson without a quiz can be finished at any time.
@@ -31,11 +33,23 @@ export async function completeLesson(
     );
   }
 
-  await pool.query(
-    `INSERT INTO lesson_completions (lesson_id, school_id, student_id, attempt_id)
-     VALUES ($1, $2, $3, $4)
-     ON CONFLICT (lesson_id, student_id) DO NOTHING`,
-    [lessonId, user.schoolId, user.id, attemptId],
-  );
+  // Finishing a lesson also earns the automatic star, once; both or neither are saved.
+  await inTransaction(pool, async (db) => {
+    const { rows } = await db.query(
+      `INSERT INTO lesson_completions (lesson_id, school_id, student_id, attempt_id)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (lesson_id, student_id) DO NOTHING
+       RETURNING lesson_id`,
+      [lessonId, user.schoolId, user.id, attemptId],
+    );
+    if (rows.length > 0) {
+      await awardLessonStar(db, {
+        schoolId: user.schoolId,
+        studentId: user.id,
+        subjectId: lesson.subject.id,
+        lessonId,
+      });
+    }
+  });
   return lessonProgress(pool, { studentId: user.id, lessonId, quiz: lesson.quiz });
 }

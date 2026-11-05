@@ -619,6 +619,8 @@ describe.skipIf(!process.env.DATABASE_URL)('the quiz for students', () => {
         expect(failed.quiz.openAttemptId).toBeNull();
         expect(failed.quiz.nextAttemptAt).toEqual(expect.any(String));
         expect((await complete(w)).status).toBe(409);
+        const noStar = await api.client.query('SELECT 1 FROM stars');
+        expect(noStar.rows).toHaveLength(0);
 
         await movePast(api, 11);
         const second = (await start(w)).body.attempt;
@@ -636,6 +638,9 @@ describe.skipIf(!process.env.DATABASE_URL)('the quiz for students', () => {
         const { rows } = await api.client.query('SELECT attempt_id FROM lesson_completions');
         expect(rows).toEqual([{ attempt_id: second.id }]);
         expect((await complete(w)).body.progress.completed).toBe(true);
+        // The automatic star came with it, and pressing the button again gives no second one.
+        const stars = await api.client.query('SELECT source FROM stars');
+        expect(stars.rows).toEqual([{ source: 'automatic' }]);
       });
     });
 
