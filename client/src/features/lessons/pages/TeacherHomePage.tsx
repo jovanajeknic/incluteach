@@ -1,17 +1,19 @@
-import { ArrowRightIcon, EyeIcon, PlusIcon } from '@phosphor-icons/react';
+import { ArrowRightIcon, PlusIcon } from '@phosphor-icons/react';
 import { motion } from 'motion/react';
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { needsReview, useSchool } from '@/features/school/schoolContext';
-import { teacherClassIds, type SchoolLesson } from '@/features/school/types';
-import type { Subject } from '@/features/student/types';
+import { ErrorState } from '@/shared/components/ErrorState';
+import { LoadingState } from '@/shared/components/LoadingState';
+import { cn } from '@/shared/lib/utils';
 import { itemMotion, listMotion } from '@/shared/motion/listMotion';
+import { Button } from '@/shared/ui/button';
 import { SubjectCard } from '@/shared/visual/SubjectCard';
 import { subjectTheme } from '@/shared/visual/subjectIcons';
-import { cn } from '@/shared/lib/utils';
-import { Button } from '@/shared/ui/button';
 import { text } from '@/text/sr-Latn';
-import { coursePath, lessonPath, newLessonPath } from '../paths';
+import type { TeacherSubject } from '../api/lessonsApi';
+import { useMySubjects } from '../api/queries';
+import { newLessonPath, subjectLessonsPath } from '../paths';
+import { subjectAppearance } from '../subjectAppearance';
 
 type View = 'subject' | 'class';
 
@@ -25,10 +27,10 @@ function readSavedView(): View {
   }
 }
 
+/** "Moji predmeti": the subjects the teacher teaches this school year, from the server. */
 export function TeacherHomePage() {
-  const t = text.home;
-  const school = useSchool();
-  const { data } = school;
+  const t = text.teacher.home;
+  const subjects = useMySubjects();
   const [view, setView] = useState<View>(readSavedView);
 
   function chooseView(next: View) {
@@ -39,10 +41,6 @@ export function TeacherHomePage() {
       // Remembering the choice is only a convenience.
     }
   }
-
-  const lessonsOf = (subjectId: string, classId: string) =>
-    data.lessons.filter((lesson) => lesson.subjectId === subjectId && lesson.classId === classId);
-  const toReview = data.lessons.filter(needsReview);
 
   return (
     <>
@@ -58,17 +56,23 @@ export function TeacherHomePage() {
         </Button>
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
-        <ViewSwitch view={view} onChange={chooseView} />
-        {toReview.length > 0 && <ReviewLine lessons={toReview} />}
-      </div>
-
-      {data.teacher.teaching.length === 0 ? (
+      {subjects.isPending ? (
+        <LoadingState label={text.teacher.load.loading} />
+      ) : subjects.isError ? (
+        <ErrorState onRetry={() => void subjects.refetch()} />
+      ) : subjects.data.subjects.length === 0 ? (
         <p className="mt-10 text-lg text-ink-soft">{t.noSubjects}</p>
-      ) : view === 'subject' ? (
-        <BySubject lessonsOf={lessonsOf} />
       ) : (
-        <ByClass lessonsOf={lessonsOf} />
+        <>
+          <div className="mt-6">
+            <ViewSwitch view={view} onChange={chooseView} />
+          </div>
+          {view === 'subject' ? (
+            <BySubject subjects={subjects.data.subjects} />
+          ) : (
+            <ByClass subjects={subjects.data.subjects} />
+          )}
+        </>
       )}
     </>
   );
@@ -76,7 +80,7 @@ export function TeacherHomePage() {
 
 /** Two options with a sliding marker under the chosen one. */
 function ViewSwitch({ view, onChange }: { view: View; onChange: (view: View) => void }) {
-  const t = text.home;
+  const t = text.teacher.home;
   const options: { value: View; label: string }[] = [
     { value: 'subject', label: t.bySubject },
     { value: 'class', label: t.byClass },
@@ -112,39 +116,13 @@ function ViewSwitch({ view, onChange }: { view: View; onChange: (view: View) => 
   );
 }
 
-/** A quiet line, not a banner: lessons where finished AI work waits for the teacher. */
-function ReviewLine({ lessons }: { lessons: SchoolLesson[] }) {
-  return (
-    <section aria-labelledby="review-heading" className="flex min-w-0 items-center gap-2 text-sm">
-      <h2
-        id="review-heading"
-        className="flex shrink-0 items-center gap-1.5 font-medium text-butter-ink"
-      >
-        <EyeIcon aria-hidden="true" weight="duotone" className="size-5" />
-        {text.home.reviewLabel}:
-      </h2>
-      <ul className="flex min-w-0 flex-wrap gap-x-3 gap-y-1">
-        {lessons.map((lesson) => (
-          <li key={lesson.id}>
-            <Link
-              to={lessonPath(lesson.id)}
-              className="text-ink underline decoration-butter-deep decoration-2 underline-offset-4 hover:decoration-butter-ink"
-            >
-              {lesson.title}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-type LessonsOf = (subjectId: string, classId: string) => SchoolLesson[];
-
-function BySubject({ lessonsOf }: { lessonsOf: LessonsOf }) {
-  const school = useSchool();
-  const teaching = school.data.teacher.teaching;
-  const subjectIds = [...new Set(teaching.map((item) => item.subjectId))];
+/** Subjects that share a name (Matematika in 5-1 and 5-2) become one card with a row each. */
+function BySubject({ subjects }: { subjects: TeacherSubject[] }) {
+  const groups = new Map<string, TeacherSubject[]>();
+  for (const subject of subjects) {
+    const key = subject.name.toLowerCase();
+    groups.set(key, [...(groups.get(key) ?? []), subject]);
+  }
 
   return (
     <motion.ul
@@ -153,30 +131,20 @@ function BySubject({ lessonsOf }: { lessonsOf: LessonsOf }) {
       animate="show"
       className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3"
     >
-      {subjectIds.map((subjectId) => {
-        const subject = school.getSubject(subjectId);
-        if (!subject) return null;
-        const classIds = teaching
-          .filter((item) => item.subjectId === subjectId)
-          .map((item) => item.classId);
+      {[...groups.values()].map((group) => {
+        const first = group[0]!;
         return (
-          <motion.li key={subjectId} variants={itemMotion}>
-            <SubjectCard subject={subject}>
+          <motion.li key={first.id} variants={itemMotion}>
+            <SubjectCard subject={subjectAppearance(first.id, first.name)}>
               <ul className="mt-5 grid gap-2">
-                {classIds.map((classId) => {
-                  const group = school.getClass(classId);
-                  if (!group) return null;
-                  return (
-                    <li key={classId}>
-                      <CourseLink
-                        subject={subject}
-                        classId={classId}
-                        label={text.home.classHeading(group.name)}
-                        count={lessonsOf(subjectId, classId).length}
-                      />
-                    </li>
-                  );
-                })}
+                {group.map((subject) => (
+                  <li key={subject.id}>
+                    <SubjectLink
+                      subject={subject}
+                      label={text.teacher.home.classHeading(subject.className)}
+                    />
+                  </li>
+                ))}
               </ul>
             </SubjectCard>
           </motion.li>
@@ -186,84 +154,84 @@ function BySubject({ lessonsOf }: { lessonsOf: LessonsOf }) {
   );
 }
 
-function ByClass({ lessonsOf }: { lessonsOf: LessonsOf }) {
-  const school = useSchool();
-  const teaching = school.data.teacher.teaching;
+function ByClass({ subjects }: { subjects: TeacherSubject[] }) {
+  const classes = new Map<string, TeacherSubject[]>();
+  for (const subject of subjects) {
+    classes.set(subject.classId, [...(classes.get(subject.classId) ?? []), subject]);
+  }
 
   return (
     <div className="mt-8 grid gap-12">
-      {teacherClassIds(school.data.teacher).map((classId) => {
-        const group = school.getClass(classId);
-        if (!group) return null;
-        const subjects = teaching
-          .filter((item) => item.classId === classId)
-          .flatMap((item) => school.getSubject(item.subjectId) ?? []);
-        return (
-          <section key={classId} aria-labelledby={`class-${classId}`}>
-            <h2 id={`class-${classId}`} className="font-display text-2xl font-semibold text-ink">
-              {text.home.classHeading(group.name)}
-            </h2>
-            <motion.ul
-              variants={listMotion}
-              initial="hidden"
-              animate="show"
-              className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-3"
-            >
-              {subjects.map((subject) => (
-                <motion.li key={subject.id} variants={itemMotion}>
-                  <SubjectCard subject={subject}>
-                    <div className="mt-5">
-                      <CourseLink
-                        subject={subject}
-                        classId={classId}
-                        label={text.lesson.courseLabel(subject.name, group.name)}
-                        count={lessonsOf(subject.id, classId).length}
-                        hideLabel
-                      />
-                    </div>
-                  </SubjectCard>
-                </motion.li>
-              ))}
-            </motion.ul>
-          </section>
-        );
-      })}
+      {[...classes.entries()].map(([classId, inClass]) => (
+        <section key={classId} aria-labelledby={`class-${classId}`}>
+          <h2 id={`class-${classId}`} className="font-display text-2xl font-semibold text-ink">
+            {text.teacher.home.classHeading(inClass[0]!.className)}
+          </h2>
+          <motion.ul
+            variants={listMotion}
+            initial="hidden"
+            animate="show"
+            className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-3"
+          >
+            {inClass.map((subject) => (
+              <motion.li key={subject.id} variants={itemMotion}>
+                <SubjectCard subject={subjectAppearance(subject.id, subject.name)}>
+                  <div className="mt-5">
+                    <SubjectLink subject={subject} label={subject.name} hideLabel />
+                  </div>
+                </SubjectCard>
+              </motion.li>
+            ))}
+          </motion.ul>
+        </section>
+      ))}
     </div>
   );
 }
 
-function CourseLink({
+function SubjectLink({
   subject,
-  classId,
   label,
-  count,
   hideLabel = false,
 }: {
-  subject: Subject;
-  classId: string;
+  subject: TeacherSubject;
   label: string;
-  count: number;
-  /** In the by-class view the class is already the section heading. */
+  /** In the by-class view the subject is already the card's heading. */
   hideLabel?: boolean;
 }) {
-  const theme = subjectTheme[subject.color];
+  const t = text.teacher.home;
+  const theme = subjectTheme[subjectAppearance(subject.id, subject.name).color];
+  const total = Object.values(subject.lessonCounts).reduce((sum, count) => sum + count, 0);
+  const waiting = subject.lessonCounts.in_review;
+
   return (
     <Link
-      to={coursePath(subject.id, classId)}
+      to={subjectLessonsPath(subject.id)}
       className="flex items-center justify-between gap-3 rounded-2xl bg-card/80 px-4 py-3 transition-colors hover:bg-card"
     >
       <span className="min-w-0">
         <span className={cn('block font-display font-semibold text-ink', hideLabel && 'sr-only')}>
           {label}
         </span>
+        {hideLabel && (
+          <span className="sr-only">
+            {text.teacher.home.classHeading(subject.className)}
+            {', '}
+          </span>
+        )}
         <span className={cn('block text-sm font-medium', theme.ink)}>
-          {text.home.lessonCount(count)}
+          {t.lessonCount(total)} · {t.studentCount(subject.studentCount)}
         </span>
+        {waiting > 0 && (
+          <span className="block text-sm font-medium text-butter-ink">
+            {t.waitingForReview(waiting)}
+          </span>
+        )}
       </span>
       <ArrowRightIcon
         aria-hidden="true"
         weight="bold"
-        className={cn('size-5 shrink-0 transition-transform group-hover:translate-x-1', theme.ink)}
+        className={cn('size-5 shrink-0', theme.ink)}
       />
     </Link>
   );

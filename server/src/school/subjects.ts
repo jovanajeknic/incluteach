@@ -112,6 +112,76 @@ export async function listSubjects(
   return { subjects: rows.map(toSubject), total: Number(counted[0].total) };
 }
 
+export type LessonStatusCounts = Record<'draft' | 'processing' | 'in_review' | 'published', number>;
+
+// A subject as its own teacher sees it: no teacher block, but how many students joined and
+// how many lessons there are in each state.
+export interface TeacherSubject {
+  id: string;
+  name: string;
+  classId: string;
+  className: string;
+  schoolYear: number;
+  studentCount: number;
+  lessonCounts: LessonStatusCounts;
+}
+
+interface TeacherSubjectRow {
+  id: string;
+  name: string;
+  class_id: string;
+  class_name: string;
+  school_year: number;
+  student_count: string;
+  draft_count: string;
+  processing_count: string;
+  in_review_count: string;
+  published_count: string;
+}
+
+// The subjects one teacher teaches in one school year, by class and then by name. Students who
+// left the school (deactivated or erased) are not counted.
+export async function listTeacherSubjects(
+  pool: Queryable,
+  { schoolId, teacherId, schoolYear }: { schoolId: string; teacherId: string; schoolYear: number },
+): Promise<TeacherSubject[]> {
+  const { rows } = await pool.query<TeacherSubjectRow>(
+    `SELECT s.id, s.name, s.class_id, c.name AS class_name, c.school_year,
+       (SELECT count(*) FROM enrollments e
+          JOIN users st ON st.id = e.student_id
+         WHERE e.subject_id = s.id AND e.status = 'approved'
+           AND st.deactivated_at IS NULL AND st.deleted_at IS NULL) AS student_count,
+       (SELECT count(*) FROM lessons l WHERE l.subject_id = s.id AND l.status = 'draft')
+         AS draft_count,
+       (SELECT count(*) FROM lessons l WHERE l.subject_id = s.id AND l.status = 'processing')
+         AS processing_count,
+       (SELECT count(*) FROM lessons l WHERE l.subject_id = s.id AND l.status = 'in_review')
+         AS in_review_count,
+       (SELECT count(*) FROM lessons l WHERE l.subject_id = s.id AND l.status = 'published')
+         AS published_count
+     FROM subjects s
+     JOIN classes c ON c.id = s.class_id
+     WHERE s.school_id = $1 AND s.teacher_id = $2 AND c.school_year = $3
+     ORDER BY lower(c.name), lower(s.name), s.id`,
+    [schoolId, teacherId, schoolYear],
+  );
+
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    classId: row.class_id,
+    className: row.class_name,
+    schoolYear: row.school_year,
+    studentCount: Number(row.student_count),
+    lessonCounts: {
+      draft: Number(row.draft_count),
+      processing: Number(row.processing_count),
+      in_review: Number(row.in_review_count),
+      published: Number(row.published_count),
+    },
+  }));
+}
+
 // A subject needs a teacher who still works at this school.
 async function assertActiveTeacher(
   pool: Queryable,

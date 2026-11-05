@@ -12,6 +12,7 @@ import {
   insertSubject,
   insertUser,
 } from '../db/testUtils.ts';
+import { currentSchoolYear } from '../school/schoolYear.ts';
 import { inApi as runWithApi, PASSWORD, type Api } from './testApi.ts';
 
 const NOT_ADMINS = ['ana_ivic', 'jovan_jovanovic', 'petar_ivic'];
@@ -548,6 +549,164 @@ describe.skipIf(!process.env.DATABASE_URL)('subjects', () => {
         const id = await insertSubject(api.client, api.f.schoolId, classId, api.f.teacherId);
 
         expect((await (await api.as(username)).delete(`/subjects/${id}`)).status).toBe(403);
+      });
+    });
+  });
+  describe('GET /subjects/mine', () => {
+    const year = currentSchoolYear();
+
+    it("lists only the signed-in teacher's subjects of the current school year", async () => {
+      await inApi(async (api) => {
+        const { client, f } = api;
+        const classA = await insertClass(client, f.schoolId, '5-2', year);
+        const classB = await insertClass(client, f.schoolId, '5-1', year);
+        const lastYear = await insertClass(client, f.schoolId, '4-2', year - 1);
+        const other = await insertActivatedUser(client, f.schoolId, 'teacher', {
+          username: 'mira_miric',
+          email: 'mira@example.com',
+          password: PASSWORD,
+        });
+        const biology = await insertSubject(client, f.schoolId, classA, f.teacherId, 'Biologija');
+        await insertSubject(client, f.schoolId, classB, f.teacherId, 'Matematika');
+        await insertSubject(client, f.schoolId, lastYear, f.teacherId, 'Prošlogodišnji');
+        await insertSubject(client, f.schoolId, classA, other, 'Tuđi predmet');
+
+        const teacher = await api.as('jovan_jovanovic');
+        const response = await teacher.get('/subjects/mine');
+
+        expect(response.status).toBe(200);
+        expect(response.body.schoolYear).toBe(year);
+        // By class name first, then by subject name.
+        expect(labels(response)).toEqual(['Matematika (5-1)', 'Biologija (5-2)']);
+        expect(response.body.subjects[1]).toEqual({
+          id: biology,
+          name: 'Biologija',
+          classId: classA,
+          className: '5-2',
+          schoolYear: year,
+          studentCount: 0,
+          lessonCounts: { draft: 0, processing: 0, in_review: 0, published: 0 },
+        });
+      });
+    });
+
+    it('counts students who joined and lessons by state', async () => {
+      await inApi(async (api) => {
+        const { client, f } = api;
+        const classId = await insertClass(client, f.schoolId, '5-2', year);
+        const subjectId = await insertSubject(client, f.schoolId, classId, f.teacherId);
+        const enroll = (studentId: string, status: 'approved' | 'awaiting_teacher') =>
+          insertEnrollment(client, {
+            schoolId: f.schoolId,
+            studentId,
+            subjectId,
+            requestedBy: studentId,
+            requestedByRole: 'student',
+            status,
+            parentDecidedBy: f.parentId,
+            teacherDecidedBy: status === 'approved' ? f.teacherId : undefined,
+          });
+        const leaver = await insertActivatedUser(client, f.schoolId, 'student', {
+          username: 'ivan_ivic',
+          email: 'ivan@example.com',
+          password: PASSWORD,
+        });
+        const waiting = await insertActivatedUser(client, f.schoolId, 'student', {
+          username: 'sara_saric',
+          email: 'sara@example.com',
+          password: PASSWORD,
+        });
+        for (const studentId of [f.studentId, leaver]) {
+          await insertParentStudent(client, f.schoolId, f.parentId, studentId, f.adminId);
+        }
+        await insertParentStudent(client, f.schoolId, f.parentId, waiting, f.adminId);
+        await enroll(f.studentId, 'approved');
+        await enroll(leaver, 'approved');
+        await enroll(waiting, 'awaiting_teacher');
+        await api.deactivate(leaver);
+
+        const lesson = (status: 'draft' | 'processing' | 'in_review' | 'published') =>
+          insertLesson(client, {
+            schoolId: f.schoolId,
+            subjectId,
+            createdBy: f.teacherId,
+            status,
+            publishedAt: status === 'published' ? new Date().toISOString() : null,
+          });
+        await lesson('draft');
+        await lesson('draft');
+        await lesson('in_review');
+        await lesson('published');
+
+        const response = await (await api.as('jovan_jovanovic')).get('/subjects/mine');
+
+        expect(response.body.subjects[0].studentCount).toBe(1);
+        expect(response.body.subjects[0].lessonCounts).toEqual({
+          draft: 2,
+          processing: 0,
+          in_review: 1,
+          published: 1,
+        });
+      });
+    });
+
+    it('can show another school year', async () => {
+      await inApi(async (api) => {
+        const { client, f } = api;
+        const lastYear = await insertClass(client, f.schoolId, '4-2', year - 1);
+        await insertSubject(client, f.schoolId, lastYear, f.teacherId, 'Prošlogodišnji');
+
+        const response = await (
+          await api.as('jovan_jovanovic')
+        ).get(`/subjects/mine?schoolYear=${year - 1}`);
+
+        expect(response.body.schoolYear).toBe(year - 1);
+        expect(labels(response)).toEqual(['Prošlogodišnji (4-2)']);
+      });
+    });
+
+    it('never shows the subjects of another school', async () => {
+      await inApi(async (api) => {
+        const { client, f } = api;
+        const otherTeacher = await insertUser(client, f.otherSchoolId, 'teacher');
+        const otherClass = await insertClass(client, f.otherSchoolId, '5-2', year);
+        await insertSubject(client, f.otherSchoolId, otherClass, otherTeacher);
+
+        const response = await (await api.as('jovan_jovanovic')).get('/subjects/mine');
+
+        expect(response.body.subjects).toEqual([]);
+      });
+    });
+
+    it.each(['abc', '1999', '2101', '20.5'])('answers 400 for schoolYear=%s', async (value) => {
+      await inApi(async (api) => {
+        const response = await (
+          await api.as('jovan_jovanovic')
+        ).get(`/subjects/mine?schoolYear=${value}`);
+
+        expect(response.status).toBe(400);
+        expect(response.body.error.code).toBe('invalid_request');
+      });
+    });
+
+    it.each(['admin_a', 'ana_ivic', 'petar_ivic'])(
+      'answers 403 for %s, who is not a teacher',
+      async (username) => {
+        await inApi(async (api) => {
+          expect((await (await api.as(username)).get('/subjects/mine')).status).toBe(403);
+        });
+      },
+    );
+
+    it('answers 401 when nobody is signed in', async () => {
+      await inApi(async ({ app }) => {
+        expect((await request(app).get('/subjects/mine')).status).toBe(401);
+      });
+    });
+
+    it('keeps the admin-only list closed to teachers', async () => {
+      await inApi(async (api) => {
+        expect((await (await api.as('jovan_jovanovic')).get('/subjects')).status).toBe(403);
       });
     });
   });

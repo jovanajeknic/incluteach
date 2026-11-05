@@ -444,23 +444,174 @@ export const text = {
     closeMenu: 'Zatvori meni',
   },
 
-  home: {
-    pageTitle: 'Moji predmeti',
-    heading: 'Moji predmeti',
-    viewLabel: 'Prikaz predmeta',
-    bySubject: 'Po predmetima',
-    byClass: 'Po odjeljenjima',
-    classHeading: (name: string) => `Odjeljenje ${name}`,
-    lessonCount: (count: number) => {
-      if (count === 0) return 'još nema lekcija';
-      if (count % 10 === 1 && count % 100 !== 11) return `${count} lekcija`;
-      if ([2, 3, 4].includes(count % 10) && ![12, 13, 14].includes(count % 100))
-        return `${count} lekcije`;
-      return `${count} lekcija`;
+  teacher: {
+    states: {
+      draft: 'Nacrt',
+      processing: 'AI radi',
+      in_review: 'Čeka pregled',
+      published: 'Objavljena',
     },
-    openCourse: (subject: string, className: string) => `${subject}, odjeljenje ${className}`,
-    reviewLabel: 'Čeka tvoj pregled',
-    noSubjects: 'Još ti nije dodijeljen nijedan predmet. Predmete dodjeljuje škola.',
+    // Chosen by the `code` of an API error; `unknown_error` is the fallback for any other.
+    errors: {
+      invalid_title: 'Naslov mora imati od 1 do 200 znakova.',
+      invalid_body: 'Tekst je predug. Može imati najviše 40.000 znakova.',
+      invalid_subject: 'Izaberi predmet koji predaješ.',
+      lesson_published: 'Objavljenu lekciju nije moguće mijenjati. Vrati je u nacrt, pa je uredi.',
+      lesson_busy: 'AI trenutno radi na ovoj lekciji. Sačekaj da završi.',
+      lesson_has_no_text: 'Lekcija nema tekst. Dodaj tekst, pa je objavi.',
+      needs_approval:
+        'Sažetak ili kviz ove lekcije još nije odobren, pa je ne možeš objaviti. Odobravanje dolazi uskoro.',
+      content_outdated:
+        'Tekst se promijenio poslije izrade sažetka ili kviza. Odobri ih ponovo prije objave.',
+      wrong_state: 'Lekcija je u međuvremenu promijenjena. Osvježi stranicu i pokušaj ponovo.',
+      unsupported_file:
+        'Ovaj fajl nije podržan. Izaberi Word (.docx) ili PDF sa tekstom. Stari .doc fajl sačuvaj kao .docx.',
+      no_text_in_file:
+        'U fajlu nema teksta (možda je skeniran). Zalijepi tekst ili pošalji Word fajl.',
+      unreadable_file: 'Fajl nije moguće pročitati. Možda je oštećen ili zaštićen lozinkom.',
+      text_too_long:
+        'Tekst iz fajla je predug (više od 40.000 znakova ili 100 stranica). Pošalji kraći dio.',
+      file_too_large: 'Fajl je veći od 10 MB.',
+      not_found: 'Ova lekcija ne postoji ili je ne možeš vidjeti.',
+      forbidden: 'Nemaš pravo da ovo uradiš.',
+      network_error: 'Server trenutno nije dostupan. Provjeri vezu i pokušaj ponovo.',
+      unknown_error: 'Došlo je do greške. Pokušaj ponovo.',
+    },
+    load: {
+      loading: 'Učitavanje…',
+      failedTitle: 'Nije moguće učitati podatke',
+      failedDescription: 'Provjeri vezu i pokušaj ponovo.',
+      retry: 'Pokušaj ponovo',
+    },
+    home: {
+      pageTitle: 'Moji predmeti',
+      heading: 'Moji predmeti',
+      viewLabel: 'Prikaz predmeta',
+      bySubject: 'Po predmetima',
+      byClass: 'Po odjeljenjima',
+      classHeading: (name: string) => `Odjeljenje ${name}`,
+      studentCount: (count: number) => `${count} ${studentsWord(count)}`,
+      lessonCount: (count: number) => {
+        if (count === 0) return 'još nema lekcija';
+        const last = count % 10;
+        const lastTwo = count % 100;
+        if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) return `${count} lekcije`;
+        return `${count} lekcija`;
+      },
+      waitingForReview: (count: number) => `čeka tvoj pregled: ${count}`,
+      noSubjects:
+        'Još ti nije dodijeljen nijedan predmet u ovoj školskoj godini. Predmete dodjeljuje škola.',
+    },
+    subject: {
+      back: 'Moji predmeti',
+      meta: (className: string, students: number) =>
+        `Odjeljenje ${className} · ${students} ${studentsWord(students)}`,
+      filterLabel: 'Prikaz lekcija',
+      filterAll: 'Sve',
+      empty: 'Ovdje još nema lekcija. Dodaj prvu.',
+      noMatches: 'Nijedna lekcija ne odgovara ovom prikazu.',
+      showMore: 'Prikaži još',
+      shown: (shown: number, total: number) => `Prikazano ${shown} od ${total}`,
+      updated: (date: string) => `izmijenjeno ${date}`,
+      notFoundTitle: 'Predmet nije pronađen',
+      notFoundDescription: 'Ovaj predmet ne predaješ u ovoj školskoj godini.',
+    },
+    newLesson: {
+      pageTitle: 'Dodaj lekciju',
+      heading: 'Dodaj lekciju',
+      subjectLabel: 'Predmet i odjeljenje',
+      subjectPlaceholder: 'Izaberi',
+      subjectOption: (subject: string, className: string) => `${subject} · ${className}`,
+      titleLabel: 'Naslov',
+      sourceLabel: 'Izvor teksta',
+      pasteTab: 'Zalijepi tekst',
+      fileTab: 'Iz fajla',
+      bodyLabel: 'Tekst lekcije',
+      bodyHint: 'Zalijepi ili ukucaj tekst. Prazan red odvaja pasuse.',
+      fileLabel: 'Word (.docx) ili PDF sa tekstom',
+      fileHint:
+        'Do 10 MB. Tekst iz fajla ćeš moći da pročitaš i ispraviš prije nego što radiš bilo šta dalje.',
+      fileChosen: (name: string) => `Izabrano: ${name}`,
+      counter: (used: number, max: number) =>
+        `${used.toLocaleString('sr-Latn-ME')} od ${max.toLocaleString('sr-Latn-ME')} znakova`,
+      save: 'Dodaj lekciju',
+      saving: 'Dodavanje…',
+      cancel: 'Odustani',
+      noSubjects: 'Nemaš nijedan predmet, pa ne možeš dodati lekciju. Predmete dodjeljuje škola.',
+      errors: {
+        subjectRequired: 'Izaberi predmet.',
+        titleRequired: 'Unesi naslov lekcije.',
+        titleTooLong: 'Naslov može imati najviše 200 znakova.',
+        bodyRequired: 'Unesi tekst lekcije.',
+        bodyTooLong: 'Tekst može imati najviše 40.000 znakova.',
+        fileRequired: 'Izaberi fajl.',
+        fileTooLarge: 'Fajl je veći od 10 MB.',
+        fileOldWord: 'Stari Word fajl (.doc) nije podržan. Sačuvaj ga kao .docx.',
+        fileUnsupported: 'Podržani su samo Word (.docx) i PDF fajlovi.',
+      },
+    },
+    lesson: {
+      backToSubjects: 'Moji predmeti',
+      notFoundTitle: 'Lekcija nije pronađena',
+      notFoundDescription: 'Ove lekcije nema, ili je ne možeš vidjeti.',
+      source: {
+        pasted: 'Zalijepljen tekst',
+        docx: (name: string | null) => (name ? `Word fajl: ${name}` : 'Word fajl'),
+        pdf: (name: string | null) => (name ? `PDF fajl: ${name}` : 'PDF fajl'),
+      },
+      titleLabel: 'Naslov',
+      bodyLabel: 'Tekst lekcije',
+      counter: (used: number, max: number) =>
+        `${used.toLocaleString('sr-Latn-ME')} od ${max.toLocaleString('sr-Latn-ME')} znakova`,
+      save: 'Sačuvaj izmjene',
+      saving: 'Čuvanje…',
+      saved: 'Izmjene su sačuvane.',
+      unsaved: 'Imaš nesačuvane izmjene.',
+      leaveTitle: 'Napustiti stranicu?',
+      leaveText: 'Nesačuvane izmjene će se izgubiti.',
+      leaveStay: 'Ostani',
+      leaveGo: 'Napusti',
+      readOnlyPublished:
+        'Lekcija je objavljena i ne može se mijenjati. Vrati je u nacrt da urediš tekst.',
+      processing: 'AI trenutno radi na ovoj lekciji. Stranica se sama osvježava.',
+      processingError: 'AI nije uspio da završi posao. Pokušaj ponovo kasnije.',
+      replaceFile: 'Zamijeni tekst iz fajla',
+      replaceTitle: 'Zamijeniti tekst?',
+      replaceText:
+        'Tekst iz fajla zamijeniće trenutni tekst lekcije, a tvoje izmjene u njemu se gube.',
+      replaceYes: 'Izaberi fajl',
+      cancel: 'Odustani',
+      uploading: 'Čitanje fajla…',
+      uploadDone: 'Tekst je učitan iz fajla. Pročitaj ga i ispravi gdje treba.',
+      uploadFailedAfterCreate: 'Lekcija je napravljena, ali tekst iz fajla nije učitan.',
+      imagesNotIncluded: (count: number) =>
+        count % 10 === 1 && count % 100 !== 11
+          ? `Dokument ima ${count} sliku koja nije uključena u tekst. Ako je važna, opiši je u tekstu.`
+          : `Dokument ima ${count} slika koje nisu uključene u tekst. Ako su važne, opiši ih u tekstu.`,
+      content: {
+        heading: 'Sažetak i kviz',
+        none: 'Za ovu lekciju još nema sažetka ni kviza.',
+        summary: 'Sažetak',
+        quiz: 'Kviz',
+        draft: 'čeka odobrenje',
+        approved: 'odobren',
+        outdated: 'zastario, tekst se promijenio',
+        byAi: 'napravio AI',
+        byTeacher: 'napisao nastavnik',
+        soon: 'Uređivanje i odobravanje dolaze uskoro.',
+      },
+      publish: 'Objavi',
+      publishing: 'Objavljivanje…',
+      publishedAt: (date: string) =>
+        `Objavljena ${date}. Vide je učenici koji su upisani na predmet.`,
+      draftHint: 'Učenici ne vide lekciju dok je ne objaviš.',
+      unpublish: 'Vrati u nacrt',
+      unpublishing: 'Vraćanje…',
+      delete: 'Obriši lekciju',
+      deleteTitle: 'Obrisati lekciju?',
+      deleteText: 'Lekcija će biti trajno obrisana, zajedno sa svime što joj pripada.',
+      deleteYes: 'Da, obriši',
+    },
   },
 
   lesson: {
@@ -472,166 +623,6 @@ export const text = {
       assigned: 'Objavljena',
     },
     courseLabel: (subject: string, className: string) => `${subject} · ${className}`,
-  },
-
-  course: {
-    backToSubjects: 'Moji predmeti',
-    studentCount: (count: number) => `${count} ${studentsWord(count)}`,
-    otherClasses: 'Isti predmet u odjeljenju:',
-    filterLabel: 'Prikaz lekcija',
-    filters: {
-      all: 'Sve',
-      review: 'Čekaju pregled',
-      published: 'Objavljene',
-      working: 'U izradi',
-    },
-    empty: 'Ovdje još nema lekcija. Dodaj prvu, a AI će pripremiti sve verzije.',
-    noMatches: 'Nijedna lekcija ne odgovara ovom prikazu.',
-    approvedCount: (approved: number, total: number) => `odobreno ${approved} od ${total}`,
-    notFoundTitle: 'Predmet nije pronađen',
-    notFoundDescription: 'Ovaj predmet ne predaješ u tom odjeljenju.',
-  },
-
-  newLesson: {
-    pageTitle: 'Dodaj lekciju',
-    heading: 'Dodaj lekciju',
-    allFieldsRequired: 'Sva polja su obavezna.',
-    courseLabel: 'Predmet i odjeljenje',
-    coursePlaceholder: 'Izaberi',
-    titleLabel: 'Naslov',
-    contentLabel: 'Tekst lekcije',
-    contentHint: 'Zalijepi ili ukucaj tekst. Prazan red odvaja pasuse.',
-    aiNote:
-      'Čim sačuvaš, AI pravi skraćenu verziju, niži nivo, tekst za lakše čitanje, audio i ilustracije.',
-    save: 'Dodaj i pokreni AI',
-    cancel: 'Odustani',
-    errors: {
-      titleRequired: 'Unesi naslov lekcije.',
-      courseRequired: 'Izaberi predmet i odjeljenje.',
-      contentRequired: 'Unesi tekst lekcije.',
-    },
-  },
-
-  lessonDetail: {
-    notFoundTitle: 'Lekcija nije pronađena',
-    notFoundDescription:
-      'Ove lekcije nema. Možda je adresa pogrešna, ili je lekcija napravljena prije osvježavanja stranice pa se izgubila.',
-    backToSubjects: 'Moji predmeti',
-    forbiddenTitle: 'Nemate pristup',
-    forbiddenDescription: 'Ova lekcija pripada predmetu ili odjeljenju kojem ne predaješ.',
-    ai: {
-      working: 'AI priprema verzije…',
-      workingHint: 'Za koji trenutak sve će biti spremno za tvoj pregled.',
-      redoing: 'AI prepravlja ovu verziju…',
-      draftTitle: 'AI još nije pripremio verzije',
-      draftText: 'Pokreni AI i dobićeš sve verzije ove lekcije za pregled.',
-      start: 'Pokreni AI',
-      again: 'Napravi sve verzije ponovo',
-      againHint: 'Ako promijeniš tekst, AI može ponovo napraviti sve verzije.',
-      suggestionsIntro: 'AI uzima u obzir i tvoja uputstva:',
-      demoNote: 'U demou je AI simuliran i ništa ne odlazi na internet.',
-      failed: 'AI trenutno nije uspio da pripremi verzije. Ništa nije izgubljeno.',
-      failedVersion: 'AI nije uspio da prepravi ovu verziju. Prethodna je sačuvana.',
-      retry: 'Pokušaj ponovo',
-    },
-    stale: 'Tvoj tekst se promijenio poslije ove verzije. Pogledaj je, prepravi ili odobri ponovo.',
-    extrasHint: 'AI je predložio pitanja za kviz i objašnjenja riječi. I njih odobri prije objave.',
-    approveExtras: 'Odobri kviz i riječi',
-    aiCommentLabel: 'Napomena AI-ja (vidiš je samo ti):',
-    manage: {
-      unpublish: 'Povuci od učenika',
-      unpublishConfirm: 'Učenici više neće vidjeti ovu lekciju dok je ponovo ne objaviš.',
-      unpublishYes: 'Da, povuci',
-      unpublished: 'Lekcija je povučena. Učenici je više ne vide.',
-      delete: 'Obriši lekciju',
-      deleteConfirm: 'Lekcija će biti trajno obrisana.',
-      deleteYes: 'Da, obriši',
-      cancel: 'Odustani',
-    },
-    tabsLabel: 'Verzije lekcije',
-    kinds: {
-      standard: 'Original',
-      shortened: 'Skraćena',
-      easier: 'Niži nivo',
-      dyslexia: 'Lakše čitanje',
-      audio: 'Audio',
-      illustrations: 'Ilustracije',
-    },
-    kindHints: {
-      standard: 'Tvoj tekst. Iz njega AI pravi sve ostale verzije.',
-      shortened: 'Samo ono najvažnije iz lekcije.',
-      easier: 'Isti sadržaj, jednostavnijim riječima i rečenicama.',
-      dyslexia:
-        'Kratki redovi, posebna slova i veći razmaci, za učenike kojima je čitanje teško (na primjer kod disleksije).',
-      audio: 'Tekst koji se čita naglas. Učenici ga slušaju glasom uređaja.',
-      illustrations: 'Crteži uz lekciju. Vide ih svi učenici odjeljenja.',
-    },
-    extrasTab: 'Kviz i riječi',
-    audience: (count: number) =>
-      count === 0
-        ? 'Trenutno je ne dobija nijedan učenik'
-        : `Dobija ${count} ${studentsWord(count)}`,
-    aiSuggestion: 'AI prijedlog',
-    approved: 'Odobreno',
-    approve: 'Odobri',
-    missingTitle: 'Ova verzija još ne postoji',
-    missingText: 'Lekcija je napravljena prije nego što je AI pripremao ovu verziju.',
-    create: 'Napravi verziju',
-    edit: 'Uredi tekst',
-    save: 'Sačuvaj',
-    cancel: 'Odustani',
-    editLabel: (kind: string) => `Tekst: ${kind}`,
-    emptyError: 'Tekst ne može biti prazan.',
-    captionLabel: (n: number) => `Opis ispod slike ${n}`,
-    feedbackLabel: 'Šta da AI promijeni?',
-    feedbackHint: 'Na primjer: „Kraće rečenice“ ili „Dodaj primjer sa jabukama“.',
-    feedbackRequired: 'Napiši šta treba promijeniti.',
-    redo: 'Prepravi',
-    listen: 'Poslušaj',
-    stopListening: 'Zaustavi',
-    noVoice: 'Ovaj uređaj ne može da čita naglas, ali učenici ga mogu slušati na svojim uređajima.',
-    publish: {
-      progress: (approved: number, total: number) => `Odobreno ${approved} od ${total}`,
-      button: 'Objavi učenicima',
-      needsApproval: 'Odobri sve verzije, pa objavi.',
-      published: (className: string) =>
-        `Objavljeno. Učenici odjeljenja ${className} je vide, svako u verziji koja mu je namijenjena.`,
-      ready: (className: string) => `Sve je odobreno. Lekcija ide odjeljenju ${className}.`,
-      changesWaiting:
-        'Učenici vide objavljenu lekciju. Tvoje izmjene vide tek kad ih odobriš i objaviš.',
-      changesReady: 'Izmjene su odobrene. Objavi ih da ih učenici vide.',
-      republish: 'Objavi izmjene',
-    },
-    saveSection: 'Sačuvaj',
-    sectionSaved: 'Sačuvano.',
-    sectionInvalid: 'Neki redovi su prazni — popuni ih ili ukloni.',
-    glossary: {
-      heading: 'Teže riječi',
-      intro: 'Dijete dodirne podvučenu riječ i vidi objašnjenje.',
-      term: (n: number) => `Riječ ${n}`,
-      definition: (n: number) => `Objašnjenje ${n}`,
-      add: '+ riječ',
-      remove: (n: number) => `Ukloni riječ ${n}`,
-      empty: 'Još nema nijedne.',
-    },
-    quiz: {
-      heading: 'Pitanja za kviz',
-      intro:
-        'Nema ocjena: poslije svakog odgovora dijete vidi objašnjenje i dobija zvjezdicu kad završi.',
-      question: (n: number) => `Pitanje ${n}`,
-      option: (q: number, n: number) => `Pitanje ${q}, odgovor ${n}`,
-      correct: (q: number) => `Tačan odgovor na pitanje ${q}`,
-      correctOption: (n: number) => `Odgovor ${n} je tačan`,
-      explanation: (n: number) => `Objašnjenje za pitanje ${n}`,
-      addQuestion: '+ pitanje',
-      removeQuestion: (n: number) => `Ukloni pitanje ${n}`,
-      empty: 'Još nema pitanja.',
-    },
-    home: {
-      heading: 'Za roditelje',
-      intro: 'Savjeti za rad kod kuće, po jedan u redu.',
-      label: 'Savjeti',
-    },
   },
 
   classView: {

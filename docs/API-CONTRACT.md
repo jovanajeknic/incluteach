@@ -228,7 +228,18 @@ All endpoints in this group are for `admin` only and work on the admin's school.
 
 ## Subjects (admin)
 
-A subject is a name in one class taught by one teacher. The same name can appear several times, with different teachers or in different classes. All endpoints in this group are for `admin` only and work on the admin's school.
+A subject is a name in one class taught by one teacher. The same name can appear several times, with different teachers or in different classes. All endpoints in this group are for `admin` only and work on the admin's school, except `GET /subjects/mine`, which is for a teacher.
+
+### GET /subjects/mine
+
+- **Status**: implemented
+- **Purpose**: the subjects the signed-in teacher teaches, with how many students joined and how many lessons are in each state. A teacher has no other way to list subjects (`GET /subjects` is for the admin), and a subject without lessons would otherwise never show up.
+- **Who may call it**: `teacher`. The admin, students and parents get `403`.
+- **Request**: query `schoolYear` (2000 to 2100; default: the current school year, which starts on 1 September).
+- **Success response**: `200 { subjects, schoolYear }`. A subject is `{ id, name, classId, className, schoolYear, studentCount, lessonCounts }`, sorted by class name and then subject name. `studentCount` counts students with an approved request who still attend the school (deactivated or erased students are not counted). `lessonCounts` is `{ draft, processing, in_review, published }`.
+- **Errors**: `400 invalid_request` (the year is not a whole number in range).
+- **Notes**: only the caller's own subjects of their own school are returned.
+- **Used by (frontend)**: teacher "Moji predmeti" (by subject or by odeljenje) and the subject picker of "Nova lekcija".
 
 ### GET /subjects
 

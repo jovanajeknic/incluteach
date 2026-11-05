@@ -24,6 +24,9 @@ interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   /** Sent as JSON. */
   body?: unknown;
+  /** Sent as it is, for a file; the content type is left to the browser. */
+  rawBody?: Blob;
+  headers?: Record<string, string>;
   signal?: AbortSignal;
 }
 
@@ -48,15 +51,15 @@ function toApiError(status: number, payload: unknown): ApiError {
  * and the code never reads it; `credentials: 'include'` makes sure it is always sent.
  */
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, signal } = options;
+  const { method = 'GET', body, rawBody, headers, signal } = options;
 
   let response: Response;
   try {
     response = await fetch(`/api${path}`, {
       method,
       credentials: 'include',
-      headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      headers: body === undefined ? headers : { 'Content-Type': 'application/json', ...headers },
+      body: rawBody ?? (body === undefined ? undefined : JSON.stringify(body)),
       signal,
     });
   } catch (error) {

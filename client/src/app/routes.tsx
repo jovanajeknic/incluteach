@@ -59,13 +59,13 @@ export const routes: RouteObject[] = [
             children: [
               { index: true, lazy: fromArea(teacherArea, (area) => area.TeacherHomePage) },
               {
-                path: 'subjects/:subjectId/classes/:classId',
-                lazy: fromArea(teacherArea, (area) => area.CoursePage),
+                path: 'subjects/:subjectId',
+                lazy: fromArea(teacherArea, (area) => area.SubjectLessonsPage),
               },
               { path: 'lessons/new', lazy: fromArea(teacherArea, (area) => area.NewLessonPage) },
               {
                 path: 'lessons/:lessonId',
-                lazy: fromArea(teacherArea, (area) => area.LessonDetailPage),
+                lazy: fromArea(teacherArea, (area) => area.LessonPage),
               },
               { path: 'class', lazy: fromArea(teacherArea, (area) => area.ClassPage) },
               {

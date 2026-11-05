@@ -4,7 +4,14 @@ import { getUser, requireRole } from '../auth/currentUser.ts';
 import type { Queryable } from '../db/pool.ts';
 import { HttpError } from '../http/errors.ts';
 import { cleanText, isUuid, readWholeNumber } from '../http/validation.ts';
-import { createSubject, deleteSubject, listSubjects, updateSubject } from '../school/subjects.ts';
+import { currentSchoolYear } from '../school/schoolYear.ts';
+import {
+  createSubject,
+  deleteSubject,
+  listSubjects,
+  listTeacherSubjects,
+  updateSubject,
+} from '../school/subjects.ts';
 
 const MIN_YEAR = 2000;
 const MAX_YEAR = 2100;
@@ -36,6 +43,25 @@ function readSubjectId(value: unknown): string {
 // same name can appear several times with different teachers or in different classes.
 export function subjectsRouter(pool: Queryable): Router {
   const router = Router();
+
+  // The one thing a teacher may ask here: their own subjects, for the current school year
+  // unless another is asked for (query: schoolYear). It comes before the admin-only rule below.
+  router.get('/mine', requireRole('teacher'), async (req, res) => {
+    const { schoolYear } = req.query;
+    const year =
+      schoolYear === undefined
+        ? currentSchoolYear()
+        : readWholeNumber(schoolYear, MIN_YEAR, MIN_YEAR, MAX_YEAR);
+
+    const user = getUser(req);
+    const subjects = await listTeacherSubjects(pool, {
+      schoolId: user.schoolId,
+      teacherId: user.id,
+      schoolYear: year,
+    });
+    res.json({ subjects, schoolYear: year });
+  });
+
   router.use(requireRole('admin'));
 
   // Query: classId, teacherId, schoolYear, limit and offset.

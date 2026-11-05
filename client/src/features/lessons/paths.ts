@@ -1,11 +1,12 @@
 export const teacherHomePath = '/teacher';
 export const newLessonPath = '/teacher/lessons/new';
-/** Opens the new-lesson form with the subject and class already chosen. */
-export const newLessonForPath = (subjectId: string, classId: string) =>
-  `${newLessonPath}?${new URLSearchParams({ subject: subjectId, class: classId })}`;
+/** Opens the new-lesson form with the subject already chosen. */
+export const newLessonForPath = (subjectId: string) =>
+  `${newLessonPath}?${new URLSearchParams({ subject: subjectId })}`;
 export const lessonPath = (lessonId: string) => `/teacher/lessons/${encodeURIComponent(lessonId)}`;
-export const coursePath = (subjectId: string, classId: string) =>
-  `/teacher/subjects/${encodeURIComponent(subjectId)}/classes/${encodeURIComponent(classId)}`;
+/** The lessons of one subject (a subject already belongs to exactly one odeljenje). */
+export const subjectLessonsPath = (subjectId: string) =>
+  `/teacher/subjects/${encodeURIComponent(subjectId)}`;
 export const classPath = '/teacher/class';
 export const teacherStudentPath = (studentId: string) =>
   `/teacher/students/${encodeURIComponent(studentId)}`;
