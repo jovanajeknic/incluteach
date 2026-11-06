@@ -1,5 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { classesApi } from './classesApi';
+import { familiesApi } from './familiesApi';
 import { subjectsApi, type SubjectsFilter } from './subjectsApi';
 import { usersApi, type BulkAction, type UsersFilter } from './usersApi';
 
@@ -99,3 +100,21 @@ export const useUpdateSubject = () =>
     subjectsApi.update(id, changes),
   );
 export const useDeleteSubject = () => useSubjectsMutation(subjectsApi.remove);
+
+export const useUser = (id: string) =>
+  useQuery({ queryKey: ['admin', 'user', id], queryFn: () => usersApi.get(id) });
+
+export const useParentsOf = (studentId: string) =>
+  useQuery({
+    queryKey: ['admin', 'parents-of', studentId],
+    queryFn: () => familiesApi.parentsOf(studentId),
+  });
+
+export function useLinkParent() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: familiesApi.link,
+    // Also after a failure: `link_exists` means the list shown was out of date.
+    onSettled: () => client.invalidateQueries({ queryKey: ['admin', 'parents-of'] }),
+  });
+}

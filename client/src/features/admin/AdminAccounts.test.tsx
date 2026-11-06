@@ -82,6 +82,30 @@ describe('Novi nalog', () => {
     );
   });
 
+  it('opens with the role chosen when a page of the families asks for it', async () => {
+    renderApp({ path: '/admin/users/new?role=parent' });
+
+    expect(await screen.findByLabelText('Uloga')).toHaveValue('parent');
+  });
+
+  it('ignores a role in the address that cannot be created here', async () => {
+    renderApp({ path: '/admin/users/new?role=admin' });
+
+    expect(await screen.findByLabelText('Uloga')).toHaveValue('');
+  });
+
+  it('leads from a new child to the page where the parents are linked', async () => {
+    keepAccounts();
+    const { user } = renderApp({ path: '/admin/users/new?role=student' });
+    await user.type(await screen.findByLabelText('Ime i prezime'), 'Jovan Ivić');
+    await user.click(screen.getByRole('button', { name: 'Napravi nalog' }));
+
+    expect(await screen.findByRole('link', { name: 'Poveži roditelje' })).toHaveAttribute(
+      'href',
+      '/admin/families/new-1',
+    );
+  });
+
   it('copies the link', async () => {
     keepAccounts();
     const { user } = renderApp({ path: '/admin/users/new' });

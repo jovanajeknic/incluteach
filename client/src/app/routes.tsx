@@ -163,6 +163,11 @@ export const routes: RouteObject[] = [
               { path: 'users', lazy: fromArea(adminArea, (area) => area.UsersPage) },
               { path: 'classes', lazy: fromArea(adminArea, (area) => area.ClassesPage) },
               { path: 'subjects', lazy: fromArea(adminArea, (area) => area.SubjectsPage) },
+              { path: 'families', lazy: fromArea(adminArea, (area) => area.FamiliesPage) },
+              {
+                path: 'families/:studentId',
+                lazy: fromArea(adminArea, (area) => area.FamilyPage),
+              },
               { path: 'users/new', lazy: fromArea(adminArea, (area) => area.NewUserPage) },
               { path: '*', element: <NotFoundPage homePath={adminHomePath} /> },
             ],

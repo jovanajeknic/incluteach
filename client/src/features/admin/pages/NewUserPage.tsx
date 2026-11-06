@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { SubmitButton } from '@/features/auth/components/AuthStatus';
 import { authFieldClassName } from '@/features/auth/components/fieldStyles';
 import { FormField } from '@/shared/components/FormField';
@@ -13,7 +13,7 @@ import { useCreateUser, useIssueActivation } from '../api/queries';
 import type { Activation, ManagedUser, NewUserRole } from '../api/usersApi';
 import { adminErrorMessage } from '../apiErrorMessage';
 import { ActivationLink } from '../components/ActivationLink';
-import { adminUsersPath } from '../paths';
+import { adminFamilyPath, adminUsersPath } from '../paths';
 import { newUserSchema, type NewUserInput, type NewUserValues } from '../schemas';
 
 const t = text.admin.newUser;
@@ -30,6 +30,9 @@ interface Created {
  * password. The system sends nothing itself; the administrator hands the link over.
  */
 export function NewUserPage() {
+  // The pages of the families link here with the role already chosen.
+  const [params] = useSearchParams();
+  const roleFromLink = roles.find((role) => role === params.get('role'));
   const createUser = useCreateUser();
   const issue = useIssueActivation();
   const [created, setCreated] = useState<Created | null>(null);
@@ -41,7 +44,7 @@ export function NewUserPage() {
     formState: { errors, isSubmitting },
   } = useForm<NewUserInput, unknown, NewUserValues>({
     resolver: zodResolver(newUserSchema),
-    defaultValues: { fullName: '', role: '' as NewUserValues['role'] },
+    defaultValues: { fullName: '', role: roleFromLink ?? ('' as NewUserValues['role']) },
   });
 
   async function onValid(values: NewUserValues) {
@@ -121,6 +124,11 @@ export function NewUserPage() {
             <Button type="button" size="lg" onClick={another}>
               {t.another}
             </Button>
+            {created.user.role === 'student' && (
+              <Button asChild variant="outline" size="lg">
+                <Link to={adminFamilyPath(created.user.id)}>{t.linkParents}</Link>
+              </Button>
+            )}
             <Button asChild variant="outline" size="lg">
               <Link to={adminUsersPath}>{t.toList}</Link>
             </Button>

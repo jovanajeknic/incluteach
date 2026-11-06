@@ -52,6 +52,7 @@ export const usersApi = {
     if (search) query.set('search', search);
     return apiRequest<{ users: ManagedUser[]; total: number }>(`/users?${query}`);
   },
+  get: (id: string) => apiRequest<{ user: ManagedUser }>(`/users/${encodeURIComponent(id)}`),
   create: (body: { fullName: string; role: NewUserRole }) =>
     apiRequest<{ user: ManagedUser }>('/users', { method: 'POST', body }),
   rename: (id: string, fullName: string) =>

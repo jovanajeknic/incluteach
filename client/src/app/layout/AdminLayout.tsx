@@ -1,6 +1,13 @@
-import { BooksIcon, ChalkboardTeacherIcon, PlusIcon, UsersIcon } from '@phosphor-icons/react';
+import {
+  BooksIcon,
+  ChalkboardTeacherIcon,
+  PlusIcon,
+  UsersIcon,
+  UsersThreeIcon,
+} from '@phosphor-icons/react';
 import {
   adminClassesPath,
+  adminFamiliesPath,
   adminNewUserPath,
   adminSubjectsPath,
   adminUsersPath,
@@ -26,6 +33,12 @@ export function AdminLayout() {
           tone: 'bg-mint text-mint-ink',
         },
         { to: adminSubjectsPath, label: t.subjects, icon: BooksIcon, tone: 'bg-sky text-sky-ink' },
+        {
+          to: adminFamiliesPath,
+          label: t.families,
+          icon: UsersThreeIcon,
+          tone: 'bg-blush text-blush-ink',
+        },
       ]}
       action={{ to: adminNewUserPath, label: text.admin.users.newAccount, icon: PlusIcon }}
       person={{

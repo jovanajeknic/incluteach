@@ -95,6 +95,21 @@ export function usersRouter(pool: Queryable, { publicUrl }: UsersRouterOptions):
     );
   });
 
+  // One user of the admin's school, whether or not they left the school; an erased user is
+  // not found, as in the list.
+  router.get('/:id', requireRole('admin'), async (req, res) => {
+    const admin = getUser(req);
+    const userId = String(req.params.id);
+
+    const user = isUuid(userId)
+      ? await findManagedUser(pool, { schoolId: admin.schoolId, userId })
+      : null;
+    if (!user) {
+      throw new HttpError(404, 'not_found', 'User not found.');
+    }
+    res.json({ user });
+  });
+
   // Creates an account in the admin's school. The person cannot sign in until they open
   // their activation link (see below).
   router.post('/', requireRole('admin'), async (req, res) => {

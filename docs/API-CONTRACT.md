@@ -136,6 +136,15 @@ All endpoints in this group are for `admin` only and work on the admin's school.
 - **Errors**: `400 invalid_request`.
 - **Used by (frontend)**: admin screen "Korisnici"; also the pickers for a teacher, a parent or a student on other admin screens.
 
+### GET /users/{id}
+
+- **Status**: implemented
+- **Purpose**: one user of the school, for a screen that opens a single person (for example the parents of a child), also when the person has left the school.
+- **Request**: none.
+- **Success response**: `200 { user: ManagedUser }`.
+- **Errors**: `404 not_found` (unknown, another school, a bad id, or erased).
+- **Used by (frontend)**: admin screen "Porodice", the page of one child.
+
 ### POST /users
 
 - **Status**: implemented

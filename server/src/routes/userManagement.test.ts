@@ -156,6 +156,57 @@ describe.skipIf(!process.env.DATABASE_URL)('user management', () => {
     );
   });
 
+  describe('GET /users/:id', () => {
+    it('describes one user of the school, also one who left it', async () => {
+      await inApi(async ({ get, deactivate, f }) => {
+        await deactivate(f.studentId);
+
+        const response = await get(`/users/${f.studentId}`);
+
+        expect(response.status).toBe(200);
+        expect(response.body.user).toEqual({
+          id: f.studentId,
+          username: 'ana_ivic',
+          fullName: 'Ana Ivić',
+          email: 'ana_ivic@example.com',
+          role: 'student',
+          activated: true,
+          deactivatedAt: expect.any(String),
+          createdAt: expect.any(String),
+        });
+        expect(JSON.stringify(response.body)).not.toMatch(/password|scrypt|school_?id/i);
+      });
+    });
+
+    it('answers 404 for a user of another school, an unknown user and a bad id', async () => {
+      await inApi(async ({ get, f }) => {
+        for (const id of [f.otherSchoolStudentId, '00000000-0000-0000-0000-000000000000', 'nope']) {
+          expect((await get(`/users/${id}`)).status).toBe(404);
+        }
+      });
+    });
+
+    it('answers 404 for a user whose data was erased', async () => {
+      await inApi(async ({ get, post, deactivate, f }) => {
+        await deactivate(f.studentId);
+        await post('/users/delete', { ids: [f.studentId] });
+
+        expect((await get(`/users/${f.studentId}`)).status).toBe(404);
+      });
+    });
+
+    it('answers 403 for a user who is not an admin, and 401 for nobody', async () => {
+      await inApi(async ({ app, signIn, f }) => {
+        const cookie = sessionCookie(await signIn('jovan_jovanovic'));
+
+        const response = await request(app).get(`/users/${f.studentId}`).set('Cookie', cookie);
+
+        expect(response.status).toBe(403);
+        expect((await request(app).get(`/users/${f.studentId}`)).status).toBe(401);
+      });
+    });
+  });
+
   describe('PATCH /users/:id', () => {
     it('changes the name and keeps the username', async () => {
       await inApi(async ({ patch, f }) => {
