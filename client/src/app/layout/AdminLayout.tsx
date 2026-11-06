@@ -1,5 +1,10 @@
-import { ChalkboardTeacherIcon, PlusIcon, UsersIcon } from '@phosphor-icons/react';
-import { adminClassesPath, adminNewUserPath, adminUsersPath } from '@/features/admin/paths';
+import { BooksIcon, ChalkboardTeacherIcon, PlusIcon, UsersIcon } from '@phosphor-icons/react';
+import {
+  adminClassesPath,
+  adminNewUserPath,
+  adminSubjectsPath,
+  adminUsersPath,
+} from '@/features/admin/paths';
 import { useSession } from '@/features/auth/api/session';
 import { initialsOfName } from '@/shared/lib/format';
 import { text } from '@/text/sr-Latn';
@@ -20,6 +25,7 @@ export function AdminLayout() {
           icon: ChalkboardTeacherIcon,
           tone: 'bg-mint text-mint-ink',
         },
+        { to: adminSubjectsPath, label: t.subjects, icon: BooksIcon, tone: 'bg-sky text-sky-ink' },
       ]}
       action={{ to: adminNewUserPath, label: text.admin.users.newAccount, icon: PlusIcon }}
       person={{

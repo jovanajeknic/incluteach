@@ -91,6 +91,16 @@ describe('Odeljenja', () => {
     expect(screen.getByRole('link', { name: 'Odeljenja' })).toHaveAttribute('aria-current', 'page');
   });
 
+  it('links each class to its subjects, in the same school year', async () => {
+    keepClasses([schoolClass()]);
+    renderApp({ path: '/admin/classes' });
+
+    expect(await screen.findByRole('link', { name: 'Predmeti odeljenja 5-1' })).toHaveAttribute(
+      'href',
+      '/admin/subjects?schoolYear=2026&classId=c1',
+    );
+  });
+
   it('offers the next year, to prepare it before September, and a few past ones', async () => {
     keepClasses([]);
     renderApp({ path: '/admin/classes' });

@@ -28,3 +28,21 @@ export const newClassSchema = z.object({ name: className });
 
 export type NewClassInput = z.input<typeof newClassSchema>;
 export type NewClassValues = z.output<typeof newClassSchema>;
+
+const subjectText = text.admin.subjects;
+
+/** The server answers `invalid_subject_name`; this is quick feedback only. */
+export const subjectName = z
+  .string()
+  .trim()
+  .min(1, subjectText.nameRequired)
+  .max(100, subjectText.nameLong);
+
+export const newSubjectSchema = z.object({
+  name: subjectName,
+  classId: z.string().min(1, subjectText.classRequired),
+  teacherId: z.string().min(1, subjectText.teacherRequired),
+});
+
+export type NewSubjectInput = z.input<typeof newSubjectSchema>;
+export type NewSubjectValues = z.output<typeof newSubjectSchema>;

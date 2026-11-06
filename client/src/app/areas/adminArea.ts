@@ -2,4 +2,5 @@
 export { AdminLayout } from '../layout/AdminLayout';
 export { ClassesPage } from '@/features/admin/pages/ClassesPage';
 export { NewUserPage } from '@/features/admin/pages/NewUserPage';
+export { SubjectsPage } from '@/features/admin/pages/SubjectsPage';
 export { UsersPage } from '@/features/admin/pages/UsersPage';

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
@@ -7,6 +8,7 @@ import { text } from '@/text/sr-Latn';
 import type { SchoolClass } from '../api/classesApi';
 import { useDeleteClass, useRenameClass } from '../api/queries';
 import { adminErrorMessage } from '../apiErrorMessage';
+import { adminClassSubjectsPath } from '../paths';
 import { className } from '../schemas';
 
 const t = text.admin.classes;
@@ -43,6 +45,9 @@ export function ClassRow({ item, onNotice, onProblem }: ClassRowProps) {
           {!canRemove && <p className="text-sm text-ink-soft">{t.removeBlocked}</p>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <Button asChild variant="outline" aria-label={t.subjectsOf(item.name)}>
+            <Link to={adminClassSubjectsPath(item.id, item.schoolYear)}>{t.subjects}</Link>
+          </Button>
           <Button
             type="button"
             variant="outline"
