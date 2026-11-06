@@ -14,7 +14,7 @@
     "db:backup": "tsx src/scripts/backupDb.ts",
     "create-admin": "tsx src/scripts/createAdmin.ts",
     "seed:demo": "tsx src/scripts/seedDemo.ts",
-    "seed:podgorica": "tsx src/scripts/seedPodgorica.ts",
+    "seed:schools": "tsx src/scripts/seedSchools.ts",
     "migrate": "node-pg-migrate -m migrations --envPath .env",
     "migrate:up": "npm run migrate -- up",
     "migrate:down": "npm run migrate -- down",
