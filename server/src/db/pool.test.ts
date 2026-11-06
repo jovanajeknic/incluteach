@@ -26,8 +26,9 @@ describe.skipIf(!process.env.DATABASE_URL)('database connection', () => {
     let usersTable: string | null = null;
 
     beforeAll(async () => {
+      // Looked up through the search path, so it works in the test schema as well as in public.
       const { rows } = await pool.query<{ name: string | null }>(
-        `SELECT to_regclass('public.users')::text AS name`,
+        `SELECT to_regclass('users')::text AS name`,
       );
       usersTable = rows[0].name;
     });

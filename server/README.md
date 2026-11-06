@@ -137,6 +137,24 @@ A migration is a numbered SQL file in `migrations/` that changes the database st
 | `npm run migrate:down`                                           | Undoes the last migration                    |
 | `npm run migrate -- create <name> --migration-file-language sql` | Creates a new empty migration file           |
 
+## Tests need their own tables
+
+The database tests expect empty tables (some of them count every row). Each test runs inside a transaction that is rolled back, so tests leave nothing behind, but the demo data from `npm run seed:demo` in the same tables makes about 27 of them fail. Give the tests their own set of tables, a separate "schema" inside the same database (no admin rights are needed):
+
+1. Add this line to `server/.env`:
+
+   ```sh
+   TEST_DB_SCHEMA=incluteach_test
+   ```
+
+2. Build the tables once, and again after each new migration:
+
+   ```sh
+   npm run migrate:test
+   ```
+
+With `TEST_DB_SCHEMA` set, `npm test` works in that schema only; the development tables and their demo data are not touched. Do not run `seed:demo` against it.
+
 ## Checks
 
 Run these from `server/`:
@@ -144,6 +162,7 @@ Run these from `server/`:
 | Command                | What it does                                                                 |
 | ---------------------- | ---------------------------------------------------------------------------- |
 | `npm test`             | Runs tests once (Vitest). Database tests run only when `DATABASE_URL` is set |
+| `npm run migrate:test` | Applies the migrations to the test tables (`TEST_DB_SCHEMA`)                 |
 | `npm run lint`         | Checks code with ESLint                                                      |
 | `npm run typecheck`    | Checks TypeScript types                                                      |
 | `npm run format:check` | Checks formatting with Prettier                                              |

@@ -13,7 +13,18 @@ Working rules for contributors and AI agents are in [AGENTS.md](AGENTS.md).
 
 ## Frontend
 
-The frontend is currently a **demo**: it uses fictional data kept in browser memory, has no backend and no real sign-in. Changes are lost when the page is reloaded.
+The frontend works with the real backend: sign-in, the teacher, student, parent and admin screens all call the API of `server/` (the Vite dev server forwards `/api` to `http://localhost:3000`). Start the server first, see [server/README.md](server/README.md). Only the school request form (`/school-request`) is still a demo and sends nothing.
+
+## After you pull new changes
+
+Do these in order. Skip a step if nothing in that folder changed.
+
+1. `cd client && npm install` and `cd server && npm install` (new packages are added from time to time).
+2. `cd server && npm run migrate:up` (applies new database migrations to the development tables).
+3. **Once**, for the server tests: add the line `TEST_DB_SCHEMA=incluteach_test` to `server/.env`, then run `npm run migrate:test`. The tests then use their own empty tables and never see the demo data. After every new migration, run `npm run migrate:test` too. Details: "Tests need their own tables" in [server/README.md](server/README.md).
+4. Start both: `cd server && npm run dev` and `cd client && npm run dev`. Open <http://localhost:5173/> and sign in.
+
+Nothing else is needed in `server/.env`; the optional settings are listed in `server/.env.example`. For demo data and accounts run `npm run seed:demo` (teacher, student and parent) and `npm run create-admin` (an administrator) in `server/`.
 
 ### Requirements
 
@@ -33,7 +44,7 @@ npm install
 npm run dev
 ```
 
-Then open <http://localhost:5173/> in a browser for the landing page, or <http://localhost:5173/teacher> for the teacher demo.
+Then open <http://localhost:5173/> in a browser for the landing page and sign in from there.
 
 To try it on a phone in the same Wi-Fi network, run `npm run dev -- --host` and open the `Network` address that Vite prints.
 

@@ -17,6 +17,7 @@
     "migrate": "node-pg-migrate -m migrations --envPath .env",
     "migrate:up": "npm run migrate -- up",
     "migrate:down": "npm run migrate -- down",
+    "migrate:test": "node-pg-migrate -m migrations --envPath .env --schema incluteach_test --create-schema up",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
