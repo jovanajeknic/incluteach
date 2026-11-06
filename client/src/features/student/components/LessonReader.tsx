@@ -65,8 +65,8 @@ export function LessonReader({ lesson, back, below }: LessonReaderProps) {
   );
   const paragraphs = useMemo(() => splitParagraphs(body), [body]);
   const shownContent = stepByStep ? (paragraphs[step] ?? '') : body;
-  // The voice of the browser reads Latin script better, so it always gets Latin, also when the
-  // student looks at Cyrillic. The sentences are the same ones, so the highlight stays right.
+  // The sentences are Latin, also when the student looks at Cyrillic; a voice that needs
+  // Cyrillic is given it in the hook. The sentences are the same ones, so the highlight stays right.
   const sentences = useMemo(() => lessonSentences(cyrillicToLatin(shownContent)), [shownContent]);
   const speech = useLessonSpeech(sentences);
 

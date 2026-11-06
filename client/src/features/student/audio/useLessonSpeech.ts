@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { latinToCyrillic } from '@/shared/script/serbianScript';
 
 export type SpeechAvailability = 'unsupported' | 'no-voice' | 'ready';
 export type SpeechStatus = 'idle' | 'playing' | 'paused';
@@ -17,10 +18,20 @@ function getSynth(): SpeechSynthesis | null {
 
 function pickVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | undefined {
   for (const language of PREFERRED_LANGUAGES) {
-    const voice = voices.find((item) => item.lang.toLowerCase().split(/[-_]/)[0] === language);
+    const ofLanguage = voices.filter(
+      (item) => item.lang.toLowerCase().split(/[-_]/)[0] === language,
+    );
+    // A neural ("Natural") voice sounds much better than the older robotic ones.
+    const voice = ofLanguage.find((item) => /natural/i.test(item.name)) ?? ofLanguage[0];
     if (voice) return voice;
   }
   return undefined;
+}
+
+// Some Serbian voices (for example the ones in Edge) are made for Cyrillic and read Latin text
+// as if it were English. Their name says so, in words or in the letters of the name itself.
+function readsCyrillic(voice: SpeechSynthesisVoice): boolean {
+  return /cyrillic|[Ѐ-ӿ]/i.test(voice.name);
 }
 
 /**
@@ -69,7 +80,11 @@ export function useLessonSpeech(sentences: readonly string[]) {
         setActiveSentence(null);
         return;
       }
-      const utterance = new SpeechSynthesisUtterance(sentences[index]);
+      // The sentences are Latin; a voice made for Cyrillic gets them in Cyrillic.
+      const sentence = sentences[index] ?? '';
+      const utterance = new SpeechSynthesisUtterance(
+        readsCyrillic(voice) ? latinToCyrillic(sentence) : sentence,
+      );
       utterance.voice = voice;
       utterance.lang = voice.lang;
       utterance.rate = RATE_VALUES[rate];

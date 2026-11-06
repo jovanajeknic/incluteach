@@ -279,6 +279,21 @@ describe('Reading aloud', () => {
     expect(screen.getByText(/uvijek koristi latinicu/)).toBeInTheDocument();
   });
 
+  it('gives a voice made for Cyrillic the text in Cyrillic, and prefers the natural voice', async () => {
+    const spoken = stubVoice({
+      voices: [
+        { lang: 'sr-RS', name: 'Robot - Serbian (Latin, Serbia)' },
+        { lang: 'sr-RS', name: 'Microsoft Софија Online (Natural) - Serbian (Cyrillic, Serbia)' },
+      ],
+    });
+    answerLesson();
+    const { user } = renderApp({ path: LESSON_PATH });
+
+    await user.click(await screen.findByRole('button', { name: 'Poslušaj lekciju' }));
+
+    expect(spoken).toEqual(['Биљке праве храну уз помоћ свјетлости.']);
+  });
+
   it('says clearly when the device cannot read aloud', async () => {
     vi.stubGlobal('speechSynthesis', undefined);
     Reflect.deleteProperty(window, 'speechSynthesis');

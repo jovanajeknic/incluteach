@@ -5,7 +5,9 @@ import { vi } from 'vitest';
  * the sentences the voice was asked to speak. By default it speaks the first sentence and
  * waits; with `readAll` it reads to the end. Undo it with `vi.unstubAllGlobals()`.
  */
-export function stubVoice(options: { readAll?: boolean } = {}): string[] {
+export function stubVoice(
+  options: { readAll?: boolean; voices?: { lang: string; name: string }[] } = {},
+): string[] {
   const spoken: string[] = [];
   vi.stubGlobal(
     'SpeechSynthesisUtterance',
@@ -22,7 +24,7 @@ export function stubVoice(options: { readAll?: boolean } = {}): string[] {
     },
   );
   const synth = {
-    getVoices: () => [{ lang: 'sr-RS', name: 'Test glas' }],
+    getVoices: () => options.voices ?? [{ lang: 'sr-RS', name: 'Test glas' }],
     speak: vi.fn(
       (utterance: { text: string; onstart: (() => void) | null; onend: (() => void) | null }) => {
         spoken.push(utterance.text);
