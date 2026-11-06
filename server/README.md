@@ -96,6 +96,12 @@ npm run seed:demo -- --remove # only delete it
 
 Every demo account has the same password, chosen at random and shown **once** at the end (set `DEMO_PASSWORD` in `.env` to choose your own). The usernames are shown too (for example `ana_markovic`, `milica_petrovic`, `marija_demic`). The command refuses to run when `NODE_ENV` is `production`. It only touches the school called "Demo škola (izmišljeni podaci)", never another school.
 
+## Six schools of Podgorica for trying everything
+
+To try the whole application with many people at once, `npm run seed:podgorica -- --yes` fills the database with six primary schools (the names are real, every person is invented). Each school has one admin, three teachers (Matematika, Srpski jezik and a third subject), four odeljenja in two grades with three subjects each, three students per odeljenje (twelve per school) and one or two parents for every student. Enrolments, lessons and messages are left empty, so those flows can be tried from the start.
+
+**This deletes everything in the database first** (all schools, people, lessons and progress; the tables stay), so it asks for `--yes`. Take `npm run db:backup` before it if you need the old data. Every account gets the password `password` (set `SEED_PASSWORD` to choose another), and the usernames are printed at the end. It refuses to run when `NODE_ENV` is `production`. Do not run it against the test schema.
+
 ## Back up the database
 
 All the data lives in one database on this computer, so make backups.
