@@ -2,17 +2,17 @@ import { useState } from 'react';
 import type { Role } from '@/features/auth/api/authApi';
 import { ErrorState } from '@/shared/components/ErrorState';
 import { LoadingState } from '@/shared/components/LoadingState';
-import { formatDate } from '@/shared/lib/format';
 import { useDebounced } from '@/shared/lib/useDebounced';
+import { useSession } from '@/features/auth/api/session';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select';
 import { text } from '@/text/sr-Latn';
-import { USERS_PAGE_SIZE, useIssueActivation, useUsers } from '../api/queries';
-import type { ManagedUser, UserStatus } from '../api/usersApi';
-import { adminErrorMessage } from '../apiErrorMessage';
-import { ActivationLink } from '../components/ActivationLink';
+import { USERS_PAGE_SIZE, useUsers } from '../api/queries';
+import type { UserStatus } from '../api/usersApi';
+import { SelectionBar } from '../components/SelectionBar';
+import { UserRow } from '../components/UserRow';
 
 const t = text.admin.users;
 const roles: readonly Role[] = ['teacher', 'student', 'parent', 'admin'];
@@ -24,6 +24,11 @@ export function UsersPage() {
   const [status, setStatus] = useState<UserStatus>('active');
   const [search, setSearch] = useState('');
   const [limit, setLimit] = useState(USERS_PAGE_SIZE);
+  const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set());
+  // What an action did or why it failed; kept here because the marked rows are gone after it.
+  const [notice, setNotice] = useState<string | null>(null);
+  const [problem, setProblem] = useState<string | null>(null);
+  const { user: me } = useSession();
 
   const query = useDebounced(search.trim());
   const users = useUsers({
@@ -33,6 +38,31 @@ export function UsersPage() {
     limit,
   });
   const filtered = Boolean(role || query || status !== 'active');
+
+  /** A new filter shows other people, so what was marked must not be acted on unseen. */
+  function resetView() {
+    setLimit(USERS_PAGE_SIZE);
+    setSelectedIds(new Set());
+    setNotice(null);
+    setProblem(null);
+  }
+
+  const shown = users.data?.users ?? [];
+  // Nobody can deactivate or delete themselves, so they get no checkbox.
+  const selectable = shown.filter((user) => user.id !== me?.id);
+  const selected = shown.filter((user) => selectedIds.has(user.id));
+  const allMarked = selectable.length > 0 && selectable.every((user) => selectedIds.has(user.id));
+
+  function mark(id: string, marked: boolean) {
+    setNotice(null);
+    setProblem(null);
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (marked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }
 
   return (
     <>
@@ -50,7 +80,7 @@ export function UsersPage() {
             value={role}
             onChange={(event) => {
               setRole(event.target.value as Role | '');
-              setLimit(USERS_PAGE_SIZE);
+              resetView();
             }}
             className="h-12 rounded-xl bg-card text-base"
           >
@@ -71,7 +101,7 @@ export function UsersPage() {
             value={status}
             onChange={(event) => {
               setStatus(event.target.value as UserStatus);
-              setLimit(USERS_PAGE_SIZE);
+              resetView();
             }}
             className="h-12 rounded-xl bg-card text-base"
           >
@@ -92,13 +122,41 @@ export function UsersPage() {
             value={search}
             onChange={(event) => {
               setSearch(event.target.value);
-              setLimit(USERS_PAGE_SIZE);
+              resetView();
             }}
             autoComplete="off"
             className="h-12 rounded-xl bg-card text-base md:text-base"
           />
         </div>
       </div>
+
+      <div role="status" aria-live="polite" className="mt-4 max-w-4xl empty:hidden">
+        {notice && (
+          <p className="rounded-2xl bg-mint px-4 py-3 font-medium text-mint-ink">{notice}</p>
+        )}
+      </div>
+      {problem && (
+        <p
+          role="alert"
+          className="mt-4 max-w-4xl rounded-2xl bg-blush px-4 py-3 font-medium text-blush-ink"
+        >
+          {problem}
+        </p>
+      )}
+      {selected.length > 0 && (
+        <SelectionBar
+          selected={selected}
+          onClear={() => setSelectedIds(new Set())}
+          onNotice={(message) => {
+            setProblem(null);
+            setNotice(message);
+          }}
+          onProblem={(message) => {
+            setNotice(null);
+            setProblem(message);
+          }}
+        />
+      )}
 
       <section aria-label={t.resultsLabel} className="mt-6 max-w-4xl">
         {users.isPending ? (
@@ -109,10 +167,29 @@ export function UsersPage() {
           <p className="text-lg text-ink-soft">{filtered ? t.empty : t.noUsers}</p>
         ) : (
           <>
+            {selectable.length > 0 && (
+              <label className="mb-3 flex w-fit items-center gap-3 text-base font-medium text-ink">
+                <input
+                  type="checkbox"
+                  checked={allMarked}
+                  onChange={(event) =>
+                    setSelectedIds(
+                      event.target.checked ? new Set(selectable.map((user) => user.id)) : new Set(),
+                    )
+                  }
+                  className="size-5 accent-forest"
+                />
+                {t.selectAll}
+              </label>
+            )}
             <ul className="grid gap-3">
               {users.data.users.map((user) => (
                 <li key={user.id}>
-                  <UserRow user={user} />
+                  <UserRow
+                    user={user}
+                    selected={user.id === me?.id ? null : selectedIds.has(user.id)}
+                    onSelect={(marked) => mark(user.id, marked)}
+                  />
                 </li>
               ))}
             </ul>
@@ -136,62 +213,5 @@ export function UsersPage() {
         )}
       </section>
     </>
-  );
-}
-
-/** Words, not only colours, tell the state apart. */
-function Chip({ children, tone }: { children: string; tone: string }) {
-  return <span className={`rounded-full px-3 py-1 text-sm font-medium ${tone}`}>{children}</span>;
-}
-
-function UserRow({ user }: { user: ManagedUser }) {
-  const issue = useIssueActivation();
-  const link = issue.data?.activation;
-  // A person who left the school cannot sign in again until they are brought back.
-  const canGetLink = !user.deactivatedAt;
-
-  return (
-    <div className="rounded-2xl bg-card px-5 py-4 shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
-        <div className="min-w-0">
-          <p className="font-display text-lg font-semibold break-words text-ink">{user.fullName}</p>
-          <p className="text-sm text-ink-soft">{t.username(user.username)}</p>
-          <p className="text-sm text-ink-soft">{user.email ?? t.noEmail}</p>
-          <p className="text-sm text-ink-soft">{t.createdOn(formatDate(user.createdAt))}</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Chip tone="bg-lilac text-lilac-ink">{text.admin.roles[user.role]}</Chip>
-          {user.deactivatedAt ? (
-            <Chip tone="bg-blush text-blush-ink">{t.deactivated}</Chip>
-          ) : (
-            !user.activated && <Chip tone="bg-butter text-butter-ink">{t.notActivated}</Chip>
-          )}
-          {canGetLink && (
-            <Button
-              type="button"
-              variant="outline"
-              aria-label={t.newLinkFor(user.fullName)}
-              disabled={issue.isPending}
-              onClick={() => issue.mutate(user.id)}
-            >
-              {issue.isPending ? t.issuing : t.newLink}
-            </Button>
-          )}
-        </div>
-      </div>
-      {issue.isError && (
-        <p role="alert" className="mt-3 font-medium text-blush-ink">
-          {adminErrorMessage(issue.error)}
-        </p>
-      )}
-      {link && (
-        <div className="mt-4 border-t border-border pt-4">
-          <ActivationLink activation={link} person={user} />
-          <Button type="button" variant="ghost" className="mt-3" onClick={() => issue.reset()}>
-            {text.admin.link.hide}
-          </Button>
-        </div>
-      )}
-    </div>
   );
 }

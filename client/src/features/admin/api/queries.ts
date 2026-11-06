@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { usersApi, type UsersFilter } from './usersApi';
+import { usersApi, type BulkAction, type UsersFilter } from './usersApi';
 
 export const USERS_PAGE_SIZE = 25;
 
@@ -23,3 +23,24 @@ export function useCreateUser() {
 }
 
 export const useIssueActivation = () => useMutation({ mutationFn: usersApi.issueActivation });
+
+/** Both change who is in the list, so the list is loaded again, also after a failure. */
+function useRefreshingUsersMutation<Variables, Result>(
+  call: (variables: Variables) => Promise<Result>,
+) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: call,
+    onSettled: () => client.invalidateQueries({ queryKey: ['admin', 'users'] }),
+  });
+}
+
+export const useRenameUser = () =>
+  useRefreshingUsersMutation(({ id, fullName }: { id: string; fullName: string }) =>
+    usersApi.rename(id, fullName),
+  );
+
+export const useChangeUsers = () =>
+  useRefreshingUsersMutation(({ action, ids }: { action: BulkAction; ids: string[] }) =>
+    usersApi.change(action, ids),
+  );
