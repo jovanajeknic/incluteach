@@ -161,6 +161,7 @@ export const routes: RouteObject[] = [
             children: [
               { index: true, element: <Navigate to={adminUsersPath} replace /> },
               { path: 'users', lazy: fromArea(adminArea, (area) => area.UsersPage) },
+              { path: 'classes', lazy: fromArea(adminArea, (area) => area.ClassesPage) },
               { path: 'users/new', lazy: fromArea(adminArea, (area) => area.NewUserPage) },
               { path: '*', element: <NotFoundPage homePath={adminHomePath} /> },
             ],

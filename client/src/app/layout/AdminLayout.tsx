@@ -1,5 +1,5 @@
-import { PlusIcon, UsersIcon } from '@phosphor-icons/react';
-import { adminNewUserPath, adminUsersPath } from '@/features/admin/paths';
+import { ChalkboardTeacherIcon, PlusIcon, UsersIcon } from '@phosphor-icons/react';
+import { adminClassesPath, adminNewUserPath, adminUsersPath } from '@/features/admin/paths';
 import { useSession } from '@/features/auth/api/session';
 import { initialsOfName } from '@/shared/lib/format';
 import { text } from '@/text/sr-Latn';
@@ -14,6 +14,12 @@ export function AdminLayout() {
       navLabel={t.label}
       navItems={[
         { to: adminUsersPath, label: t.users, icon: UsersIcon, tone: 'bg-butter text-butter-ink' },
+        {
+          to: adminClassesPath,
+          label: t.classes,
+          icon: ChalkboardTeacherIcon,
+          tone: 'bg-mint text-mint-ink',
+        },
       ]}
       action={{ to: adminNewUserPath, label: text.admin.users.newAccount, icon: PlusIcon }}
       person={{

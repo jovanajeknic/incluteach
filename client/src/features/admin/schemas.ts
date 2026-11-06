@@ -14,3 +14,17 @@ export const newUserSchema = z.object({
 
 export type NewUserInput = z.input<typeof newUserSchema>;
 export type NewUserValues = z.output<typeof newUserSchema>;
+
+const classText = text.admin.classes;
+
+/** The server answers `invalid_class_name` and `class_exists`; this is quick feedback only. */
+export const className = z
+  .string()
+  .trim()
+  .min(1, classText.nameRequired)
+  .max(50, classText.nameLong);
+
+export const newClassSchema = z.object({ name: className });
+
+export type NewClassInput = z.input<typeof newClassSchema>;
+export type NewClassValues = z.output<typeof newClassSchema>;

@@ -1,4 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { classesApi } from './classesApi';
 import { usersApi, type BulkAction, type UsersFilter } from './usersApi';
 
 export const USERS_PAGE_SIZE = 25;
@@ -44,3 +45,24 @@ export const useChangeUsers = () =>
   useRefreshingUsersMutation(({ action, ids }: { action: BulkAction; ids: string[] }) =>
     usersApi.change(action, ids),
   );
+
+export const useClasses = (schoolYear: number) =>
+  useQuery({
+    queryKey: ['admin', 'classes', schoolYear],
+    queryFn: () => classesApi.list(schoolYear),
+    placeholderData: keepPreviousData,
+  });
+
+/** A change of a class reloads the lists of all school years. */
+function useClassesMutation<Variables, Result>(call: (variables: Variables) => Promise<Result>) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: call,
+    onSettled: () => client.invalidateQueries({ queryKey: ['admin', 'classes'] }),
+  });
+}
+
+export const useCreateClass = () => useClassesMutation(classesApi.create);
+export const useRenameClass = () =>
+  useClassesMutation(({ id, name }: { id: string; name: string }) => classesApi.rename(id, name));
+export const useDeleteClass = () => useClassesMutation(classesApi.remove);
