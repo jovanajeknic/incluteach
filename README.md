@@ -78,3 +78,46 @@ The browser only ever talks to the Netlify address. `client/public/_redirects` f
 - **Render** (root directory `server`): build command `npm install && npm run build`, start command `npm start`, health check path `/health`. Environment: `DATABASE_URL` (the Neon connection string), `NODE_ENV=production`, `PUBLIC_URL` (the Netlify address), `TRUST_PROXY=2`, `AI_PROVIDER=fake`.
 - **Netlify** (base directory `client`): build command `npm run build`, publish directory `client/dist`.
 - **Neon**: fill the database from a computer, because the seed scripts refuse to run with `NODE_ENV=production`. Put the Neon connection string in `DATABASE_URL` for that one terminal, then run `npm run migrate:up` and `npm run seed:schools -- --yes` in `server/` (set `SEED_PASSWORD` to choose the password).
+
+## Demo accounts (OŠ Dragiša Ivanović)
+
+All the people are invented. **Password of every account: `password`**
+
+| Role | Username |
+|---|---|
+| Admin | `admin_dragisa` |
+| Teacher, Matematika | `mirjana_kovacevic` |
+| Teacher, Biologija | `zoran_radunovic` |
+| Teacher, Srpski jezik | `vesna_buric` |
+| Teacher, Istorija | `dragan_lakic` |
+
+Students and their parents:
+
+| Odeljenje | Student | Parents |
+|---|---|---|
+| 6-1 | `ana_vukovic` | `mihailo_vukovic`, `dragana_vukovic` |
+| 6-1 | `luka_radovic` | `savo_radovic` |
+| 6-1 | `milica_perovic` | `milan_perovic`, `jelena_perovic` |
+| 6-1 | `nikola_jovanovic` | `boris_jovanovic`, `vesna_jovanovic` |
+| 6-1 | `teodora_djurovic` | `tamara_djurovic` |
+| 6-1 | `stefan_knezevic` | `aleksa_knezevic`, `visnja_knezevic` |
+| 6-1 | `sara_bozovic` | `milos_bozovic`, `snezana_bozovic` |
+| 6-1 | `vuk_rakocevic` | `dusan_rakocevic` |
+| 6-2 | `nina_vujovic` | `vladimir_vujovic`, `ljiljana_vujovic` |
+| 6-2 | `petar_gazivoda` | `marko_gazivoda`, `andjela_gazivoda` |
+| 6-2 | `katarina_nikolic` | `biljana_nikolic` |
+| 6-2 | `filip_stanisic` | `radoje_stanisic`, `mirjana_stanisic` |
+| 6-2 | `jovana_mijuskovic` | `mihailo_mijuskovic`, `dragana_mijuskovic` |
+| 6-2 | `andrija_pejovic` | `savo_pejovic` |
+| 6-2 | `ivana_scepanovic` | `milan_scepanovic`, `jelena_scepanovic` |
+| 6-2 | `lazar_raicevic` | `boris_raicevic`, `vesna_raicevic` |
+| 7-1 | `mina_vucinic` | `tamara_vucinic` |
+| 7-1 | `djordje_bulatovic` | `aleksa_bulatovic`, `visnja_bulatovic` |
+| 7-1 | `lena_perovic` | `milan_perovic`, `jelena_perovic` (same parents as `milica_perovic`) |
+| 7-1 | `ognjen_soskic` | `dusan_soskic` |
+| 7-1 | `sofija_mirkovic` | `vladimir_mirkovic`, `ljiljana_mirkovic` |
+| 7-1 | `danilo_gazivoda` | `marko_gazivoda`, `andjela_gazivoda` (same parents as `petar_gazivoda`) |
+| 7-1 | `maja_cetkovic` | `biljana_cetkovic` |
+| 7-1 | `jovan_martinovic` | `radoje_martinovic`, `mirjana_martinovic` |
+
+The other three schools have their own admins (`admin_stampar`, `admin_gorki`, `admin_nazor`) with the same password.
