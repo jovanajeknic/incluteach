@@ -62,3 +62,19 @@ Run these from `client/`:
 | `npm run format` | Formats all files with Prettier |
 | `npm run build` | Type-checks and builds the production version into `client/dist/` |
 | `npm run preview` | Serves the production build locally |
+
+## Live demo (free hosting)
+
+| Part | Service | Address |
+|---|---|---|
+| Frontend | Netlify | _filled in after the first deploy_ |
+| Backend | Render (Web Service, `server/`) | https://incluteach-api.onrender.com |
+| Database | Neon (PostgreSQL) | not public |
+
+The browser only ever talks to the Netlify address. `client/public/_redirects` forwards `/api/...` to the backend, so the session cookie works without CORS. The free Render service sleeps after 15 minutes without traffic, so the first request after a pause can take about a minute.
+
+### Settings on the services
+
+- **Render** (root directory `server`): build command `npm install && npm run build`, start command `npm start`, health check path `/health`. Environment: `DATABASE_URL` (the Neon connection string), `NODE_ENV=production`, `PUBLIC_URL` (the Netlify address), `TRUST_PROXY=2`, `AI_PROVIDER=fake`.
+- **Netlify** (base directory `client`): build command `npm run build`, publish directory `client/dist`.
+- **Neon**: fill the database from a computer, because the seed scripts refuse to run with `NODE_ENV=production`. Put the Neon connection string in `DATABASE_URL` for that one terminal, then run `npm run migrate:up` and `npm run seed:schools -- --yes` in `server/` (set `SEED_PASSWORD` to choose the password).

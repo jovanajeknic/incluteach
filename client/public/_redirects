@@ -1,0 +1,6 @@
+# Netlify reads this file. The first rule forwards /api/... to the backend on Render (the backend
+# has no /api in its paths, so :splat drops it). The browser keeps seeing one address, so the
+# session cookie works without CORS. The second rule makes every other address open the app,
+# so a page can be refreshed on any route.
+/api/*  https://incluteach-api.onrender.com/:splat  200
+/*      /index.html                                  200
