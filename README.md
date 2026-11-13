@@ -75,7 +75,7 @@ The browser only ever talks to the Netlify address. `client/public/_redirects` f
 
 ### Settings on the services
 
-- **Render** (root directory `server`): build command `npm install && npm run build`, start command `npm start`, health check path `/health`. Environment: `DATABASE_URL` (the Neon connection string), `NODE_ENV=production`, `PUBLIC_URL` (the Netlify address), `TRUST_PROXY=2`, `AI_PROVIDER=fake`.
+- **Render** (root directory `server`): build command `npm install --include=dev && npm run build` (with `NODE_ENV=production` a plain `npm install` skips TypeScript and the type packages the build needs), start command `npm start`, health check path `/health`. Environment: `DATABASE_URL` (the Neon connection string), `NODE_VERSION=22`, `NODE_ENV=production`, `PUBLIC_URL` (the Netlify address), `TRUST_PROXY=2`, `AI_PROVIDER=fake`.
 - **Netlify** (base directory `client`): build command `npm run build`, publish directory `client/dist`.
 - **Neon**: fill the database from a computer, because the seed scripts refuse to run with `NODE_ENV=production`. Put the Neon connection string in `DATABASE_URL` for that one terminal, then run `npm run migrate:up` and `npm run seed:schools -- --yes` in `server/` (set `SEED_PASSWORD` to choose the password).
 
