@@ -41,6 +41,20 @@ describe('loadConfig', () => {
     });
   });
 
+  describe('trustProxyHops', () => {
+    it('defaults to 0', () => {
+      expect(loadConfig({ DATABASE_URL }).trustProxyHops).toBe(0);
+    });
+
+    it('uses TRUST_PROXY when it is set', () => {
+      expect(loadConfig({ DATABASE_URL, TRUST_PROXY: '2' }).trustProxyHops).toBe(2);
+    });
+
+    it.each(['abc', '-1', '6', '1.5'])('rejects the invalid TRUST_PROXY "%s"', (value) => {
+      expect(() => loadConfig({ DATABASE_URL, TRUST_PROXY: value })).toThrow(/TRUST_PROXY must be/);
+    });
+  });
+
   describe('publicUrl', () => {
     it('defaults to the local frontend', () => {
       expect(loadConfig({ DATABASE_URL }).publicUrl).toBe('http://localhost:5173');

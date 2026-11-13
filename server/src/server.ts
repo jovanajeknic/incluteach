@@ -21,6 +21,7 @@ const jobs = new BackgroundJobs();
 const server = createApp({
   pool,
   secureCookies: config.secureCookies,
+  trustProxyHops: config.trustProxyHops,
   publicUrl: config.publicUrl,
   logRequests: true,
   ai: createAiProvider(config.aiProvider, { apiKey: config.aiApiKey, model: config.aiModel }),

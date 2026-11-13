@@ -5,6 +5,9 @@ export interface Config {
   port: number;
   // Cookies marked Secure are sent only over HTTPS, so this is on in production only.
   secureCookies: boolean;
+  // How many proxies stand between the browser and this server (0 on a computer). Needed so that
+  // the per-address limit on failed sign-ins sees the visitor's address, not the proxy's.
+  trustProxyHops: number;
   // Address of the website, used to build the activation links that admins send out.
   publicUrl: string;
   // Which AI service makes summaries and quizzes. "fake" makes invented but complete results.
@@ -40,6 +43,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     databaseUrl,
     port: parsePort(env.PORT),
     secureCookies: env.NODE_ENV === 'production',
+    trustProxyHops: parseTrustProxyHops(env.TRUST_PROXY),
     publicUrl: parsePublicUrl(env.PUBLIC_URL),
     aiProvider,
     aiApiKey,
@@ -58,6 +62,19 @@ function parsePort(value: string | undefined): number {
     throw new Error(`PORT must be a whole number between 1 and 65535, got "${text}".`);
   }
   return port;
+}
+
+function parseTrustProxyHops(value: string | undefined): number {
+  const text = value?.trim();
+  if (!text) {
+    return 0;
+  }
+
+  const hops = Number(text);
+  if (!Number.isInteger(hops) || hops < 0 || hops > 5) {
+    throw new Error(`TRUST_PROXY must be a whole number between 0 and 5, got "${text}".`);
+  }
+  return hops;
 }
 
 function parsePublicUrl(value: string | undefined): string {

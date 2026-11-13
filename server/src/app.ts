@@ -27,6 +27,8 @@ import { usersRouter } from './routes/users.ts';
 export interface AppDependencies {
   pool: Queryable;
   secureCookies?: boolean;
+  // How many proxies in front of the server to trust for the visitor's address. 0 trusts none.
+  trustProxyHops?: number;
   // Address of the website that activation links point to.
   publicUrl?: string;
   // Only tests set this, to make password hashing quicker.
@@ -45,6 +47,7 @@ export interface AppDependencies {
 export function createApp({
   pool,
   secureCookies = false,
+  trustProxyHops = 0,
   publicUrl = 'http://localhost:5173',
   passwordCost,
   logRequests = false,
@@ -56,6 +59,9 @@ export function createApp({
 
   // Do not tell the world which framework runs the server.
   app.disable('x-powered-by');
+  if (trustProxyHops > 0) {
+    app.set('trust proxy', trustProxyHops);
+  }
   if (logRequests) {
     app.use(requestLog());
   }
