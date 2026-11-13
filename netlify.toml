@@ -1,0 +1,9 @@
+# Netlify reads this file, so nothing has to be typed into the Netlify settings.
+# No "base" on purpose: the command moves into client/ itself and "publish" is relative to the
+# repository root. client/public/_redirects (forwards /api to the backend) is copied into dist/.
+[build]
+  command = "cd client && npm install && npm run build"
+  publish = "client/dist"
+
+[build.environment]
+  NODE_VERSION = "22"
