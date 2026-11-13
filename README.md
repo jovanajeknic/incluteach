@@ -67,7 +67,7 @@ Run these from `client/`:
 
 | Part | Service | Address |
 |---|---|---|
-| Frontend | Netlify | _filled in after the first deploy_ |
+| Frontend | Netlify | https://harmonious-sable-92c9bf.netlify.app |
 | Backend | Render (Web Service, `server/`) | https://incluteach-api.onrender.com |
 | Database | Neon (PostgreSQL) | not public |
 
